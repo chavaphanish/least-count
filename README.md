@@ -1,32 +1,28 @@
 # Least Count
 
-Least Count is a browser card game built around reducing the value of your hand, calling Show, and staying below the cumulative elimination cutoff. The long-term vision is card nights with friends through real-time online play and private rooms, on desktop and mobile browsers.
+Least Count is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
 
-**Current status: local playable practice.** Play full matches against 1–7 simulated opponents in your browser. The game implements the working rulebook and confirmed clarifications, including jokers, 7 penalties, Show, scoring, timers, and elimination. Online multiplayer is not available.
+**This branch adds onboarding and multiplayer.** Guest rooms work without external authentication configuration. Google sign-in, verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Review this feature in its pull request before merging or deploying.
 
-## What works today
+## Playing
 
-- Parallel discard/pickup card animations, with a face-down closed-pile flight and reduced-motion support. Accepted moves are saved before animation; refreshing cannot replay them.
-- Responsive green felt table for 2–8 players, with selectable cards, card values, current-turn indication, scores, and action feedback.
-- One- or two-deck setup, unique physical card identities, Printed Jokers, a Selected Joker indicator, and seven-card starting hands.
-- Same-rank discards, mandatory Match and Drop, eligible open pickup, and draw-pile recycling or exhaustion settlement.
-- 7 penalty stacking, automatic penalties when no 7 is held, optional acceptance when holding 7, and full-cycle cancellation.
-- Show validation, zero-point tied round winners, cumulative scoring, score and timeout elimination, and ordinary next rounds until one match winner remains.
-- A single 60-second deadline covering selection and the final draw choice, retained through navigation and refreshes. Planning does not pause or reset it.
-- Simulated opponents using only their own hand and public table information, plus concealed opponent cards and totals-only round results.
-- A readable Rules screen and downloads of both rule documents.
-- Keyboard-accessible controls, visible focus, a skip link, and responsive layouts.
-- Static assets suitable for Cloudflare Pages; no application services or secrets required.
+- Continue as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh.
+- From the dashboard, create a room or join using a six-character code or invitation link.
+- Room defaults are four players, a 100-point cumulative elimination cutoff, and 60-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
+- Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
+- The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
+- The online table uses the existing engine. Select cards, choose a legal draw source, call Show, handle 7 penalties, and play subsequent rounds. The server validates actions and sends each player only their own hand.
+- **Play Game** remains available for offline local practice against 1–7 simulated opponents, including the existing parallel discard/pickup animation, reduced-motion support, saved progress, and rule downloads.
 
-Click **Play Game**, choose the table size, and select **Start local game**. Select one or more cards of the same rank, then choose **Choose draw source**. Your hand and the previous discard remain unchanged until you choose the draw pile or an eligible previous card. The discard and pickup then commit together and animate in parallel. **Back to selection** lets you change your mind before committing. Matching the top rank offers **Match & Drop**, which discards immediately without a draw. Show is enabled only at the beginning of an eligible normal turn. At round results, choose the next round or set up a new match after a win.
+### Sessions, presence, and leaving
 
-### Local practice and saving
+Guests receive a cryptographically random session in an HttpOnly, SameSite cookie (Secure on HTTPS). Only its hash is stored on the server. Guest sessions expire after seven days; the same browser and cookies restore the same identity. Signing out invalidates that guest session and leaves the current room. Guests have no email, password, or editable registered profile.
 
-The human player is **You**. Other seats are simple simulated opponents, not online players. Their strategy reduces their own hand, calls Show at five or less, and responds to 7s without inspecting opponent hands or the closed draw order.
+Each identity may belong to one room at a time. Refreshing reconnects the existing seat. Live sockets heartbeat every 20 seconds; after 45 seconds without a heartbeat, a connection is considered offline. Waiting-lobby seats are retained for a further 90 seconds before removal. Explicitly leaving frees a waiting seat immediately. Host ownership transfers deterministically to the earliest connected remaining participant, then earliest remaining participant if nobody is connected. Empty waiting rooms close.
 
-Progress is stored in `sessionStorage` for the current browser tab. Refreshing or visiting the Rules screen does not renew the turn deadline; an expired saved turn is resolved on return. Closing the tab normally ends its saved session. **New game** intentionally replaces progress after confirmation during an active round. If browser storage is unavailable, the UI reports that refreshes will lose progress.
+An active game's disconnected seats remain part of the match; disconnecting does not introduce a new forfeit rule or pause timed turns. The server's 60-second deadline still applies. Untimed games have no turn alarm or automatic timeout elimination: a disconnected current player must reconnect to continue. No automatic bot replacement or midgame seat replacement is implemented. Closing a room is available to its host only before the game starts.
 
-All cards and game state exist on your device, including simulated opponents' hands. Those cards are hidden from the UI, not protected from browser inspection. This is a local practice game, not a secure multiplayer system. Timers use the local clock and can be affected by device time changes or browser suspension. No backend, authentication, database, online rooms, or mobile packaging is included.
+Local practice is stored in this tab's `sessionStorage`; other hands are only visually concealed in this offline mode. Online state is persisted in Cloudflare Durable Objects, with private hand projections sent over authenticated WebSockets. Refreshing never resets the server deadline.
 
 ## Rulebook and confirmed decisions
 
@@ -39,7 +35,7 @@ The initial clarification topics have been answered. The overall rulebook remain
 
 ### Gameplay reference
 
-The local engine follows these rules; the linked documents give the full details:
+The shared engine follows these rules; the linked documents give the full details:
 
 - **Players and dealing:** 2–8 players, seven starting cards each; one standard deck plus one Printed Joker for 2–4 players, or two decks plus two Printed Jokers for 5–8 players.
 - **Selected Joker:** choose a new eligible indicator each round, excluding 7s and Printed Jokers. Remove that physical card from play; the remaining cards of its rank are worth zero.
@@ -52,112 +48,111 @@ The local engine follows these rules; the linked documents give the full details
 
 For example, if the final two players each have 99 cumulative points and tie on a zero-point Show, both remain at 99 and play another ordinary round. A tied round result is not a shared match victory.
 
-The linked documents contain the detailed scoring, hand-privacy, penalty, and draw-pile exhaustion rules. Online hand privacy and authoritative timers will require server enforcement in the later multiplayer phase.
+The linked documents contain the detailed scoring, hand-privacy, penalty, and draw-pile exhaustion rules. Online rooms enforce hand privacy and deadlines on the server. Room hosts may choose a positive custom elimination cutoff or disable turn deadlines; other rules are unchanged.
 
-## Technology stack
+## Development
 
-- React 19 and TypeScript with strict type checking.
-- Vite for development and static production builds.
-- Plain CSS for styling and responsive layouts.
-- Vitest for unit tests.
-- Locally bundled Fontsource fonts, with system font fallbacks.
-
-## Getting started
-
-Use **Node.js 24** (recommended and recorded in `.nvmrc`) and npm. The package also supports Node.js 22.12+ within 22.x, or Node.js 24+.
-
-From the repository root:
+Use Node.js 24 (see `.nvmrc`) and npm. Node.js 22.12+ within 22.x is also supported.
 
 ```sh
 npm ci
-npm run dev
+npm run build
 ```
 
-`npm ci` installs the committed lockfile without changing it. Use `npm install` when intentionally adding or updating dependencies. Vite prints the development address.
-
-No environment variables, secrets, external application services, or backend are needed for the current local game. In a managed cloud task, use the existing isolated checkout; an additional Git worktree is unnecessary. For cloud access when required, bind the development server with:
+Run these in **two terminals**, from the repository root:
 
 ```sh
-npm run dev -- --host 0.0.0.0
+# Terminal 1: local Worker, persistent rooms, and WebSockets
+npm run dev:server
 ```
 
-### Available commands
+```sh
+# Terminal 2: frontend (open the printed http://127.0.0.1:5173 address)
+npm run dev -- --host 127.0.0.1
+```
+
+Vite proxies `/api` and WebSockets to the Worker at port 8787. Use the `127.0.0.1` address to match the local origin allowlist. Local Wrangler state is stored under ignored `.wrangler/`; deleting it removes local sessions and rooms. No Supabase variables are needed for guests or local practice. To enable registered accounts locally, create the ignored `.dev.vars` using `.dev.vars.example` and the setup guide. Do not commit credentials.
+
+For a different development host/port, set `APP_ORIGIN` explicitly on the Worker command to that frontend origin. Serving `dist` alone supports local practice but cannot provide online rooms or authentication.
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start the development server with hot reload. |
-| `npm run build` | Run TypeScript checks and build static assets into `dist/`. |
-| `npm run preview` | Serve the built `dist/` locally; run the build first. |
-| `npm test` | Run Vitest once, noninteractively, and exit. |
-| `npm run test:watch` | Run Vitest in interactive watch mode. |
-| `npm run test:e2e` | Run Playwright browser tests, starting the app automatically. |
+| `npm run dev` | Vite frontend with hot reload and API proxy |
+| `npm run dev:server` | Local Worker and Durable Objects |
+| `npm run typecheck` | Strict TypeScript checks for frontend, Worker, and browser tests |
+| `npm run build` | Type-check and build frontend into `dist/` |
+| `npm run preview` | Preview built frontend, with the same local API proxy |
+| `npm test` | Run unit tests once, noninteractively |
+| `npm run test:watch` | Interactive unit tests |
+| `npm run test:e2e` | Browser checks; starts the Worker and Vite automatically |
 
-To check and preview a production build:
-
-```sh
-npm run build
-npm test
-npm run preview
-```
-
-Unit tests cover card and deck construction, selected-rank values, legal and illegal actions, pickup eligibility, Show and scoring, zero-point ties at 99, full 7 cycles, deadlines, elimination, recycling, exhaustion, saved sessions, and seeded whole matches for 2, 4, and 8 players.
-
-Browser tests cover responsive eight-player tables at 320–1440px, actual card controls, illegal selections, Match and Drop, pickup, refresh recovery, 7 actions, timers, scoring, next rounds, keyboard navigation, rule downloads, and a complete local match through the UI.
-
-To run the Playwright checks (the test runner starts Vite automatically):
+There is no separate lint command configured. Browser setup:
 
 ```sh
 npx playwright install chromium
 npm run test:e2e
 ```
 
-On Linux, `npx playwright install --with-deps chromium` also installs required system libraries when permitted. In the managed environment, the installed system browser can be used with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e`. To test built static assets, first run `npm run build`, then set `PLAYWRIGHT_PREVIEW=1` when running the browser tests. Browser artifacts under `test-results/` and `playwright-report/` are ignored.
+On Linux, use `npx playwright install --with-deps chromium` if system libraries are missing. A system Chromium can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium`. After building, `PLAYWRIGHT_PREVIEW=1 npm run test:e2e` tests production assets against the local Worker. Artifacts are ignored.
 
-`createDeck()` remains a standard 52-card utility. `assembleDeck()` and `prepareDeck()` add the rulebook’s one/two-deck composition, Printed Jokers, unique physical identities, and Selected Joker removal. The immutable game reducer accepts an explicit clock and random source for deterministic tests. Its `play-turn` action validates the discard and selected pickup atomically; failed choices leave the hand and pile unchanged. Existing saves already waiting for a replacement draw remain supported. Draft selections are not saved: refreshing before confirmation returns to the unchanged turn and original deadline.
+Tests cover the existing game rules and local UI, session initialization, provider verification with mocked Supabase, profile ownership, avatar file validation, room settings/membership, private projections, host transfer, atomic starts, server deadlines, and real guest multi-browser rooms. Live Google consent, actual verification/reset email delivery, and real Supabase Storage/RLS checks remain deployment checks in [the setup guide](docs/supabase-setup.md).
 
-## Project structure
+## Architecture and files
 
 ```text
-RULEBOOK.md                    Original provisional rulebook
-README.md                      Project status and development guide
-docs/
-  rule-clarifications.md       Confirmed decisions overriding draft conflicts
-src/
-  game/                        Decks, immutable engine, bot strategy, and unit tests
-  components/                  Playing cards, round results, and page layout
-  pages/                       Landing, playable local table, and Rules screen
-  App.tsx                      Hash-based screen navigation
-  hooks/                       Local session, timer, and simulated-opponent orchestration
-  lib/                         Versioned session storage and validation
-  main.tsx                     React entry point
-  styles.css                   Shared styles and responsive layouts
-e2e/                           Playwright gameplay and responsive browser tests
-playwright.config.ts           Development/production browser test setup
-public/
-  favicon.svg                  Static application icon
+src/game/                 Framework-independent decks, immutable engine, bots, tests
+src/shared/multiplayer.ts Validated room settings and public wire types
+src/auth/                 Supabase client, startup stages, session provider, tests
+src/components/           Shared cards, avatars, loading screen, layout
+src/pages/                Access, dashboard, profile, lobby/online table, local game, rules
+src/hooks/                Local practice and authenticated realtime room connections
+src/lib/                  Local saved-session validation
+server/index.ts           Same-origin Worker API and assets routing
+server/auth.ts            Provider-verified identity and own-profile/avatar operations
+server/objects.ts         Durable session/code directory and persisted realtime rooms
+server/room.ts            Testable authoritative room/game transitions and projections
+server/http.ts            Origin checks, bounded bodies, cookies, cryptographic tokens
+supabase/migrations/      Profiles, avatar bucket, owner-only RLS policies
+wrangler.jsonc            Worker/assets, SQLite Durable Object bindings and migration
+.dev.vars.example         Public provider configuration placeholders
 ```
 
-Keep game state, validation, and scoring independent of React in `src/game`. Reusable display elements belong in `src/components`; screens and their interactions belong in `src/pages`.
+Registered sessions use Supabase PKCE, persisted SDK sessions and automatic token refresh. The Worker verifies every bearer token using Supabase `getUser`, requires a verified email, and accesses profiles/Storage with the caller's JWT and public publishable key. No service-role key is used. Profile UUIDs come from verified identity. Emails and account timestamps are returned only by the private self-session endpoint; room projections contain only public names/avatars, presence, scores, and visible cards.
 
-Navigation uses `#/`, `#/game`, and `#/rules`, allowing direct links and refreshes on static hosting without server routing.
+A single directory object reserves collision-checked six-character codes and tracks identity membership. Each room has its own Durable Object, serializing join/start/action operations and persisting state. Short-lived, single-use connection tickets keep long-lived credentials out of WebSocket URLs. Socket authorization expires with the originating session; reconnect obtains a fresh verified ticket. Requests enforce same-origin mutation checks and bounded payloads. The server supplies actor IDs and securely randomized dealing; clients cannot start for another host or submit another player's turn. Request IDs prevent replaying accepted socket actions. Alarms enforce timed turns independently of browser clocks.
 
-## Cloudflare Pages
+The shared engine accepts validated room settings when the host starts. It retains the default cutoff/timer for old local saves. Untimed turns have a null deadline; scoring uses the configured cutoff. Other rule behavior and the original rulebook are preserved.
 
-Configure a future Pages deployment with:
+Avatar uploads accept JPG/PNG/WebP up to 2 MB, validate signatures on both sides, and use server-generated paths in the owner's folder. The browser also decodes images and limits dimensions to 4096 × 4096. Storage policies enforce ownership. Profile images are public; email is not. Replacing/removing an avatar cleans up its old object. There is no match-history database or mobile packaging.
+
+## Cloudflare deployment
+
+Online features now require the **Worker plus Durable Objects**, rather than a static-only Pages deployment. The existing Worker name remains `least-count`. `wrangler.jsonc` bundles the API and `dist` assets, SPA fallback for `/join/CODE` and `/auth/callback`, and the initial SQLite Durable Object migration.
+
+For the existing Git-connected Cloudflare Worker, after PR review:
 
 | Setting | Value |
 |---|---|
-| Root directory | Repository root |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Node.js version | `NODE_VERSION=24` |
+| Root | Repository root |
+| Build | `npm run build` |
+| Deploy | `npx wrangler deploy` |
+| Preview deploy | `npx wrangler versions upload` |
+| Node | `NODE_VERSION=24` |
 
-No Pages Functions or secrets are required for the current static local game. A production multiplayer service is a separate future component. Deployment has not been configured or published as part of this work.
+Use the configuration-driven deploy command so the API, bindings, and migrations accompany the assets. Keep the `v1` migration once deployed; future schema/class changes need new tags. Review Cloudflare's current plan/usage limits for SQLite Durable Objects. No deployment is performed by the build or tests. Worker preview URLs have isolated origins: registered callbacks require explicit Supabase allowlisting; use a stable reviewed testing domain for provider checks.
 
-## Development roadmap
+| Runtime variable | Purpose |
+|---|---|
+| `SUPABASE_URL` | Project HTTPS URL; omit with the key for guest-only mode |
+| `SUPABASE_PUBLISHABLE_KEY` | Public publishable key (or legacy anon key); deliberately exposed to the SDK |
+| `APP_ORIGIN` | Optional comma-separated additional exact frontend origins; same-origin production works without it |
 
-1. **Review and refine local practice.** Playtest the provisional rules, improve opponent strategy and usability, and record any additional rule decisions before changing behavior.
-2. **Online multiplayer later.** Add private rooms and a server-authoritative game service, protecting private hands and enforcing actions and timers across clients. A static browser-only build cannot enforce these guarantees.
-3. **Additional platform work later.** Authentication, databases, and mobile packaging remain outside this phase.
+Set runtime variables using Cloudflare configuration for both deployment and previews as needed; if Git deploys replace dashboard variables, use Wrangler's documented `--keep-vars` deployment option. Never supply a service-role key, database password, Google client secret, or SMTP password to the frontend or these public variables. Google and SMTP credentials belong only in Supabase/provider dashboards.
 
-Use pull requests for substantial changes such as gameplay work. Small, trivial updates may go directly to `main` when authorized. Document rule decisions explicitly rather than inventing behavior in code.
+## Next steps
+
+1. Review this PR and follow [Supabase setup and live checks](docs/supabase-setup.md).
+2. Deploy a reviewed build and test Google/email/profile storage against the real project.
+3. Playtest registered/guest mixed rooms and reconnection on real mobile networks. Record new rule decisions before changing gameplay.
+
+Substantial changes use pull requests; this feature must not merge automatically. Small trivial updates may go directly to `main` when authorized.
