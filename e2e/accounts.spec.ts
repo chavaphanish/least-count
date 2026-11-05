@@ -91,7 +91,9 @@ test('email signup requests verification and recovery requests a real provider r
     },
   )
   await page.goto('/')
+  await expect(page.getByRole('button', { name: /google/i })).toHaveCount(0)
   await page.getByRole('button', { name: 'Sign Up', exact: true }).click()
+  await expect(page.getByRole('button', { name: /google/i })).toHaveCount(0)
   await page.getByLabel('Display name', { exact: true }).fill('New Player')
   await page.getByLabel('Email address').fill('new@example.test')
   await page.getByLabel('Password', { exact: true }).fill('test-only-password')
@@ -110,7 +112,7 @@ test('email signup requests verification and recovery requests a real provider r
   expect(reset).toBe(true)
 })
 
-test('cancelled provider callback keeps its invitation and allows another attempt', async ({
+test('failed email callback keeps its invitation and allows another sign-in attempt', async ({
   page,
 }) => {
   await mockProvider(page)
@@ -122,9 +124,7 @@ test('cancelled provider callback keeps its invitation and allows another attemp
   await expect(
     page.getByText('Your invitation to room', { exact: false }),
   ).toContainText('ABC234')
-  await expect(
-    page.getByRole('button', { name: 'Continue with Google' }),
-  ).toBeEnabled()
+  await expect(page.getByLabel('Email address')).toBeVisible()
 })
 
 test('registered profile restores, saves name, rejects invalid image, and removes avatar', async ({
@@ -157,13 +157,11 @@ test('registered profile restores, saves name, rejects invalid image, and remove
   await page.getByLabel('Display name', { exact: true }).fill('Renamed Player')
   await page.getByRole('button', { name: 'Save profile', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('profile is saved')
-  await page
-    .getByLabel('Profile picture', { exact: true })
-    .setInputFiles({
-      name: 'fake.png',
-      mimeType: 'image/png',
-      buffer: Buffer.from('not an image'),
-    })
+  await page.getByLabel('Profile picture', { exact: true }).setInputFiles({
+    name: 'fake.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  })
   await expect(page.getByRole('alert')).toContainText(/image|PNG|file/)
   await page
     .getByRole('button', { name: 'Remove picture', exact: true })

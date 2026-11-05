@@ -1,6 +1,6 @@
 # Supabase setup for Least Count
 
-The supplied Supabase project is `ugyaoeckoqkhqaqezoqg`. Its public URL and publishable key are configured in `wrangler.jsonc` as Worker runtime variables. Database migration, provider settings, and live verification are still pending. Guests, rooms, and local practice have been tested independently. Google/email/profile code is implemented and tested with mocked provider responses; it is **not live-provider verified**. Follow these steps in your browser. Do not send passwords or private keys in chat.
+The supplied Supabase project is `ugyaoeckoqkhqaqezoqg`. Its public URL and publishable key are configured in `wrangler.jsonc` as Worker runtime variables. The user reports the database migration and verified email signup are working. Live avatar/Storage/RLS checks remain to be completed. Guests, rooms, and local practice have been tested independently. Registered accounts use verified email/password only, with password recovery. Automated provider checks use mocks and do not prove live email delivery or storage configuration. Follow these steps in your browser. Do not send passwords or private keys in chat.
 
 ## 1. Create the project
 
@@ -35,16 +35,7 @@ http://127.0.0.1:4173/auth/callback?flow=recovery
 
 6. Leave email templates using the provider's supported confirmation/recovery links (normally `{{ .ConfirmationURL }}`), so redirect and token exchange remain intact. Test the actual received link.
 
-## 4. Enable Google
-
-1. In Supabase's **Google** authentication provider, copy the provider's displayed callback URL, normally `https://YOUR-PROJECT.supabase.co/auth/v1/callback`.
-2. Open [Google Cloud Console](https://console.cloud.google.com/), select/create a project, and configure the OAuth consent screen (Google Auth Platform branding/audience).
-3. Create an OAuth client of type **Web application**. Add the Supabase callback URL from step 1 as an **Authorized redirect URI**. This is the Supabase callback, not the game's `/auth/callback` URL.
-4. If requested, add your deployed game's origin and local test origin as authorized JavaScript origins.
-5. Copy the Google client ID and client secret **directly into Supabase's Google provider settings**, enable the provider, and save. Never put the client secret in GitHub, `.dev.vars`, frontend code, or chat.
-6. While Google's consent app is in Testing, add your intended test accounts to its audience. Complete Google's publishing/verification requirements before opening access to everyone.
-
-## 5. Connect the Worker
+## 4. Connect the Worker
 
 In Cloudflare, open **Workers & Pages → least-count → Settings → Variables and Secrets** (runtime settings):
 
@@ -59,16 +50,15 @@ For local development only, copy `.dev.vars.example` to `.dev.vars`, replace the
 
 If both values are omitted, guest-only mode remains available with clear disabled registered-account controls. Invalid values or missing database migration produce explicit errors rather than fake accounts. Never configure just one value intentionally.
 
-## 6. Verify the reviewed deployment
+## 5. Verify the reviewed deployment
 
 These require the real project and cannot be proven by mocks:
 
 - Sign up with a new email. Confirm that the verification email arrives, the unverified account cannot enter rooms, and the verification link returns to the game. Sign in after verification, refresh, then sign out.
 - Use **Forgot password?**, open the real recovery email in the same browser that requested it (PKCE), change the password, and sign in again. Expired/invalid links should show a useful error.
-- Complete Google consent using an allowed account. Repeat with cancellation and ensure sign-in remains available without losing an invitation.
-- Open `/join/ROOMCODE` while signed out; complete email or Google sign-in in the same browser and confirm the room is retained. Cross-browser/device PKCE callbacks may require signing in on the original invitation browser.
+- Open `/join/ROOMCODE` while signed out; complete verified email sign-in in the same browser and confirm the room is retained. Cross-browser/device PKCE callbacks may require signing in on the original invitation browser.
 - Save a display name, upload/replace/remove a JPG, PNG, or WebP avatar, and refresh. Verify old objects are removed, invalid/oversize files fail, and broken images fall back to initials.
 - Using two test users and their own JWTs in Supabase tooling, verify user A cannot read/update user B's private profile or upload/delete in B's avatar folder. Public avatar URLs intentionally remain readable.
 - Fill a mixed registered/guest room on separate browsers, verify host-only start and seven-card private hands, then test refresh/reconnect, host departure, timed deadlines, and untimed play. The browser network response must contain only the viewer's hand.
 
-Do not commit test passwords/tokens. If mail or OAuth fails, check Supabase Auth logs, redirect allowlists, Google testing audience, SMTP settings, and browser callback errors. If profiles fail, apply/check the migration and RLS policies. If guests fail too, check the Cloudflare Worker bindings/deployment before troubleshooting Supabase.
+Do not commit test passwords/tokens. If email verification or recovery fails, check Supabase Auth logs, redirect allowlists, SMTP settings, and browser callback errors. If profiles fail, apply/check the migration and RLS policies. If guests fail too, check the Cloudflare Worker bindings/deployment before troubleshooting Supabase.

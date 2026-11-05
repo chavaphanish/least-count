@@ -2,11 +2,14 @@ import type { Card } from './cards'
 import { shuffleDeck } from './cards'
 import { handTotal, prepareDeck } from './deck'
 import type { GameCard, GameRank } from './deck'
+import { formatGameEvent, gameEvents, HISTORY_LIMIT } from './events'
+import type { GameEvent, GameEventData, EventPlayer } from './events'
 
 export const TURN_MS = 60_000
 export const ELIMINATION_SCORE = 100
 export type GameSettings = { eliminationThreshold: number; timedGame: boolean }
-export const gameSettings = (s: GameState): GameSettings => s.settings ?? { eliminationThreshold: ELIMINATION_SCORE, timedGame: true }
+export const gameSettings = (s: GameState): GameSettings =>
+  s.settings ?? { eliminationThreshold: ELIMINATION_SCORE, timedGame: true }
 export type Phase = 'turn' | 'draw' | 'penalty' | 'round-over' | 'game-over'
 export type Player = {
   id: string
@@ -47,7 +50,9 @@ export type GameState = {
   sevens: { initiator: number; participants: number[]; amount: number } | null
   deadline: number | null
   result: RoundResult | null
-  log: string[]
+  events?: GameEvent[]
+  eventSequence?: number
+  log: string[] // Derived compatibility view; events are the authoritative history.
 }
 export type Action =
   | { type: 'discard'; playerId: string; cardIds: string[] }
@@ -82,6 +87,19 @@ export const canShow = (s: GameState, playerId: string) =>
   !s.players[s.current].eliminated &&
   handTotal(s.players[s.current].hand, s.indicator.rank) <= 5
 
+export function discardOutcome(
+  phase: Phase,
+  rank: GameRank,
+  topRank: GameRank | undefined,
+  hasPickup: boolean,
+) {
+  if (rank === '7') return 'seven' as const
+  if (phase === 'penalty')
+    throw new RuleError('Play one or more 7s, or accept the penalty.')
+  if (rank === topRank) return 'match' as const
+  return hasPickup ? ('choice' as const) : ('automatic' as const)
+}
+
 /** Validate a selection without changing the hand, pile, timer, or random source. */
 export function inspectDiscard(
   s: GameState,
@@ -110,16 +128,37 @@ export function inspectDiscard(
   if (s.phase === 'penalty' && rank !== '7')
     throw new RuleError('Play one or more 7s, or accept the penalty.')
   const matchesTop = latestGroup(s).at(-1)?.rank === rank
+  const outcome = discardOutcome(
+    s.phase,
+    rank,
+    latestGroup(s).at(-1)?.rank,
+    pickupCards(s).length > 0,
+  )
   return {
     cards: group,
     rank,
     matchesTop,
-    needsDraw: s.phase === 'turn' && !matchesTop,
+    outcome,
+    needsDraw: outcome === 'choice' || outcome === 'automatic',
+    needsChoice: outcome === 'choice',
   }
 }
 
-function note(s: GameState, text: string) {
-  s.log = [...s.log.slice(-39), text]
+const publicPlayer = (p: Player): EventPlayer => ({ id: p.id, name: p.name })
+function emit(s: GameState, data: GameEventData, now: number) {
+  const history = gameEvents(s)
+  const sequenceNumber =
+    (s.eventSequence ?? history.at(-1)?.sequenceNumber ?? 0) + 1
+  const event = {
+    ...data,
+    id: `event-${sequenceNumber}`,
+    sequenceNumber,
+    roundNumber: s.round,
+    timestamp: now,
+  } as GameEvent
+  s.eventSequence = sequenceNumber
+  s.events = [...history.slice(-(HISTORY_LIMIT - 1)), event]
+  s.log = [...s.log.slice(-39), formatGameEvent(event)]
 }
 function nextActive(s: GameState, after: number): number {
   for (let step = 1; step <= s.players.length; step++) {
@@ -129,14 +168,14 @@ function nextActive(s: GameState, after: number): number {
   throw new RuleError('No active player remains.')
 }
 
-function lastPlayerWins(s: GameState): boolean {
+function lastPlayerWins(s: GameState, now: number): boolean {
   const survivors = active(s)
   if (survivors.length !== 1) return false
   s.phase = 'game-over'
   s.deadline = null
   s.sevens = null
   s.result = { reason: 'last-player', winners: [survivors[0].id], scores: [] }
-  note(s, `${survivors[0].name} wins the match.`)
+  emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(survivors[0]) }, now)
   return true
 }
 
@@ -144,6 +183,7 @@ function settle(
   s: GameState,
   reason: 'show' | 'exhaustion',
   callerId?: string,
+  now = Date.now(),
 ) {
   const players = active(s)
   const totals = players.map((p) => handTotal(p.hand, s.indicator.rank))
@@ -199,12 +239,45 @@ function settle(
   s.deadline = null
   s.sevens = null
   s.discardedRank = null
-  note(
+  if (reason === 'show')
+    emit(
+      s,
+      {
+        type: 'SHOW_RESOLVED',
+        player: publicPlayer(players[callerIndex]),
+        successful,
+      },
+      now,
+    )
+  emit(
     s,
-    reason === 'exhaustion'
-      ? 'No recyclable cards remain. Round settled by hand totals.'
-      : `${players[callerIndex].name} called Show: ${successful ? 'lowest hand (zero-point ties allowed)' : 'unsuccessful, 40 penalty points'}.`,
+    {
+      type: 'ROUND_COMPLETED',
+      reason,
+      scores: scores.map(({ id, name, total, penalty, score }) => ({
+        id,
+        name,
+        total,
+        penalty,
+        score,
+      })),
+    },
+    now,
   )
+  for (const score of scores)
+    if (score.eliminated)
+      emit(
+        s,
+        {
+          type: 'PLAYER_ELIMINATED',
+          player: { id: score.id, name: score.name },
+          reason: 'score',
+          cutoff: gameSettings(s).eliminationThreshold,
+        },
+        now,
+      )
+  if (s.phase === 'game-over')
+    emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(active(s)[0]) }, now)
 }
 
 /** Draw only from the closed pile; protect the current group and pending open pickup. */
@@ -212,6 +285,7 @@ function drawCards(
   s: GameState,
   player: Player,
   count: number,
+  now: number,
   random: () => number,
 ): boolean {
   for (let drawn = 0; drawn < count; drawn++) {
@@ -227,12 +301,11 @@ function drawCards(
         .map((group) => group.filter((c) => protectedIds.has(c.id)))
         .filter((group) => group.length)
       s.drawPile = shuffleDeck(recyclable, random)
-      if (s.drawPile.length)
-        note(s, 'Older discards were reshuffled into the draw pile.')
+      if (s.drawPile.length) emit(s, { type: 'PILE_RECYCLED' }, now)
     }
     const card = s.drawPile.pop()
     if (!card) {
-      settle(s, 'exhaustion')
+      settle(s, 'exhaustion', undefined, now)
       return false
     }
     player.hand.push(card)
@@ -248,7 +321,7 @@ function beginTurn(
 ) {
   s.current = index
   s.discardedRank = null
-  if (lastPlayerWins(s)) return
+  if (lastPlayerWins(s, now)) return
   s.phase = s.sevens ? 'penalty' : 'turn'
   s.deadline = gameSettings(s).timedGame ? now + TURN_MS : null
   const player = s.players[index]
@@ -260,10 +333,15 @@ function beginTurn(
 function acceptPenalty(s: GameState, now: number, random: () => number) {
   const player = s.players[s.current]
   const amount = s.sevens!.amount
-  if (!drawCards(s, player, amount, random)) return
-  note(
+  if (!drawCards(s, player, amount, now, random)) return
+  emit(
     s,
-    `${player.name} drew the ${amount}-card penalty and lost their normal turn.`,
+    {
+      type: 'POWER_SEVEN_PENALTY_DRAWN',
+      player: publicPlayer(player),
+      count: amount,
+    },
+    now,
   )
   s.eligible = []
   s.sevens = null
@@ -274,7 +352,18 @@ function finishNormalTurn(s: GameState, now: number, random: () => number) {
   s.eligible = latestGroup(s).map((c) => c.id)
   if (s.discardedRank === '7') {
     s.sevens = { initiator: s.current, participants: [s.current], amount: 2 }
-    note(s, '7 penalty started: 2 cards.')
+    emit(
+      s,
+      {
+        type: 'POWER_SEVEN_PLAYED',
+        player: publicPlayer(s.players[s.current]),
+        cards: latestGroup(s),
+        penalty: 2,
+        next: publicPlayer(s.players[nextActive(s, s.current)]),
+        stacked: false,
+      },
+      now,
+    )
   }
   beginTurn(s, nextActive(s, s.current), now, random)
 }
@@ -290,10 +379,7 @@ function startRound(s: GameState, now: number, random: () => number) {
   s.eligible = [] // The initial card was not discarded by a preceding player.
   s.sevens = null // An initial 7 never starts a penalty.
   s.result = null
-  note(
-    s,
-    `Round ${s.round}: seven cards each; selected joker rank ${indicator.rank}.`,
-  )
+  emit(s, { type: 'ROUND_STARTED', indicatorRank: indicator.rank }, now)
   beginTurn(s, s.starter, now, random)
 }
 
@@ -301,9 +387,26 @@ export function createGame(
   names: string[],
   now = Date.now(),
   random = Math.random,
-  settings: GameSettings = { eliminationThreshold: ELIMINATION_SCORE, timedGame: true },
+  settings: GameSettings = {
+    eliminationThreshold: ELIMINATION_SCORE,
+    timedGame: true,
+  },
+  playerIds?: string[],
 ): GameState {
-  if (!Number.isSafeInteger(settings.eliminationThreshold) || settings.eliminationThreshold <= 0 || typeof settings.timedGame !== 'boolean') throw new RuleError('Choose a positive whole-number cutoff and timed or untimed play.')
+  if (
+    playerIds &&
+    (playerIds.length !== names.length ||
+      new Set(playerIds).size !== names.length)
+  )
+    throw new RuleError('Provide a unique ID for every player.')
+  if (
+    !Number.isSafeInteger(settings.eliminationThreshold) ||
+    settings.eliminationThreshold <= 0 ||
+    typeof settings.timedGame !== 'boolean'
+  )
+    throw new RuleError(
+      'Choose a positive whole-number cutoff and timed or untimed play.',
+    )
   if (
     names.length < 2 ||
     names.length > 8 ||
@@ -319,7 +422,7 @@ export function createGame(
     settings: { ...settings },
     version: 1,
     players: names.map((name, index) => ({
-      id: `p${index}`,
+      id: playerIds?.[index] ?? `p${index}`,
       name: name.trim(),
       hand: [],
       score: 0,
@@ -337,6 +440,8 @@ export function createGame(
     sevens: null,
     deadline: null,
     result: null,
+    events: [],
+    eventSequence: 0,
     log: [],
   }
   startRound(s, now, random)
@@ -368,9 +473,15 @@ export function applyAction(
     player.hand = []
     s.eligible = []
     s.sevens = null
-    note(
+    emit(
       s,
-      `${player.name} was eliminated by timeout. Pickup eligibility and any 7 penalty were cleared.`,
+      {
+        type: 'PLAYER_ELIMINATED',
+        player: publicPlayer(player),
+        reason: 'timeout',
+        cutoff: gameSettings(s).eliminationThreshold,
+      },
+      now,
     )
     beginTurn(s, nextActive(s, s.current), now, random)
     return s
@@ -383,9 +494,12 @@ export function applyAction(
   if (action.type === 'play-turn') {
     if (s.phase !== 'turn')
       throw new RuleError('A combined turn must start before discarding.')
-    if (!inspectDiscard(s, action.playerId, action.cardIds).needsDraw) {
+    const outcome = inspectDiscard(s, action.playerId, action.cardIds).outcome
+    if (outcome === 'automatic' && action.source !== 'pile')
+      throw new RuleError('Only the draw pile is available.')
+    if (outcome === 'seven' || outcome === 'match') {
       throw new RuleError(
-        'Match and Drop requires a discard without a replacement draw.',
+        'Playing 7s or Match and Drop requires no replacement draw.',
       )
     }
     // Both steps validate before anything is returned or persisted. A rejected
@@ -400,6 +514,7 @@ export function applyAction(
       now,
       random,
     )
+    if (outcome === 'automatic') return discarded
     return applyAction(
       discarded,
       {
@@ -416,7 +531,16 @@ export function applyAction(
       throw new RuleError(
         'Show requires a total of 5 or less at the start of a normal turn.',
       )
-    settle(s, 'show', player.id)
+    emit(
+      s,
+      {
+        type: 'SHOW_DECLARED',
+        player: publicPlayer(player),
+        total: handTotal(player.hand, s.indicator.rank),
+      },
+      now,
+    )
+    settle(s, 'show', player.id, now)
   } else if (action.type === 'accept-penalty') {
     if (s.phase !== 'penalty' || !s.sevens)
       throw new RuleError('There is no pending 7 penalty.')
@@ -425,37 +549,95 @@ export function applyAction(
     const {
       cards: group,
       rank,
-      matchesTop,
+      outcome,
     } = inspectDiscard(s, action.playerId, action.cardIds)
     player.hand = player.hand.filter((c) => !action.cardIds.includes(c.id))
     s.discards.push(group)
-    note(
-      s,
-      `${player.name} discarded ${group.length} × ${rank}${matchesTop && s.phase === 'turn' ? ' — Match and Drop, no draw' : ''}.`,
-    )
     if (s.phase === 'penalty') {
       s.eligible = group.map((c) => c.id)
       s.sevens!.participants.push(s.current)
       s.sevens!.amount += 2
+      const cycleComplete = s.sevens!.participants.length === active(s).length
+      if (!cycleComplete)
+        emit(
+          s,
+          {
+            type: 'POWER_SEVEN_PLAYED',
+            player: publicPlayer(player),
+            cards: group,
+            penalty: s.sevens!.amount,
+            next: publicPlayer(s.players[nextActive(s, s.current)]),
+            stacked: true,
+          },
+          now,
+        )
       if (s.sevens!.participants.length === active(s).length) {
         const initiator = s.sevens!.initiator
         s.sevens = null
-        note(
+        emit(
           s,
-          'Full cycle of 7s: penalty cancelled. Initiator takes the next normal turn.',
+          {
+            type: 'POWER_SEVEN_PLAYED',
+            player: publicPlayer(player),
+            cards: group,
+            penalty: 0,
+            next: publicPlayer(s.players[initiator]),
+            stacked: true,
+          },
+          now,
+        )
+        emit(
+          s,
+          {
+            type: 'POWER_SEVEN_CYCLE_COMPLETED',
+            next: publicPlayer(s.players[initiator]),
+          },
+          now,
         )
         beginTurn(s, initiator, now, random)
       } else beginTurn(s, nextActive(s, s.current), now, random)
     } else {
       s.discardedRank = rank
-      if (matchesTop) finishNormalTurn(s, now, random)
-      else s.phase = 'draw' // The deadline is deliberately unchanged.
+      if (outcome === 'seven') finishNormalTurn(s, now, random)
+      else if (outcome === 'match') {
+        emit(
+          s,
+          {
+            type: 'TURN_COMPLETED',
+            player: publicPlayer(player),
+            cards: group,
+            draw: 'none',
+          },
+          now,
+        )
+        finishNormalTurn(s, now, random)
+      } else if (outcome === 'automatic') {
+        if (drawCards(s, player, 1, now, random)) {
+          emit(
+            s,
+            {
+              type: 'TURN_COMPLETED',
+              player: publicPlayer(player),
+              cards: group,
+              draw: 'automatic',
+            },
+            now,
+          )
+          finishNormalTurn(s, now, random)
+        }
+      } else s.phase = 'draw' // The deadline is deliberately unchanged.
     }
   } else if (action.type === 'draw') {
     if (s.phase !== 'draw')
       throw new RuleError(
         'Discard first. Match and Drop does not allow a replacement draw.',
       )
+    const discardedCards = latestGroup(s)
+    // Resolve older saves that were waiting for a now-unnecessary 7 draw.
+    if (s.discardedRank === '7') {
+      finishNormalTurn(s, now, random)
+      return s
+    }
     if (action.source === 'discard') {
       const card = pickupCards(s).find((c) => c.id === action.cardId)
       if (!card)
@@ -466,12 +648,50 @@ export function applyAction(
       s.discards = s.discards
         .map((group) => group.filter((c) => c.id !== card.id))
         .filter((group) => group.length)
-      note(s, `${player.name} picked up ${card.rank} from the preceding group.`)
+      emit(
+        s,
+        {
+          type: 'TURN_COMPLETED',
+          player: publicPlayer(player),
+          cards: discardedCards,
+          draw: 'pickup',
+          pickup: card,
+        },
+        now,
+      )
     } else {
-      if (!drawCards(s, player, 1, random)) return s
-      note(s, `${player.name} drew one card from the draw pile.`)
+      if (!drawCards(s, player, 1, now, random)) return s
+      emit(
+        s,
+        {
+          type: 'TURN_COMPLETED',
+          player: publicPlayer(player),
+          cards: discardedCards,
+          draw: pickupCards(s).length ? 'pile' : 'automatic',
+        },
+        now,
+      )
     }
     finishNormalTurn(s, now, random)
   }
   return s
+}
+
+/** Upgrade a pending legacy draw without adding a client action or resetting its deadline. */
+export function resolveForcedDraw(
+  state: GameState,
+  now = Date.now(),
+  random = Math.random,
+): GameState {
+  if (
+    state.phase !== 'draw' ||
+    (state.discardedRank !== '7' && pickupCards(state).length)
+  )
+    return state
+  return applyAction(
+    state,
+    { type: 'draw', playerId: state.players[state.current].id, source: 'pile' },
+    now,
+    random,
+  )
 }

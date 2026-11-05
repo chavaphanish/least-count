@@ -120,6 +120,7 @@ describe('game deck and values', () => {
 describe('normal turns and pickup', () => {
   it('discards then draws exactly once, keeping the same deadline until completion', () => {
     const original = fixture()
+    original.eligible = original.discards[0].map((c) => c.id)
     const before = structuredClone(original)
     const s = discard(original, [original.players[0].hand[0].id], 500)
     expect(original).toEqual(before)
@@ -209,7 +210,8 @@ describe('normal turns and pickup', () => {
       s,
       s.players[0].hand.map((c) => c.id),
     )
-    expect(s.phase).toBe('draw')
+    expect(s.phase).toBe('turn')
+    expect(s.players[0].hand).toHaveLength(1)
     s = fixture()
     s.players[0].hand = [joker(), card('9')]
     expect(() =>
@@ -233,6 +235,7 @@ describe('combined normal turns', () => {
 
   it('commits discard and closed draw with the same result as the existing turn rules', () => {
     const game = fixture()
+    game.eligible = game.discards[0].map((c) => c.id)
     const before = structuredClone(game)
     const cardIds = [game.players[0].hand[0].id]
     const combined = act(game, {
@@ -304,25 +307,20 @@ describe('combined normal turns', () => {
         cardIds: ids,
         source: 'pile',
       }),
-    ).toThrow(/without a replacement draw/)
+    ).toThrow(/no replacement draw/)
     expect(game.players[0].hand).toHaveLength(1)
     expect(discard(game, ids).players[0].hand).toHaveLength(0)
   })
 
-  it('activates a normal 7 only after the combined replacement draw', () => {
+  it('a normal 7 bypasses replacement drawing even when the old top rank differs', () => {
     const game = fixture()
     game.players[0].hand = [card('7'), card('K')]
     game.players[1].hand = [card('7')]
-    const drawn = game.drawPile.at(-1)!
-    const next = act(game, {
-      type: 'play-turn',
-      playerId: 'p0',
-      cardIds: [game.players[0].hand[0].id],
-      source: 'pile',
-    })
-    expect(next.players[0].hand).toContainEqual(drawn)
-    expect(next.phase).toBe('penalty')
+    const next = discard(game, [game.players[0].hand[0].id])
+    expect(next.players[0].hand).toHaveLength(1)
+    expect(next.drawPile).toEqual(game.drawPile)
     expect(next.current).toBe(1)
+    expect(next.phase).toBe('penalty')
     expect(next.sevens!.amount).toBe(2)
   })
 
@@ -457,7 +455,7 @@ describe('Show, scoring, and ordinary rounds', () => {
 })
 
 describe('7 sequences and timeout', () => {
-  it.each([2, 4, 8])(
+  it.each([2, 3, 4, 5, 6, 7, 8])(
     'requires every active player in a %i-player full cycle and returns to the initiator',
     (count) => {
       let s = fixture(count)
@@ -477,7 +475,7 @@ describe('7 sequences and timeout', () => {
     },
   )
 
-  it('requires the initiating normal draw, adds two per action, and cancels a full cycle', () => {
+  it('requires no initiating draw, adds two per action, and cancels a full cycle', () => {
     let s = fixture()
     s.players.forEach((p) => {
       p.hand = [card('7'), card('7'), card('K')]
@@ -486,9 +484,7 @@ describe('7 sequences and timeout', () => {
       s,
       s.players[0].hand.slice(0, 2).map((c) => c.id),
     )
-    expect(s.phase).toBe('draw')
-    expect(s.sevens).toBeNull()
-    s = act(s, { type: 'draw', playerId: 'p0', source: 'pile' })
+    expect(s.players[0].hand).toHaveLength(1)
     expect(s.sevens!.amount).toBe(2)
     expect(s.phase).toBe('penalty')
     expect(() => act(s, { type: 'show', playerId: 'p1' })).toThrow()
@@ -525,7 +521,11 @@ describe('7 sequences and timeout', () => {
     expect(s.players[1].hand).toHaveLength(4)
     expect(s.eligible).toEqual([])
     s = discard(s, [s.players[2].hand[0].id])
-    expect(pickupCards(s)).toEqual([])
+    expect(s.current).toBe(0)
+    expect(s.events!.at(-1)).toMatchObject({
+      type: 'TURN_COMPLETED',
+      draw: 'automatic',
+    })
     expect(() =>
       act(s, {
         type: 'draw',

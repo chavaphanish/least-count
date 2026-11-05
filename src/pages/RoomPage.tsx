@@ -1,3 +1,5 @@
+import { discardOutcome } from '../game/engine'
+import { GameActivity } from '../components/GameActivity'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
@@ -103,7 +105,13 @@ export function RoomPage({
       setSelectionError('Select one or more cards of the same rank.')
       return
     }
-    if (g.phase === 'penalty' || matching) {
+    const outcome = discardOutcome(
+      g.phase,
+      cards[0].rank,
+      g.latestDiscard.at(-1)?.rank,
+      g.pickup.length > 0,
+    )
+    if (outcome !== 'choice') {
       if (send({ type: 'discard', cardIds: cards.map((c) => c.id) }))
         setSelected([])
     } else setPlan(room!.revision)
@@ -421,11 +429,13 @@ export function RoomPage({
                     disabled={busy || !cards.length}
                     onClick={discard}
                   >
-                    {g.phase === 'penalty'
+                    {g.phase === 'penalty' || cards[0]?.rank === '7'
                       ? 'Play selected 7s'
                       : matching
                         ? 'Match & Drop'
-                        : 'Choose draw source'}
+                        : g.pickup.length
+                          ? 'Choose draw source'
+                          : 'Discard & draw automatically'}
                   </button>
                 )}
                 {g.phase === 'turn' && !choosing && (
@@ -551,14 +561,7 @@ export function RoomPage({
                 ))}
               </ul>
             </section>
-            <details className="activity-log">
-              <summary>Table activity</summary>
-              <ol>
-                {g.log.slice(-10).map((line, index) => (
-                  <li key={index}>{line}</li>
-                ))}
-              </ol>
-            </details>
+            <GameActivity events={g.events} />
           </div>
         </>
       )}

@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { applyAction, createGame, isPlaying } from '../game/engine'
+import {
+  applyAction,
+  createGame,
+  isPlaying,
+  resolveForcedDraw,
+} from '../game/engine'
 import type { Action, GameState } from '../game/engine'
 import { botView, chooseBotAction } from '../game/bot'
 import { loadSession, saveSession } from '../lib/session'
 
 function restore() {
   try {
-    const saved = loadSession(window.sessionStorage)
-    return saved && isPlaying(saved) && saved.deadline !== null && saved.deadline <= Date.now()
+    const loaded = loadSession(window.sessionStorage)
+    const saved = loaded ? resolveForcedDraw(loaded) : null
+    return saved &&
+      isPlaying(saved) &&
+      saved.deadline !== null &&
+      saved.deadline <= Date.now()
       ? applyAction(saved, { type: 'timeout' })
       : saved
   } catch {
@@ -60,7 +69,12 @@ export function useLocalGame() {
       const time = Date.now()
       setNow(time)
       const current = ref.current
-      if (current && isPlaying(current) && current.deadline !== null && current.deadline <= time)
+      if (
+        current &&
+        isPlaying(current) &&
+        current.deadline !== null &&
+        current.deadline <= time
+      )
         send({ type: 'timeout' })
     }, 250)
     return () => window.clearInterval(timer)

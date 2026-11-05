@@ -1,3 +1,4 @@
+import { formatGameEvent, HISTORY_LIMIT } from '../game/events'
 import { RANKS, SUITS } from '../game/cards'
 import type { GameCard } from '../game/deck'
 import { gameSettings, isPlaying } from '../game/engine'
@@ -96,12 +97,33 @@ export function isSavedGame(value: unknown): value is GameState {
       !s.log.every((line) => typeof line === 'string')
     )
       return false
+    if (
+      s.events !== undefined &&
+      (!Array.isArray(s.events) ||
+        s.events.length > HISTORY_LIMIT ||
+        !s.events.every(
+          (e, i, events) =>
+            typeof e.id === 'string' &&
+            Number.isSafeInteger(e.sequenceNumber) &&
+            e.sequenceNumber > (events[i - 1]?.sequenceNumber ?? 0) &&
+            Number.isFinite(e.timestamp) &&
+            typeof formatGameEvent(e) === 'string',
+        ))
+    )
+      return false
     const activeCount = s.players.filter((p) => !p.eliminated).length
     const settings = gameSettings(s)
-    if (!Number.isSafeInteger(settings.eliminationThreshold) || settings.eliminationThreshold <= 0 || typeof settings.timedGame !== 'boolean') return false
+    if (
+      !Number.isSafeInteger(settings.eliminationThreshold) ||
+      settings.eliminationThreshold <= 0 ||
+      typeof settings.timedGame !== 'boolean'
+    )
+      return false
     if (isPlaying(s)) {
       if (
-        (settings.timedGame ? typeof s.deadline !== 'number' || !Number.isFinite(s.deadline) : s.deadline !== null) ||
+        (settings.timedGame
+          ? typeof s.deadline !== 'number' || !Number.isFinite(s.deadline)
+          : s.deadline !== null) ||
         s.players[s.current].eliminated ||
         activeCount < 2 ||
         s.result !== null

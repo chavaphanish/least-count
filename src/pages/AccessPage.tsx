@@ -63,24 +63,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
       setBusy(false)
     }
   }
-  async function google() {
-    setBusy(true)
-    setError('')
-    try {
-      if (!auth.services.provider)
-        throw new Error('Google sign-in is not configured yet.')
-      const { error } = await auth.services.provider.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${location.origin}/auth/callback` },
-      })
-      if (error) throw error
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Google sign-in failed.',
-      )
-      setBusy(false)
-    }
-  }
   return (
     <section className="access-page" aria-labelledby="access-title">
       <div className="access-story">
@@ -138,18 +120,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             Registered accounts need Supabase configuration. Guest rooms and
             local practice are available now.
           </p>
-        )}
-        {mode !== 'guest' && mode !== 'reset' && (
-          <>
-            <button
-              className="button google-button"
-              disabled={busy || !auth.configured}
-              onClick={google}
-            >
-              Continue with Google
-            </button>
-            <p className="form-divider">or use your email</p>
-          </>
         )}
         <form onSubmit={submit}>
           {(mode === 'guest' || mode === 'signup') && (

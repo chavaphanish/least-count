@@ -1,4 +1,4 @@
-import rulebookUrl from '../../RULEBOOK.md?url'
+import rulebookUrl from '../../docs/RULEBOOK.md?url'
 import decisionsUrl from '../../docs/rule-clarifications.md?url'
 
 const rules = [
@@ -12,11 +12,11 @@ const rules = [
   },
   {
     title: 'Discard, then draw',
-    text: 'Select one card or multiple cards of the same rank. Choose your replacement source while the previous discard stays visible. Your discard and pickup commit together and animate at the same time. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Matching the previously visible top rank is Match and Drop: you must skip the draw.',
+    text: 'Select one card or multiple cards of the same rank. Choose your replacement source while the previous discard stays visible. Your discard and pickup commit together and animate at the same time. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Without an eligible open pickup, a required replacement is drawn automatically in the same action. Matching the previously visible top rank is Match and Drop: you must skip the draw. Playing 7s also skips replacement drawing.',
   },
   {
     title: 'Watch the sevens',
-    text: 'A 7 starts a two-card penalty after the initiating player completes any required normal draw. Respond with one or more 7s to add two, or draw the accumulated penalty and lose your normal turn. Multiple 7s in one action still add only two. If every active player responds, the penalty is cancelled and the initiator takes a normal turn. The initial face-up 7 has no power effect.',
+    text: 'Playing one or more 7s ends the action immediately without drawing a replacement, even when the top rank differs. The next player faces a two-card penalty. Respond with one or more 7s to add two, or draw the accumulated penalty and lose your normal turn. Multiple 7s in one action still add only two. If every active player responds, the penalty is cancelled and the initiator takes a normal turn. The initial face-up 7 has no power effect.',
   },
   {
     title: 'Call Show at five or less',
@@ -51,10 +51,10 @@ export function RulesPage() {
         <div className="rules-note">
           <h2>Working rules, with confirmed clarifications</h2>
           <p>
-            This local game uses the Edition 2.0 draft and the decisions
-            recorded with it. The confirmed decisions override conflicting draft
-            text. Online multiplayer is not available. Simulated opponents and
-            all game state run on your device; this is not a secure online game.
+            Online rooms and local practice use the current rulebook and
+            confirmed decisions. Online hands, actions, and timers are enforced
+            by the server. Local practice uses simulated opponents on your
+            device. Online hosts can change the cutoff or choose untimed play.
           </p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import type { GameEvent } from '../game/events'
 import type { Card } from '../game/cards'
 import type { GameCard } from '../game/deck'
 import type { Phase, RoundResult } from '../game/engine'
@@ -103,6 +104,7 @@ export type GameView = {
   penalty: number
   canShow: boolean
   result: RoundResult | null
+  events: GameEvent[]
   log: string[]
 }
 export type RoomView = {
