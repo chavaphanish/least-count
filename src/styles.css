@@ -421,9 +421,6 @@ form label, .invitation-url { display: flex; flex-direction: column; gap: 9px; f
 form input:not([type=checkbox]), form select, .invitation-url input { min-width: 0; width: 100%; border: 1px solid #b7c9ba66; border-radius: 6px; color: var(--cream); background: #153d30; padding: 13px; font: inherit; font-size: 14px; }
 input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 form .button { align-self: flex-start; }
-.google-button { justify-content: center; width: 100%; background: #f5f0e4; color: #183c2e; }
-.google-button:disabled { opacity: .45; }
-.form-divider { color: var(--muted); font-size: 11px; text-align: center; margin: 20px 0; }
 .service-note, .form-notice { padding: 13px; border: 1px solid var(--border); color: var(--gold); background: #e9cd9107; font-size: 12px; line-height: 1.8; border-radius: 6px; margin: 15px 0; }
 .account-fineprint, .field-hint { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 8px 0 15px; }
 .auth-actions, .dashboard-links { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }

@@ -2,7 +2,7 @@
 
 Least Count is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
 
-**This branch adds onboarding and multiplayer.** Guest rooms work without external authentication configuration. Google sign-in, verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
+**This branch adds onboarding and multiplayer.** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
 
 ## Playing
 
@@ -105,7 +105,7 @@ npm run test:e2e
 
 On Linux, use `npx playwright install --with-deps chromium` if system libraries are missing. A system Chromium can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium`. After building, `PLAYWRIGHT_PREVIEW=1 npm run test:e2e` tests production assets against the local Worker. Artifacts are ignored.
 
-Tests cover the existing game rules and local UI, session initialization, provider verification with mocked Supabase, profile ownership, avatar file validation, room settings/membership, private projections, host transfer, atomic starts, server deadlines, and real guest multi-browser rooms. Live Google consent, actual verification/reset email delivery, and real Supabase Storage/RLS checks remain deployment checks in [the setup guide](docs/supabase-setup.md).
+Tests cover the existing game rules and local UI, session initialization, provider verification with mocked Supabase, profile ownership, avatar file validation, room settings/membership, private projections, host transfer, atomic starts, server deadlines, and real guest multi-browser rooms. Actual verification/reset email delivery, and real Supabase Storage/RLS checks remain deployment checks in [the setup guide](docs/supabase-setup.md).
 
 ## Architecture and files
 
@@ -127,7 +127,7 @@ wrangler.jsonc            Worker/assets, SQLite Durable Object bindings and migr
 .dev.vars.example         Public provider configuration placeholders
 ```
 
-Registered sessions use Supabase PKCE, persisted SDK sessions and automatic token refresh. The Worker verifies every bearer token using Supabase `getUser`, requires a verified email, and accesses profiles/Storage with the caller's JWT and public publishable key. No service-role key is used. Profile UUIDs come from verified identity. Emails and account timestamps are returned only by the private self-session endpoint; room projections contain only public names/avatars, presence, scores, and visible cards.
+Registered access uses verified email/password only. Email confirmation and password recovery retain Supabase PKCE, persisted SDK sessions and automatic token refresh. The Worker verifies every bearer token using Supabase `getUser`, requires a verified email, and accesses profiles/Storage with the caller's JWT and public publishable key. No service-role key is used. Profile UUIDs come from verified identity. Emails and account timestamps are returned only by the private self-session endpoint; room projections contain only public names/avatars, presence, scores, and visible cards.
 
 A single directory object reserves collision-checked six-character codes and tracks identity membership. Each room has its own Durable Object, serializing join/start/action operations and persisting state. Short-lived, single-use connection tickets keep long-lived credentials out of WebSocket URLs. Socket authorization expires with the originating session; reconnect obtains a fresh verified ticket. Requests enforce same-origin mutation checks and bounded payloads. The server supplies actor IDs and securely randomized dealing; clients cannot start for another host or submit another player's turn. Request IDs prevent replaying accepted socket actions. Alarms enforce timed turns independently of browser clocks.
 
@@ -157,12 +157,12 @@ Use the configuration-driven deploy command so the API, bindings, and migrations
 | `SUPABASE_PUBLISHABLE_KEY` | Public publishable key (or legacy anon key); deliberately exposed to the SDK |
 | `APP_ORIGIN` | Optional comma-separated additional exact frontend origins; same-origin production works without it |
 
-Set runtime variables using Cloudflare configuration for both deployment and previews as needed; if Git deploys replace dashboard variables, use Wrangler's documented `--keep-vars` deployment option. Never supply a service-role key, database password, Google client secret, or SMTP password to the frontend or these public variables. Google and SMTP credentials belong only in Supabase/provider dashboards.
+Set runtime variables using Cloudflare configuration for both deployment and previews as needed; if Git deploys replace dashboard variables, use Wrangler's documented `--keep-vars` deployment option. Never supply a service-role key, database password, SMTP password to the frontend or these public variables. SMTP credentials belong only in Supabase/provider dashboards.
 
 ## Next steps
 
 1. Review this PR and follow [Supabase setup and live checks](docs/supabase-setup.md).
-2. Deploy a reviewed build and test Google/email/profile storage against the real project.
+2. Deploy a reviewed build and test verified email access and profile storage against the real project.
 3. Playtest registered/guest mixed rooms and reconnection on real mobile networks. Record new rule decisions before changing gameplay.
 
 Substantial changes use pull requests; this feature must not merge automatically. Small trivial updates may go directly to `main` when authorized.

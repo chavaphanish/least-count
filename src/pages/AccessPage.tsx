@@ -63,41 +63,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
       setBusy(false)
     }
   }
-  async function google() {
-    setBusy(true)
-    setError('')
-    try {
-      if (!auth.services.provider)
-        throw new Error('Google sign-in is not configured yet.')
-      const providers = await auth.services.api<{ google: boolean }>(
-        '/auth/providers',
-      )
-      if (!providers.google)
-        throw new Error(
-          'Google sign-in is not enabled for this Supabase project. Enable the Google provider and save its Google OAuth client ID and secret in Supabase. You can use email or guest access meanwhile.',
-        )
-      const { data, error } = await auth.services.provider.auth.signInWithOAuth(
-        {
-          provider: 'google',
-          options: {
-            redirectTo: `${location.origin}/auth/callback`,
-            skipBrowserRedirect: true,
-          },
-        },
-      )
-      if (error) throw error
-      if (!data.url)
-        throw new Error(
-          'Google sign-in did not return a redirect URL. Please retry.',
-        )
-      location.assign(data.url)
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Google sign-in failed.',
-      )
-      setBusy(false)
-    }
-  }
   return (
     <section className="access-page" aria-labelledby="access-title">
       <div className="access-story">
@@ -155,18 +120,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             Registered accounts need Supabase configuration. Guest rooms and
             local practice are available now.
           </p>
-        )}
-        {mode !== 'guest' && mode !== 'reset' && (
-          <>
-            <button
-              className="button google-button"
-              disabled={busy || !auth.configured}
-              onClick={google}
-            >
-              Continue with Google
-            </button>
-            <p className="form-divider">or use your email</p>
-          </>
         )}
         <form onSubmit={submit}>
           {(mode === 'guest' || mode === 'signup') && (

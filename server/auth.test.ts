@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  authenticate,
-  authProviders,
-  publicConfig,
-  updateProfile,
-} from './auth'
+import { authenticate, publicConfig, updateProfile } from './auth'
 import type { Env } from './types'
 const uid = '11111111-1111-4111-8111-111111111111'
 const exp = Math.floor(Date.now() / 1000) + 3600
@@ -186,28 +181,4 @@ describe('provider-backed identity and profile authorization', () => {
   })
   it('offers guest mode when no Supabase project is configured', () =>
     expect(publicConfig({} as Env)).toEqual({ supabase: null }))
-})
-
-describe('Google provider diagnostics', () => {
-  it.each([true, false])(
-    'reports actual Supabase Google availability (%s)',
-    async (google) => {
-      const mock = vi.fn(async (_url: unknown, options: RequestInit) => {
-        expect((options.headers as { apikey: string }).apikey).toBe(
-          env.SUPABASE_PUBLISHABLE_KEY,
-        )
-        return new Response(JSON.stringify({ external: { google } }))
-      })
-      vi.stubGlobal('fetch', mock)
-      await expect(authProviders(env)).resolves.toEqual({ google })
-      expect(mock.mock.calls[0][0]).toBe(`${env.SUPABASE_URL}/auth/v1/settings`)
-    },
-  )
-  it('reports provider outages without claiming OAuth is configured', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response('{}', { status: 503 })),
-    )
-    await expect(authProviders(env)).rejects.toMatchObject({ status: 503 })
-  })
 })
