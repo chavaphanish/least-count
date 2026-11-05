@@ -1,2 +1,58 @@
-# least-count
-An online multiplayer card game built for the web and mobile, featuring real-time gameplay, private game rooms, and strategic low-score challenges.
+# Least Count
+
+A browser card game built with React, TypeScript, Vite, and plain responsive CSS. The long-term vision is an online multiplayer card game for web and mobile browsers, featuring real-time gameplay, private game rooms, and strategic low-score challenges.
+
+**Current status: visual prototype only.** The landing page links to a sample card table and a rulebook placeholder. All players and hands are mock data. There is no playable game, scoring, backend, authentication, database, or online multiplayer. The exact rules will be implemented after the rulebook is supplied; the sample hand size, seats, and table piles do not establish game rules.
+
+## Development
+
+Use Node.js 22.12+ (22.x) or Node.js 24+ and npm. Node.js 24 is recommended.
+
+```sh
+npm install
+npm run dev
+```
+
+Vite prints the local development address. For cloud development, use `npm run dev -- --host 0.0.0.0` when external binding is needed. Use the existing checkout; cloud tasks already have isolated environments and do not need an additional worktree.
+
+## Build and preview
+
+```sh
+npm run build
+npm run preview
+```
+
+The build first runs strict TypeScript checks and then creates static assets in `dist/`. The preview command serves those assets locally. There are no required environment variables or external application services. Fonts are bundled locally through Fontsource, with system font fallbacks.
+
+## Tests
+
+```sh
+npm test
+# Optional interactive watch mode:
+npm run test:watch
+```
+
+`npm test` runs Vitest once and exits. Tests cover card identities, all 52 standard suit/rank combinations, independent deck creation, deterministic Fisher–Yates swaps, preservation of cards and input order, boundary inputs, and invalid random sources. These are playing-card utilities, not a finalized Least Count rules engine. `createDeck` currently describes a standard deck without jokers; game-specific deck composition remains open.
+
+## Project structure
+
+```text
+src/
+  game/         Framework-independent card types, deck creation, shuffle, and tests
+  components/   Reusable playing cards and page layout
+  pages/        Landing page, mock game table, and rulebook placeholder
+  App.tsx       Small hash-based screen router
+  styles.css    Shared styles and responsive layouts
+```
+
+Navigation uses `#/`, `#/game`, and `#/rules` so direct links work on static hosting without server routing. The interface supports keyboard navigation, visible focus indicators, a skip link, screen-reader card labels, and reduced-motion preferences.
+
+## Cloudflare Pages
+
+Use the repository root, build command `npm run build`, and output directory `dist`. Set Node.js to a supported version (recommended: `NODE_VERSION=24`). No Pages Functions, secrets, or backend are needed. Deployments have not been configured or published by this change.
+
+## Next steps
+
+1. Supply and confirm the rulebook, including deck composition, dealing, turns, card values, legal moves, scoring, and win conditions.
+2. Implement and test the rules in `src/game` before connecting them to the table interface.
+3. Add real gameplay interactions. Online rooms and multiplayer can follow in a separate phase.
