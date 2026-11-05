@@ -6,18 +6,19 @@ Least Count is a browser card game built around reducing the value of your hand,
 
 ## What works today
 
+- Parallel discard/pickup card animations, with a face-down closed-pile flight and reduced-motion support. Accepted moves are saved before animation; refreshing cannot replay them.
 - Responsive green felt table for 2–8 players, with selectable cards, card values, current-turn indication, scores, and action feedback.
 - One- or two-deck setup, unique physical card identities, Printed Jokers, a Selected Joker indicator, and seven-card starting hands.
 - Same-rank discards, mandatory Match and Drop, eligible open pickup, and draw-pile recycling or exhaustion settlement.
 - 7 penalty stacking, automatic penalties when no 7 is held, optional acceptance when holding 7, and full-cycle cancellation.
 - Show validation, zero-point tied round winners, cumulative scoring, score and timeout elimination, and ordinary next rounds until one match winner remains.
-- A single 60-second deadline covering both discard and required draw, retained through navigation and refreshes.
+- A single 60-second deadline covering selection and the final draw choice, retained through navigation and refreshes. Planning does not pause or reset it.
 - Simulated opponents using only their own hand and public table information, plus concealed opponent cards and totals-only round results.
 - A readable Rules screen and downloads of both rule documents.
 - Keyboard-accessible controls, visible focus, a skip link, and responsive layouts.
 - Static assets suitable for Cloudflare Pages; no application services or secrets required.
 
-Click **Play Game**, choose the table size, and select **Start local game**. Select one or more cards of the same rank and discard them; the interface then offers any required draw. Show is enabled only at the beginning of an eligible normal turn. At round results, choose the next round or set up a new match after a win.
+Click **Play Game**, choose the table size, and select **Start local game**. Select one or more cards of the same rank, then choose **Choose draw source**. Your hand and the previous discard remain unchanged until you choose the draw pile or an eligible previous card. The discard and pickup then commit together and animate in parallel. **Back to selection** lets you change your mind before committing. Matching the top rank offers **Match & Drop**, which discards immediately without a draw. Show is enabled only at the beginning of an eligible normal turn. At round results, choose the next round or set up a new match after a win.
 
 ### Local practice and saving
 
@@ -112,7 +113,7 @@ npm run test:e2e
 
 On Linux, `npx playwright install --with-deps chromium` also installs required system libraries when permitted. In the managed environment, the installed system browser can be used with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e`. To test built static assets, first run `npm run build`, then set `PLAYWRIGHT_PREVIEW=1` when running the browser tests. Browser artifacts under `test-results/` and `playwright-report/` are ignored.
 
-`createDeck()` remains a standard 52-card utility. `assembleDeck()` and `prepareDeck()` add the rulebook’s one/two-deck composition, Printed Jokers, unique physical identities, and Selected Joker removal. The immutable game reducer accepts an explicit clock and random source for deterministic tests.
+`createDeck()` remains a standard 52-card utility. `assembleDeck()` and `prepareDeck()` add the rulebook’s one/two-deck composition, Printed Jokers, unique physical identities, and Selected Joker removal. The immutable game reducer accepts an explicit clock and random source for deterministic tests. Its `play-turn` action validates the discard and selected pickup atomically; failed choices leave the hand and pile unchanged. Existing saves already waiting for a replacement draw remain supported. Draft selections are not saved: refreshing before confirmation returns to the unchanged turn and original deadline.
 
 ## Project structure
 

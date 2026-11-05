@@ -28,19 +28,20 @@ export function useLocalGame() {
   }, [])
   const send = useCallback(
     (action: Action) => {
-      if (!ref.current) return false
+      if (!ref.current) return null
       try {
         const time = Date.now()
-        commit(applyAction(ref.current, action, time))
+        const next = applyAction(ref.current, action, time)
+        commit(next)
         setNow(time)
-        return true
+        return next
       } catch (reason) {
         setError(
           reason instanceof Error
             ? reason.message
             : 'That action could not be completed.',
         )
-        return false
+        return null
       }
     },
     [commit],

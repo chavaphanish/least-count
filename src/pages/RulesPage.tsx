@@ -12,7 +12,7 @@ const rules = [
   },
   {
     title: 'Discard, then draw',
-    text: 'Select one card or multiple cards of the same rank. Discard them, then draw one replacement from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Matching the previously visible top rank is Match and Drop: you must skip the draw.',
+    text: 'Select one card or multiple cards of the same rank. Choose your replacement source while the previous discard stays visible. Your discard and pickup commit together and animate at the same time. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Matching the previously visible top rank is Match and Drop: you must skip the draw.',
   },
   {
     title: 'Watch the sevens',
