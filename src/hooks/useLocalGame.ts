@@ -7,7 +7,7 @@ import { loadSession, saveSession } from '../lib/session'
 function restore() {
   try {
     const saved = loadSession(window.sessionStorage)
-    return saved && isPlaying(saved) && saved.deadline! <= Date.now()
+    return saved && isPlaying(saved) && saved.deadline !== null && saved.deadline <= Date.now()
       ? applyAction(saved, { type: 'timeout' })
       : saved
   } catch {
@@ -60,7 +60,7 @@ export function useLocalGame() {
       const time = Date.now()
       setNow(time)
       const current = ref.current
-      if (current && isPlaying(current) && current.deadline! <= time)
+      if (current && isPlaying(current) && current.deadline !== null && current.deadline <= time)
         send({ type: 'timeout' })
     }, 250)
     return () => window.clearInterval(timer)

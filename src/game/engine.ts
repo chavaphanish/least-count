@@ -5,6 +5,8 @@ import type { GameCard, GameRank } from './deck'
 
 export const TURN_MS = 60_000
 export const ELIMINATION_SCORE = 100
+export type GameSettings = { eliminationThreshold: number; timedGame: boolean }
+export const gameSettings = (s: GameState): GameSettings => s.settings ?? { eliminationThreshold: ELIMINATION_SCORE, timedGame: true }
 export type Phase = 'turn' | 'draw' | 'penalty' | 'round-over' | 'game-over'
 export type Player = {
   id: string
@@ -30,6 +32,7 @@ export type RoundResult = {
   scores: RoundScore[]
 }
 export type GameState = {
+  settings?: GameSettings
   version: 1
   players: Player[]
   phase: Phase
@@ -171,7 +174,7 @@ function settle(
             : totals[index]
     if (penalty === 0) winners.push(player.id)
     player.score += penalty
-    if (player.score >= ELIMINATION_SCORE) {
+    if (player.score >= gameSettings(s).eliminationThreshold) {
       player.eliminated = true
       player.eliminationReason = 'score'
       player.hand = []
@@ -247,7 +250,7 @@ function beginTurn(
   s.discardedRank = null
   if (lastPlayerWins(s)) return
   s.phase = s.sevens ? 'penalty' : 'turn'
-  s.deadline = now + TURN_MS
+  s.deadline = gameSettings(s).timedGame ? now + TURN_MS : null
   const player = s.players[index]
   if (s.sevens && !player.hand.some((c) => c.rank === '7')) {
     acceptPenalty(s, now, random)
@@ -298,7 +301,9 @@ export function createGame(
   names: string[],
   now = Date.now(),
   random = Math.random,
+  settings: GameSettings = { eliminationThreshold: ELIMINATION_SCORE, timedGame: true },
 ): GameState {
+  if (!Number.isSafeInteger(settings.eliminationThreshold) || settings.eliminationThreshold <= 0 || typeof settings.timedGame !== 'boolean') throw new RuleError('Choose a positive whole-number cutoff and timed or untimed play.')
   if (
     names.length < 2 ||
     names.length > 8 ||
@@ -311,6 +316,7 @@ export function createGame(
     random,
   )[0]
   const s: GameState = {
+    settings: { ...settings },
     version: 1,
     players: names.map((name, index) => ({
       id: `p${index}`,

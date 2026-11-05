@@ -1,0 +1,4 @@
+# Public Supabase project configuration, used by the Worker and its browser client.
+# Copy to .dev.vars for local development. Never put a service-role key here.
+SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="YOUR_PUBLIC_PUBLISHABLE_OR_ANON_KEY"

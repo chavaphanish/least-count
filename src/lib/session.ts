@@ -1,6 +1,6 @@
 import { RANKS, SUITS } from '../game/cards'
 import type { GameCard } from '../game/deck'
-import { isPlaying } from '../game/engine'
+import { gameSettings, isPlaying } from '../game/engine'
 import type { GameState } from '../game/engine'
 
 export const SESSION_KEY = 'least-count:local-game:v1'
@@ -97,10 +97,11 @@ export function isSavedGame(value: unknown): value is GameState {
     )
       return false
     const activeCount = s.players.filter((p) => !p.eliminated).length
+    const settings = gameSettings(s)
+    if (!Number.isSafeInteger(settings.eliminationThreshold) || settings.eliminationThreshold <= 0 || typeof settings.timedGame !== 'boolean') return false
     if (isPlaying(s)) {
       if (
-        typeof s.deadline !== 'number' ||
-        !Number.isFinite(s.deadline) ||
+        (settings.timedGame ? typeof s.deadline !== 'number' || !Number.isFinite(s.deadline) : s.deadline !== null) ||
         s.players[s.current].eliminated ||
         activeCount < 2 ||
         s.result !== null

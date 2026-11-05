@@ -17,9 +17,14 @@ export default defineConfig({
       : {},
     trace: 'retain-on-failure',
   },
-  webServer: {
+  webServer: [{
+    command: 'npm run dev:server',
+    url: 'http://127.0.0.1:8787/api/config',
+    reuseExistingServer: !process.env.CI,
+    timeout: 90_000,
+  }, {
     command: `npm run ${preview ? 'preview' : 'dev'} -- --host 127.0.0.1 --port ${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-  },
+  }],
 })

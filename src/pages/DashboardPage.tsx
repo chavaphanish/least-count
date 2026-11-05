@@ -1,0 +1,222 @@
+import { useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
+import { Avatar } from '../components/Avatar'
+import {
+  DEFAULT_ROOM_SETTINGS,
+  roomCode,
+  roomSettings,
+} from '../shared/multiplayer'
+import type { RoomSettings } from '../shared/multiplayer'
+export function DashboardPage() {
+  const auth = useAuth()
+  const player = auth.user!.player
+  const [mode, setMode] = useState<'home' | 'create' | 'join'>('home')
+  const [settings, setSettings] = useState<RoomSettings>({
+    ...DEFAULT_ROOM_SETTINGS,
+  })
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const go = (value: typeof mode) => {
+    setMode(value)
+    setError('')
+  }
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      const room =
+        mode === 'create'
+          ? await auth.services.api<{ code: string }>('/rooms', {
+              method: 'POST',
+              body: JSON.stringify(roomSettings(settings)),
+            })
+          : { code: roomCode(code) }
+      if (mode === 'join')
+        await auth.services.api(`/rooms/${room.code}/join`, { method: 'POST' })
+      await auth.refresh()
+      location.hash = `#/room/${room.code}`
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Please retry.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function logout() {
+    setBusy(true)
+    try {
+      await auth.signOut()
+      location.hash = '#/'
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Sign out failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section className="dashboard-page">
+      <div className="dashboard-heading">
+        <div>
+          <p className="eyebrow">YOUR NEXT CARD NIGHT STARTS HERE</p>
+          <h1>
+            Welcome, <em>{player.displayName}.</em>
+          </h1>
+        </div>
+        <div className="player-chip">
+          <Avatar player={player} />
+          <span>
+            {player.displayName}
+            <small>
+              {player.accountType === 'guest'
+                ? 'Guest player'
+                : 'Registered account'}
+            </small>
+          </span>
+        </div>
+      </div>
+      {auth.room && (
+        <div className="invitation-banner">
+          You have a seat in <strong>{auth.room.code}</strong>.{' '}
+          <a className="text-link" href={`#/room/${auth.room.code}`}>
+            Return to your room →
+          </a>
+        </div>
+      )}
+      {mode === 'home' ? (
+        <>
+          <div className="dashboard-actions">
+            <button className="dashboard-action" onClick={() => go('create')}>
+              <span aria-hidden="true">♠</span>
+              <h2>Create Game Room</h2>
+              <p>Set the table. Pick your settings. Invite your friends.</p>
+              <strong>Create a room →</strong>
+            </button>
+            <button className="dashboard-action" onClick={() => go('join')}>
+              <span aria-hidden="true">♣</span>
+              <h2>Join Game Room</h2>
+              <p>Have a code? Your seat is waiting.</p>
+              <strong>Join your friends →</strong>
+            </button>
+          </div>
+          <div className="dashboard-links">
+            <a className="button button-secondary" href="#/rules">
+              How to Play
+            </a>
+            {player.accountType === 'registered' && (
+              <a className="button button-secondary" href="#/profile">
+                Profile Settings
+              </a>
+            )}
+            <a className="text-link" href="#/game">
+              Local practice →
+            </a>
+          </div>
+        </>
+      ) : (
+        <div className="room-form-panel">
+          <button className="text-button" onClick={() => go('home')}>
+            ← Back to dashboard
+          </button>
+          <h2>
+            {mode === 'create'
+              ? 'Your room, your card night.'
+              : 'Find your table.'}
+          </h2>
+          <form onSubmit={submit}>
+            {mode === 'create' ? (
+              <>
+                <label>
+                  Number of players
+                  <select
+                    value={settings.maxPlayers}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        maxPlayers: Number(e.target.value),
+                      }))
+                    }
+                  >
+                    {Array.from({ length: 7 }, (_, i) => i + 2).map((n) => (
+                      <option value={n} key={n}>
+                        {n} players
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="field-hint">
+                  {settings.maxPlayers <= 4
+                    ? 'One deck + one Printed Joker'
+                    : 'Two decks + two Printed Jokers'}{' '}
+                  · Seven starting cards each
+                </p>
+                <label>
+                  Elimination cutoff
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    required
+                    value={settings.eliminationThreshold || ''}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        eliminationThreshold: Number(e.target.value),
+                      }))
+                    }
+                  />
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.timedGame}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        timedGame: e.target.checked,
+                        turnDurationSeconds: e.target.checked ? 60 : null,
+                      }))
+                    }
+                  />
+                  Timed game · 60 seconds per turn
+                </label>
+                <p className="field-hint">
+                  {settings.timedGame
+                    ? 'The server enforces the deadline, including power-card decisions.'
+                    : 'No turn countdown or timeout elimination. Reconnection grace applies only to waiting-lobby seats.'}
+                </p>
+              </>
+            ) : (
+              <label>
+                Room code
+                <input
+                  required
+                  autoComplete="off"
+                  maxLength={6}
+                  placeholder="ABC234"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                />
+              </label>
+            )}
+            <button className="button button-primary" disabled={busy}>
+              {busy
+                ? 'Please wait…'
+                : mode === 'create'
+                  ? 'Create Room'
+                  : 'Join Room'}
+            </button>
+          </form>
+        </div>
+      )}
+      {error && (
+        <p className="game-alert" role="alert">
+          {error}
+        </p>
+      )}
+      <button className="text-button" disabled={busy} onClick={logout}>
+        {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
+      </button>
+    </section>
+  )
+}
