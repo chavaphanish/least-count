@@ -1,39 +1,41 @@
-# Rule clarifications — pending decisions
+# Rule clarifications — confirmed decisions and open questions
 
-The supplied [Least Count rulebook](../RULEBOOK.md), Edition 2.0 (Working Draft), is a **provisional reference**. Its original wording, including the “Official Game Rulebook” heading, has been preserved unchanged. The user has not finalized these rules; this document records questions, not additional rules or implementation instructions.
+The supplied [Least Count rulebook](../RULEBOOK.md), Edition 2.0 (Working Draft), remains a **provisional reference**. Its original wording, including the “Official Game Rulebook” heading, is preserved unchanged. The decisions below were confirmed by the user on 5 November 2026 and take precedence over conflicting passages in that uploaded draft. Other rules may be refined in later stages.
 
-No gameplay rules are implemented by this documentation change. The current application remains a visual prototype, and its sample hand, player seats, and deck utilities do not establish game rules.
+This documentation does not implement gameplay. The application remains a visual prototype; sample cards and player seats do not establish game rules.
 
 ## 1. Open pickup after Match and Drop
 
 **Reference:** Sections 2.2.3, 5.3, 5.4, and 13.1.
 
-The draft allows one card from the immediately preceding player's latest eligible discard group, prohibits older discards, and makes skipping the draw mandatory on a matching discard. It does not explicitly define every transition of pickup eligibility.
+**Confirmed:** After consecutive Match and Drop turns, only the immediately preceding player's latest discard group is available for open pickup. Older groups are unavailable. On a turn requiring a replacement draw, the player may choose one card from that eligible group or one card from the draw pile. A Match and Drop turn itself still requires no draw.
 
-**Question:** After consecutive Match and Drop turns, does each new discard group replace the preceding eligible group, so that only the immediately preceding player's latest group can be picked up on the next turn that requires a draw? Also confirm whether an intervening 7-penalty draw, skipped turn, or timeout clears eligibility.
+**Example:** A discards two 5s using Match and Drop. B then discards a 5 using Match and Drop. C discards a King and must draw. C may take B's 5 or a card from the draw pile, but neither of A's 5s.
 
-**Decision:** Pending. Do not infer that older groups become available again.
+**Still pending:** Does an intervening 7-penalty draw, skipped turn, or timeout clear open-pickup eligibility? The user has not answered this separate part of the original question. Do not infer that an older group becomes available again.
 
-## 2. Empty hand at the next normal turn
+## 2. Empty hand and zero-point Show ties
 
-**Reference:** Sections 5.1, 7.1, and 7.5.
+**Reference:** Sections 5.1, 7.1, 7.3–7.5, and 8.1–8.3.
 
-The draft explicitly says an empty hand is worth zero, does not end the round automatically, and must wait until the next normal turn to declare Show. It does not define a normal action for an empty-handed player who chooses not to declare Show.
+**Confirmed:** A player who empties their hand must wait until the beginning of their next normal turn and then call Show. There is no option to pass. Emptying the hand does not automatically end the round. The restriction on Show during an active 7 penalty remains in effect.
 
-**Question:** Must that player declare Show at the beginning of their next normal turn, or may they pass? If passing is allowed, what ends the turn and what happens to the timer? This question does not change the separate restrictions on Show during a 7 penalty.
+When a zero-point Show is tied by other zero-point hands, the caller and all other zero-point players are tied **round winners**, each receiving zero round penalty points. The caller does not receive the failed-Show penalty of 40 points for this zero-point tie. Other active players receive their hand totals as round penalty points under the existing scoring rules.
 
-**Decision:** Pending. Do not introduce passing, automatic victory, or a forced Show without confirmation.
+**Example:** A empties their hand through Match and Drop. On A's next normal turn, A must call Show. If B also has a hand total of zero, both A and B receive zero round penalty points. If C has a hand total of 8, C receives 8 round penalty points. The tied round result does not itself end the match.
 
-## 3. Tiebreaker winner and score basis
+**Draft conflict:** The zero-point tie decision overrides the draft's requirement that the caller be strictly lower than every opponent and its blanket 40-point penalty for a tied Show. Do not extend this exception to positive-point Show ties without confirmation.
 
-**Reference:** Sections 8 and 10.4.
+## 3. Continue ordinary rounds; no tiebreaker rounds
 
-The draft says tied players enter an extra round without the cumulative score-elimination threshold and repeat if the resulting round scores tie. It does not fully specify how a winner is selected when some, but not all, tiebreaker participants tie.
+**Reference:** Sections 8 and 10.1–10.4.
 
-**Question:** Does the unique lowest penalty score in the extra round determine the winner independently of previous cumulative totals? If several players tie for the lowest score, do only those players enter the next tiebreaker? Confirm how this applies when an unsuccessful Show awards zero to multiple opponents.
+**Confirmed:** There is no special tiebreaker round. Cumulative scores continue across ordinary rounds, and the elimination threshold remains in effect. A score of 100 or more eliminates a player under the default cutoff; a score below 100 does not. Continue ordinary rounds until elimination leaves the match winner. The existing timeout-elimination rule is unchanged.
 
-**Decision:** Pending. Do not substitute remaining hand totals or previous cumulative totals for round penalties without confirmation.
+**Example:** Only A and B remain, each with 99 cumulative points. A calls Show with zero, and B also has zero. Both receive zero round penalty points and remain at 99. Neither is eliminated and neither wins the match at this point. Start another ordinary round, retaining the scores and the 100-point cutoff. Continue until one player is eliminated.
 
-## Recording decisions
+**Draft conflict:** Do not implement the special tiebreaker procedure in Section 10.4, including its suspension of the cumulative elimination threshold. A tie does not reset scores, suspend elimination, or create a separate tiebreaker mode.
 
-Record the user's answers here before implementing the affected behavior. Keep the uploaded working draft intact until a revision is explicitly requested. Other rules may be refined in later stages; this list is an initial review, not a declaration that all remaining edge cases are settled.
+## Next review
+
+Resolve the remaining pickup-eligibility question before implementing affected transitions. These notes record the user's current decisions without rewriting the uploaded source document or declaring the whole rulebook final. Any further unresolved case should remain explicit rather than being settled silently in code.
