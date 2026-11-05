@@ -2,17 +2,30 @@
 
 Least Count is a browser card game built around reducing the value of your hand, calling Show, and staying below the cumulative elimination cutoff. The long-term vision is card nights with friends through real-time online play and private rooms, on desktop and mobile browsers.
 
-**Current status: visual prototype.** The repository includes a responsive landing page, a mock card table, tested card utilities, and a provisional rulebook with confirmed clarifications. Playable turns, scoring, timers, and opponent behavior have not been implemented. The next development phase is a local playable game; online multiplayer will follow later.
+**Current status: local playable practice.** Play full matches against 1–7 simulated opponents in your browser. The game implements the working rulebook and confirmed clarifications, including jokers, 7 penalties, Show, scoring, timers, and elimination. Online multiplayer is not available.
 
 ## What works today
 
-- Green felt-inspired landing page with Play Game and Rules navigation.
-- Visual table with a sample hand, mock opponents, and sample card piles.
-- Responsive layouts, keyboard navigation, visible focus indicators, a skip link, and screen-reader card labels.
-- Framework-independent standard card creation and non-mutating Fisher–Yates shuffling.
-- Static production build suitable for Cloudflare Pages.
+- Responsive green felt table for 2–8 players, with selectable cards, card values, current-turn indication, scores, and action feedback.
+- One- or two-deck setup, unique physical card identities, Printed Jokers, a Selected Joker indicator, and seven-card starting hands.
+- Same-rank discards, mandatory Match and Drop, eligible open pickup, and draw-pile recycling or exhaustion settlement.
+- 7 penalty stacking, automatic penalties when no 7 is held, optional acceptance when holding 7, and full-cycle cancellation.
+- Show validation, zero-point tied round winners, cumulative scoring, score and timeout elimination, and ordinary next rounds until one match winner remains.
+- A single 60-second deadline covering both discard and required draw, retained through navigation and refreshes.
+- Simulated opponents using only their own hand and public table information, plus concealed opponent cards and totals-only round results.
+- A readable Rules screen and downloads of both rule documents.
+- Keyboard-accessible controls, visible focus, a skip link, and responsive layouts.
+- Static assets suitable for Cloudflare Pages; no application services or secrets required.
 
-The Play Game button currently opens the **table preview**. The Rules screen is still a placeholder; the rulebook is available in this repository. Mock hand sizes, seats, and piles are display fixtures, not gameplay rules. There is no backend, authentication, database, online multiplayer, or mobile packaging.
+Click **Play Game**, choose the table size, and select **Start local game**. Select one or more cards of the same rank and discard them; the interface then offers any required draw. Show is enabled only at the beginning of an eligible normal turn. At round results, choose the next round or set up a new match after a win.
+
+### Local practice and saving
+
+The human player is **You**. Other seats are simple simulated opponents, not online players. Their strategy reduces their own hand, calls Show at five or less, and responds to 7s without inspecting opponent hands or the closed draw order.
+
+Progress is stored in `sessionStorage` for the current browser tab. Refreshing or visiting the Rules screen does not renew the turn deadline; an expired saved turn is resolved on return. Closing the tab normally ends its saved session. **New game** intentionally replaces progress after confirmation during an active round. If browser storage is unavailable, the UI reports that refreshes will lose progress.
+
+All cards and game state exist on your device, including simulated opponents' hands. Those cards are hidden from the UI, not protected from browser inspection. This is a local practice game, not a secure multiplayer system. Timers use the local clock and can be affected by device time changes or browser suspension. No backend, authentication, database, online rooms, or mobile packaging is included.
 
 ## Rulebook and confirmed decisions
 
@@ -23,9 +36,9 @@ Read these documents together:
 
 The initial clarification topics have been answered. The overall rulebook remains provisional and can be refined in later stages; newly discovered ambiguities should be clarified before implementing affected behavior.
 
-### Gameplay reference for the next phase
+### Gameplay reference
 
-These rules describe intended gameplay, not working features:
+The local engine follows these rules; the linked documents give the full details:
 
 - **Players and dealing:** 2–8 players, seven starting cards each; one standard deck plus one Printed Joker for 2–4 players, or two decks plus two Printed Jokers for 5–8 players.
 - **Selected Joker:** choose a new eligible indicator each round, excluding 7s and Printed Jokers. Remove that physical card from play; the remaining cards of its rank are worth zero.
@@ -61,7 +74,7 @@ npm run dev
 
 `npm ci` installs the committed lockfile without changing it. Use `npm install` when intentionally adding or updating dependencies. Vite prints the development address.
 
-No environment variables, secrets, external application services, or backend are needed for the current prototype. In a managed cloud task, use the existing isolated checkout; an additional Git worktree is unnecessary. For cloud access when required, bind the development server with:
+No environment variables, secrets, external application services, or backend are needed for the current local game. In a managed cloud task, use the existing isolated checkout; an additional Git worktree is unnecessary. For cloud access when required, bind the development server with:
 
 ```sh
 npm run dev -- --host 0.0.0.0
@@ -76,6 +89,7 @@ npm run dev -- --host 0.0.0.0
 | `npm run preview` | Serve the built `dist/` locally; run the build first. |
 | `npm test` | Run Vitest once, noninteractively, and exit. |
 | `npm run test:watch` | Run Vitest in interactive watch mode. |
+| `npm run test:e2e` | Run Playwright browser tests, starting the app automatically. |
 
 To check and preview a production build:
 
@@ -85,9 +99,20 @@ npm test
 npm run preview
 ```
 
-The existing 12 unit tests cover card identities, the 52 standard suit/rank combinations, independent deck creation, deterministic shuffle swaps, input preservation, small decks, and invalid random sources. They do not validate gameplay that has not been implemented.
+Unit tests cover card and deck construction, selected-rank values, legal and illegal actions, pickup eligibility, Show and scoring, zero-point ties at 99, full 7 cycles, deadlines, elimination, recycling, exhaustion, saved sessions, and seeded whole matches for 2, 4, and 8 players.
 
-`createDeck()` currently creates a standard 52-card deck without jokers. The rulebook's game-specific deck assembly, Printed Jokers, Selected Joker handling, and unique identities for duplicate physical cards still need to be implemented.
+Browser tests cover responsive eight-player tables at 320–1440px, actual card controls, illegal selections, Match and Drop, pickup, refresh recovery, 7 actions, timers, scoring, next rounds, keyboard navigation, rule downloads, and a complete local match through the UI.
+
+To run the Playwright checks (the test runner starts Vite automatically):
+
+```sh
+npx playwright install chromium
+npm run test:e2e
+```
+
+On Linux, `npx playwright install --with-deps chromium` also installs required system libraries when permitted. In the managed environment, the installed system browser can be used with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e`. To test built static assets, first run `npm run build`, then set `PLAYWRIGHT_PREVIEW=1` when running the browser tests. Browser artifacts under `test-results/` and `playwright-report/` are ignored.
+
+`createDeck()` remains a standard 52-card utility. `assembleDeck()` and `prepareDeck()` add the rulebook’s one/two-deck composition, Printed Jokers, unique physical identities, and Selected Joker removal. The immutable game reducer accepts an explicit clock and random source for deterministic tests.
 
 ## Project structure
 
@@ -97,12 +122,16 @@ README.md                      Project status and development guide
 docs/
   rule-clarifications.md       Confirmed decisions overriding draft conflicts
 src/
-  game/                        Framework-independent card utilities and tests
-  components/                  Reusable playing cards and page layout
-  pages/                       Landing, mock table, and Rules placeholder
+  game/                        Decks, immutable engine, bot strategy, and unit tests
+  components/                  Playing cards, round results, and page layout
+  pages/                       Landing, playable local table, and Rules screen
   App.tsx                      Hash-based screen navigation
+  hooks/                       Local session, timer, and simulated-opponent orchestration
+  lib/                         Versioned session storage and validation
   main.tsx                     React entry point
   styles.css                   Shared styles and responsive layouts
+e2e/                           Playwright gameplay and responsive browser tests
+playwright.config.ts           Development/production browser test setup
 public/
   favicon.svg                  Static application icon
 ```
@@ -122,12 +151,12 @@ Configure a future Pages deployment with:
 | Build output directory | `dist` |
 | Node.js version | `NODE_VERSION=24` |
 
-No Pages Functions or secrets are required for the current static prototype. A production multiplayer service is a separate future component. Deployment has not been configured or published as part of this work.
+No Pages Functions or secrets are required for the current static local game. A production multiplayer service is a separate future component. Deployment has not been configured or published as part of this work.
 
 ## Development roadmap
 
-1. **Next: tested local game engine.** Implement deck assembly, dealing, card values, turn validation, pickup eligibility, Match and Drop, 7 sequences, Show, scoring, elimination, and round transitions using the rulebook plus confirmed decisions.
-2. **Local playable table.** Connect the engine to the existing UI, add simulated opponents, turn controls, hand totals, a timer, and round results. Keep the local development mode clearly labeled.
-3. **Online multiplayer later.** Add private rooms and a server-authoritative game service, protecting private hands and enforcing actions and timers across clients. Authentication, databases, and mobile packaging are outside the current phase.
+1. **Review and refine local practice.** Playtest the provisional rules, improve opponent strategy and usability, and record any additional rule decisions before changing behavior.
+2. **Online multiplayer later.** Add private rooms and a server-authoritative game service, protecting private hands and enforcing actions and timers across clients. A static browser-only build cannot enforce these guarantees.
+3. **Additional platform work later.** Authentication, databases, and mobile packaging remain outside this phase.
 
-Develop changes on review branches and prepare pull requests before merging into `main`. Document additional rule decisions explicitly rather than inventing behavior in code.
+Use pull requests for substantial changes such as gameplay work. Small, trivial updates may go directly to `main` when authorized. Document rule decisions explicitly rather than inventing behavior in code.

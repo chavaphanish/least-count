@@ -228,3 +228,153 @@ em { color: var(--gold); font-weight: 400; }
   .hand .playing-card { --card-width: 58px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+/* Local game: keep turn controls and private hands legible at every table size. */
+button, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+.button { border: 0; font-family: inherit; }
+button.button-secondary { border: 1px solid #c4d4bf55; color: var(--cream); }
+.button:disabled { opacity: .45; transform: none; }
+.game-setup { max-width: 600px; margin: 30px auto 50px; padding: 38px; text-align: center; border: 1px solid var(--border); border-radius: 20px; background: #ffffff03; }
+.setup-mark { color: var(--gold); font-size: 50px; }
+.game-setup .eyebrow { justify-content: center; margin: 16px 0; font-size: 9px; }
+.game-setup h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 54px; font-weight: 400; }
+.game-setup > p:not(.eyebrow) { color: var(--muted); font-size: 13px; line-height: 1.8; margin: 15px 0; }
+.game-setup label { display: block; margin: 26px 0 10px; font-size: 13px; text-align: left; }
+.game-setup select { width: 100%; padding: 14px; border-radius: 6px; background: #163f32; color: var(--cream); border: 1px solid #b7c9ba77; font-size: 14px; }
+select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+.game-setup .setup-detail { font-size: 11px !important; }
+.game-setup .button { margin: 12px 0 8px; }
+.game-setup .text-link { display: block; }
+.game-setup .setup-saving { font-size: 10px !important; margin-top: 25px !important; }
+.match-toolbar { display: flex; gap: 20px; justify-content: space-between; align-items: center; margin: 0 0 20px; flex-wrap: wrap; }
+.seat-scroll-hint { display: none; }
+.match-toolbar > div:first-child { display: flex; flex-direction: column; gap: 5px; }
+.match-toolbar > div:first-child strong { font-size: 15px; }
+.match-toolbar > div:first-child > span { color: var(--muted); font-size: 11px; }
+.compact-button { min-height: 40px; font-size: 11px; padding: 10px 16px; }
+.turn-clock { display: flex; align-items: center; gap: 15px; border: 1px solid #e9cd914d; border-radius: 10px; padding: 10px 20px; background: #e9cd9109; }
+.turn-clock span { font-size: 12px; }
+.turn-clock strong { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 22px; min-width: 43px; }
+.clock-urgent { background: #9b342c50; border-color: #df9c83; }
+.live-table { height: auto; min-height: 550px; margin: 0; border-radius: 65px; padding: 32px 28px 30px; display: flex; flex-direction: column; gap: 35px; }
+.live-table::before { inset: 12px; }
+.opponent-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; position: relative; z-index: 1; }
+.live-opponent { flex: 0 1 115px; padding: 10px 5px; border: 1px solid transparent; border-radius: 12px; display: flex; align-items: center; flex-direction: column; gap: 7px; text-align: center; }
+.live-opponent strong { font-size: 13px; font-weight: 500; }
+.live-opponent > span { font-size: 10px; color: #d1dfc7; }
+.live-opponent > small { font-size: 8px; color: #c4d4bc; }
+.live-opponent .avatar { width: 33px; height: 33px; font-size: 13px; }
+.live-opponent:nth-child(2n) .avatar { background: #c7d1b4; }
+.live-opponent:nth-child(3n) .avatar { background: #dcaa87; }
+.active-seat { border-color: #e9cd9199; background: #e9cd910b; box-shadow: 0 0 18px #e9cd9110; }
+.eliminated-seat { opacity: .6; }
+.live-piles { display: flex; justify-content: center; align-items: flex-start; gap: 38px; position: relative; z-index: 1; }
+.live-piles .sample-pile .playing-card { --card-width: 80px; }
+.pile-button, .hand-card, .pickup-button { background: none; border: 0; padding: 0; color: inherit; border-radius: 8px; }
+.pile-button:disabled { cursor: default; }
+.pile-button:not(:disabled) { outline: 2px solid var(--gold); outline-offset: 5px; }
+.joker-indicator { padding-left: 30px; border-left: 1px solid #e9cd9133; }
+.joker-indicator > small { font-size: 9px; color: #cfdbc3; }
+.your-live-seat { position: relative; z-index: 1; margin-top: 5px; }
+.hand-heading { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.hand-heading h2 { font-size: 14px; font-weight: 500; }
+.hand-heading > strong { color: var(--gold); font-size: 12px; }
+.hand-heading > span { color: #c5d5bf; font-size: 10px; }
+.player-hand { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 10px; padding: 6px 0 2px; }
+.player-hand .playing-card { --card-width: 73px; border-radius: 5px; }
+.hand-card { transition: transform .15s; }
+.hand-card:not(:disabled):hover { transform: translateY(-5px); }
+.hand-card.selected-card { outline: 2px solid var(--gold); outline-offset: 4px; transform: translateY(-8px); }
+.hand-card:focus-visible { outline: 3px solid #fff1c9; outline-offset: 4px; }
+.card-value { display: block; font-size: 9px; margin-top: 9px; color: #d7e2ca; }
+.empty-hand { padding: 22px; font-size: 13px; color: #d7e2ca; }
+.joker-corner { position: absolute; left: 8px; top: 8px; font-size: calc(var(--card-width) * .18); color: #8d4339; }
+.joker-center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: calc(var(--card-width) * .58); color: #8d4339; }
+.joker-center small { font-family: 'DM Sans', sans-serif; font-size: calc(var(--card-width) * .11); letter-spacing: 1px; }
+.turn-panel { padding: 25px 0; }
+.turn-message { color: var(--cream); font-size: 13px; line-height: 1.8; max-width: 800px; }
+.turn-actions { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.text-button { color: var(--gold); background: transparent; border: 0; padding: 12px; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+.game-alert { border-left: 3px solid #efb59c; background: #943d2a25; color: #ffe0cd; padding: 12px 15px; font-size: 12px; margin: 15px 0; line-height: 1.7; }
+.pickup-panel { border: 1px solid var(--border); padding: 18px; border-radius: 10px; margin-top: 20px; }
+.pickup-panel h3 { font-size: 13px; font-weight: 500; }
+.pickup-panel p { color: var(--muted); font-size: 11px; line-height: 1.8; margin-top: 8px; }
+.pickup-cards { display: flex; gap: 16px; flex-wrap: wrap; padding: 18px 3px 3px; }
+.pickup-cards .playing-card { --card-width: 62px; }
+.round-summary { border: 1px solid #e9cd9166; border-radius: 15px; background: #e9cd9108; padding: 28px; margin: 0 0 28px; }
+.round-summary h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 36px; font-weight: 400; margin: 12px 0; }
+.round-summary h2:focus { outline: none; }
+.round-summary > p:not(.eyebrow) { font-size: 12px; color: var(--muted); line-height: 1.8; }
+.score-scroll { overflow-x: auto; margin: 20px 0; }
+.score-table { border-collapse: collapse; width: 100%; text-align: left; font-size: 12px; }
+.score-table caption { text-align: left; color: var(--muted); margin-bottom: 10px; font-size: 11px; }
+.score-table th, .score-table td { padding: 12px 14px 12px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.score-table th { font-weight: 500; }
+.score-table thead th { color: var(--gold); font-size: 10px; }
+.result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+.result-actions p { font-size: 11px; color: var(--muted); }
+.game-below-table { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; border-top: 1px solid var(--border); padding-top: 25px; }
+.match-scores h2 { font-size: 14px; font-weight: 500; }
+.match-scores ul { padding: 0; list-style: none; margin: 15px 0 0; }
+.match-scores li { display: grid; grid-template-columns: 1fr 50px 110px; gap: 10px; font-size: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.match-scores li small { font-size: 10px; color: var(--muted); }
+.activity-log { font-size: 12px; color: var(--muted); }
+.activity-log summary { cursor: pointer; padding: 0 0 12px; color: var(--cream); font-size: 14px; }
+.activity-log ol { padding-left: 20px; margin: 0; }
+.activity-log li { padding: 6px 0; line-height: 1.7; }
+.rules-intro { max-width: 700px; padding-top: 30px; }
+.rules-intro > p:not(.eyebrow) { margin-top: 20px; color: var(--muted); font-size: 14px; }
+.rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.rule-tile { padding: 24px; border: 1px solid var(--border); border-radius: 10px; background: #ffffff02; }
+.rule-number { color: var(--gold); font-size: 10px; letter-spacing: 2px; }
+.rule-tile h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 30px; font-weight: 400; margin: 12px 0; }
+.rule-tile p { color: var(--muted); font-size: 12px; line-height: 1.9; }
+.rules-downloads { display: flex; gap: 25px; flex-wrap: wrap; margin-bottom: 20px; }
+@media (max-width: 900px) {
+  .active-game .page-heading { flex-direction: row; align-items: center; margin-top: 12px; }
+  .active-game .page-heading h1 { font-size: 38px; }
+  .active-game .page-heading .eyebrow { display: none; }
+  .active-game .preview-pill { font-size: 7px; padding: 9px; letter-spacing: .4px; }
+  .active-game .preview-notice { margin: 14px 0; }
+  .match-toolbar { position: sticky; top: 0; z-index: 5; background: #0c2e26; padding: 12px 0; }
+  .seat-scroll-hint { display: block; font-size: 9px; color: #c6d6bd; text-align: center; margin-bottom: -22px; }
+  .live-table { border-radius: 35px; padding: 24px 16px; min-height: 0; gap: 30px; }
+  .live-table::before { inset: 8px; }
+  .opponent-row { gap: 8px; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: thin; padding: 4px 4px 10px; }
+  .live-opponent { flex: 0 0 100px; }
+  .live-piles { gap: 22px; }
+  .live-piles .sample-pile .playing-card { --card-width: 65px; }
+  .joker-indicator { padding-left: 16px; }
+  .live-piles .sample-pile > span { font-size: 7px; letter-spacing: .4px; }
+  .player-hand .playing-card { --card-width: 60px; }
+  .game-below-table, .rules-grid { grid-template-columns: 1fr; }
+  .game-setup { padding: 25px; }
+  .round-summary { padding: 20px; }
+  .table-footnote > span { display: block; }
+}
+@media (max-width: 420px) {
+  .game-setup { padding: 25px 18px; }
+  .game-setup select { font-size: 12px; padding: 13px 9px; }
+  .match-toolbar { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+  .turn-clock { padding: 8px 12px; gap: 8px; }
+  .turn-clock span { font-size: 10px; }
+  .turn-clock strong { font-size: 19px; min-width: 34px; }
+  .match-toolbar > div:first-child { flex: 1; }
+  .compact-button { min-height: 37px; grid-column: 1 / -1; justify-self: start; }
+  .live-piles { gap: 13px; }
+  .live-piles .sample-pile .playing-card { --card-width: 53px; }
+  .joker-indicator { padding-left: 10px; }
+  .joker-indicator > small { font-size: 7px; }
+  .live-piles .sample-pile > span { font-size: 6px; }
+  .player-hand { gap: 8px; }
+  .player-hand .playing-card { --card-width: 54px; }
+  .hand-heading { gap: 8px; }
+  .hand-heading > span { width: 100%; text-align: center; }
+  .live-opponent { flex-basis: 95px; }
+  .live-opponent > span { font-size: 9px; }
+  .turn-actions .button { font-size: 12px; padding: 13px 16px; }
+  .match-scores li { grid-template-columns: 1fr 35px 92px; }
+  .round-summary h2 { font-size: 30px; }
+}

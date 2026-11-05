@@ -10,7 +10,7 @@ export function HomePage() {
           <h1 id="home-title">Good friends.<br />Great cards.<br /><em>Least Count.</em></h1>
           <p className="hero-description">A new seat at your favorite card table.<br className="desktop-break" /> Made for friendly rivalries and just-one-more-round nights.</p>
           <div className="hero-actions"><a className="button button-primary" href="#/game">Play Game <span aria-hidden="true">→</span></a><a className="button button-secondary" href="#/rules">Rules <span aria-hidden="true">→</span></a></div>
-          <p className="action-note"><span className="status-dot" /> Explore the table preview · No sign-up needed</p>
+          <p className="action-note"><span className="status-dot" /> Play locally with simulated opponents · No sign-up needed</p>
         </div>
         <div className="hero-art" aria-label="An illustrated green card table with a fan of playing cards" role="img">
           <div className="table-orbit orbit-outer" /><div className="table-orbit orbit-inner" />
@@ -29,7 +29,7 @@ export function HomePage() {
       <section className="welcome-section" aria-labelledby="welcome-title">
         <div className="section-heading"><h2 id="welcome-title">The familiar table. <em>A fresh beginning.</em></h2><span>BUILT FOR THE BROWSER</span></div>
         <div className="feature-grid">
-          <article className="feature"><span className="feature-icon" aria-hidden="true">♠</span><div><h3>Take a look around</h3><p>A first look at the card table, your hand, and the seats around you.</p><a className="text-link" href="#/game">Explore the table <span aria-hidden="true">→</span></a></div></article>
+          <article className="feature"><span className="feature-icon" aria-hidden="true">♠</span><div><h3>Make your next move</h3><p>A full local match: seven cards, a ticking clock, and a little friendly rivalry.</p><a className="text-link" href="#/game">Play local practice <span aria-hidden="true">→</span></a></div></article>
           <article className="feature"><span className="feature-icon" aria-hidden="true">♧</span><div><h3>Your table, anywhere</h3><p>A little room for card night, on your desktop, tablet, or phone.</p><span className="feature-caption">NO DOWNLOAD REQUIRED</span></div></article>
           <article className="feature future-feature"><span className="feature-icon" aria-hidden="true">♢</span><div><h3>Better with friends <span className="coming-soon">COMING LATER</span></h3><p>Online multiplayer and private rooms are on the horizon.</p><span className="feature-caption">MULTIPLAYER IS NOT AVAILABLE YET</span></div></article>
         </div>
