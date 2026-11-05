@@ -2,7 +2,7 @@
 
 The supplied [Least Count rulebook](../RULEBOOK.md), Edition 2.0 (Working Draft), remains a **provisional reference**. Its original wording, including the “Official Game Rulebook” heading, is preserved unchanged. The decisions below were confirmed by the user on 5 November 2026 and take precedence over conflicting passages in that uploaded draft. Other rules may be refined in later stages.
 
-This documentation does not implement gameplay. The application remains a visual prototype; sample cards and player seats do not establish game rules.
+This document records rule decisions. See the [README](../README.md) for the current implementation status and local-practice limitations.
 
 ## 1. Open pickup after Match and Drop
 

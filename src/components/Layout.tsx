@@ -11,11 +11,11 @@ export function Layout({ children, page }: { children: ReactNode; page: string }
         <a className="brand" href="#/" aria-label="Least Count home"><span className="brand-mark" aria-hidden="true">♠</span><span>LEAST COUNT<span className="brand-caption">THE CARD TABLE</span></span></a>
         <nav aria-label="Main navigation">
           <a href="#/rules" aria-current={page === 'rules' ? 'page' : undefined}>Rules</a>
-          <span className="version-badge">EARLY PREVIEW</span>
+          <span className="version-badge">LOCAL PRACTICE</span>
         </nav>
       </header>
       <main id="main" tabIndex={-1}>{children}</main>
-      <footer className="site-footer"><span>Good company. A fresh deck. <span className="footer-italic">A little friendly rivalry.</span></span><span className="footer-suits" aria-hidden="true">♠ <i>♥</i> ♣ <i>♦</i></span><span>Least Count <span className="footer-dot">/</span> Browser prototype</span></footer>
+      <footer className="site-footer"><span>Good company. A fresh deck. <span className="footer-italic">A little friendly rivalry.</span></span><span className="footer-suits" aria-hidden="true">♠ <i>♥</i> ♣ <i>♦</i></span><span>Least Count <span className="footer-dot">/</span> Local practice</span></footer>
     </div>
   )
 }
