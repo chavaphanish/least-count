@@ -65,6 +65,10 @@ for (const width of [1440, 768, 390, 320]) {
   test(`starts an eight-player local game without overflow at ${width}px`, async ({
     page,
   }) => {
+    // Hold the initial deal while measuring layout; bot moves are tested below.
+    const now = Date.now()
+    await page.clock.install({ time: new Date(now) })
+    await page.clock.pauseAt(new Date(now + 1000))
     await page.setViewportSize({ width, height: 1000 })
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
