@@ -7,6 +7,10 @@ const rules = [
     text: 'Choose 2–8 players. Each round deals seven cards each. Up to four players use one deck plus one Printed Joker; five or more use two of each. A random player starts the first round; the starting seat rotates clockwise afterward.',
   },
   {
+    title: 'Choose the opening card',
+    text: 'Each round starts with a public face-up card. Unless it is a 7, the starter explicitly picks it up or draws one closed card, then discards a card or same-rank group without drawing again. Show is allowed before this choice at five or less, but not afterward. Both actions share one deadline. Later turns use the usual discard-first rules.',
+  },
+  {
     title: 'Keep your count low',
     text: 'Ace is 1; number cards use their number; J, Q, and K are 10. Printed Jokers are 0. A Selected Joker indicator is removed each round, and all remaining cards of that rank are 0. A 7 can never be the Selected Joker. Jokers are not wild cards.',
   },
@@ -16,7 +20,7 @@ const rules = [
   },
   {
     title: 'Watch the sevens',
-    text: 'Playing one or more 7s ends the action immediately without drawing a replacement, even when the top rank differs. The next player faces a two-card penalty. Respond with one or more 7s to add two, or draw the accumulated penalty and lose your normal turn. Multiple 7s in one action still add only two. If every active player responds, the penalty is cancelled and the initiator takes a normal turn. The initial face-up 7 has no power effect.',
+    text: 'Playing one or more 7s ends the action immediately without drawing a replacement, even when the top rank differs. The next player faces a two-card penalty. Respond with one or more 7s to add two, or draw the accumulated penalty and lose your normal turn. Multiple 7s in one action still add only two. If every active player responds, the penalty is cancelled and the initiator takes a normal turn. An opening 7 immediately makes the starter respond to a two-card penalty, automatically drawn if they hold no 7. The computer does not count as a full-cycle participant. After every active player actually responds, the starter takes a normal turn. With the existing 7 supply, an opening full cycle cannot naturally occur at four/eight players.',
   },
   {
     title: 'Call Show at five or less',

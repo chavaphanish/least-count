@@ -102,6 +102,7 @@ export type GameView = {
   drawCount: number
   deadline: number | null
   penalty: number
+  openingPenalty: boolean
   canShow: boolean
   result: RoundResult | null
   events: GameEvent[]
@@ -120,7 +121,13 @@ export type RoomView = {
 }
 export type ClientGameAction = {
   type:
-    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round'
+    | 'discard'
+    | 'play-turn'
+    | 'draw'
+    | 'opening-draw'
+    | 'show'
+    | 'accept-penalty'
+    | 'next-round'
   cardIds?: string[]
   source?: 'pile' | 'discard'
   cardId?: string

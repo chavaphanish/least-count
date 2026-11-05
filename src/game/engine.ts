@@ -10,7 +10,14 @@ export const ELIMINATION_SCORE = 100
 export type GameSettings = { eliminationThreshold: number; timedGame: boolean }
 export const gameSettings = (s: GameState): GameSettings =>
   s.settings ?? { eliminationThreshold: ELIMINATION_SCORE, timedGame: true }
-export type Phase = 'turn' | 'draw' | 'penalty' | 'round-over' | 'game-over'
+export type Phase =
+  | 'opening-draw'
+  | 'opening-discard'
+  | 'turn'
+  | 'draw'
+  | 'penalty'
+  | 'round-over'
+  | 'game-over'
 export type Player = {
   id: string
   name: string
@@ -47,7 +54,12 @@ export type GameState = {
   discards: GameCard[][]
   eligible: string[]
   discardedRank: GameRank | null
-  sevens: { initiator: number; participants: number[]; amount: number } | null
+  sevens: {
+    initiator: number
+    participants: number[]
+    amount: number
+    opening?: boolean
+  } | null
   deadline: number | null
   result: RoundResult | null
   events?: GameEvent[]
@@ -69,6 +81,12 @@ export type Action =
       source: 'pile' | 'discard'
       cardId?: string
     }
+  | {
+      type: 'opening-draw'
+      playerId: string
+      source: 'pile' | 'discard'
+      cardId?: string
+    }
   | { type: 'show'; playerId: string }
   | { type: 'accept-penalty'; playerId: string }
   | { type: 'timeout' }
@@ -80,9 +98,11 @@ export const latestGroup = (s: GameState): GameCard[] => s.discards.at(-1) ?? []
 export const pickupCards = (s: GameState): GameCard[] =>
   s.discards.flat().filter((c) => s.eligible.includes(c.id))
 export const isPlaying = (s: GameState) =>
-  ['turn', 'draw', 'penalty'].includes(s.phase)
+  ['opening-draw', 'opening-discard', 'turn', 'draw', 'penalty'].includes(
+    s.phase,
+  )
 export const canShow = (s: GameState, playerId: string) =>
-  s.phase === 'turn' &&
+  (s.phase === 'turn' || s.phase === 'opening-draw') &&
   s.players[s.current].id === playerId &&
   !s.players[s.current].eliminated &&
   handTotal(s.players[s.current].hand, s.indicator.rank) <= 5
@@ -94,6 +114,7 @@ export function discardOutcome(
   hasPickup: boolean,
 ) {
   if (rank === '7') return 'seven' as const
+  if (phase === 'opening-discard') return 'opening' as const
   if (phase === 'penalty')
     throw new RuleError('Play one or more 7s, or accept the penalty.')
   if (rank === topRank) return 'match' as const
@@ -109,7 +130,11 @@ export function inspectDiscard(
   const player = s.players[s.current]
   if (player.id !== playerId || player.eliminated)
     throw new RuleError('Wait for your turn.')
-  if (s.phase !== 'turn' && s.phase !== 'penalty')
+  if (
+    s.phase !== 'turn' &&
+    s.phase !== 'penalty' &&
+    s.phase !== 'opening-discard'
+  )
     throw new RuleError('Draw your replacement card first.')
   if (!player.hand.length)
     throw new RuleError(
@@ -318,11 +343,12 @@ function beginTurn(
   index: number,
   now: number,
   random: () => number,
+  opening = false,
 ) {
   s.current = index
   s.discardedRank = null
   if (lastPlayerWins(s, now)) return
-  s.phase = s.sevens ? 'penalty' : 'turn'
+  s.phase = s.sevens ? 'penalty' : opening ? 'opening-draw' : 'turn'
   s.deadline = gameSettings(s).timedGame ? now + TURN_MS : null
   const player = s.players[index]
   if (s.sevens && !player.hand.some((c) => c.rank === '7')) {
@@ -376,11 +402,29 @@ function startRound(s: GameState, now: number, random: () => number) {
     player.hand = player.eliminated ? [] : s.drawPile.splice(-7)
   }
   s.discards = [[s.drawPile.pop()!]]
-  s.eligible = [] // The initial card was not discarded by a preceding player.
-  s.sevens = null // An initial 7 never starts a penalty.
+  const openingCard = latestGroup(s)[0]
+  const isSeven = openingCard.rank === '7'
+  s.eligible = isSeven ? [] : [openingCard.id]
+  // The computer's card is not a player response. The first responder is the initiator.
+  s.sevens = isSeven
+    ? { initiator: s.starter, participants: [], amount: 2, opening: true }
+    : null
   s.result = null
-  emit(s, { type: 'ROUND_STARTED', indicatorRank: indicator.rank }, now)
-  beginTurn(s, s.starter, now, random)
+  emit(
+    s,
+    { type: 'ROUND_STARTED', indicatorRank: indicator.rank, openingCard },
+    now,
+  )
+  if (isSeven)
+    emit(
+      s,
+      {
+        type: 'OPENING_SEVEN_ACTIVATED',
+        player: publicPlayer(s.players[s.starter]),
+      },
+      now,
+    )
+  beginTurn(s, s.starter, now, random, true)
 }
 
 export function createGame(
@@ -491,7 +535,43 @@ export function applyAction(
   const player = s.players[s.current]
   if (action.playerId !== player.id || player.eliminated)
     throw new RuleError('Wait for your turn.')
-  if (action.type === 'play-turn') {
+  if (action.type === 'opening-draw') {
+    if (s.phase !== 'opening-draw')
+      throw new RuleError('The opening selection is not available now.')
+    if (action.source === 'discard') {
+      const opening = latestGroup(s)[0]
+      if (!opening || opening.rank === '7' || action.cardId !== opening.id)
+        throw new RuleError('Choose the visible non-7 opening card.')
+      player.hand.push(opening)
+      s.discards = s.discards
+        .map((group) => group.filter((card) => card.id !== opening.id))
+        .filter((group) => group.length)
+      emit(
+        s,
+        {
+          type: 'OPENING_CARD_SELECTED',
+          player: publicPlayer(player),
+          source: 'discard',
+          card: opening,
+        },
+        now,
+      )
+    } else if (action.source === 'pile') {
+      if (!drawCards(s, player, 1, now, random)) return s
+      emit(
+        s,
+        {
+          type: 'OPENING_CARD_SELECTED',
+          player: publicPlayer(player),
+          source: 'pile',
+        },
+        now,
+      )
+    } else throw new RuleError('Choose the opening card or the draw pile.')
+    s.eligible = []
+    s.phase = 'opening-discard'
+    // Both opening actions share one deadline; a second acquisition is invalid.
+  } else if (action.type === 'play-turn') {
     if (s.phase !== 'turn')
       throw new RuleError('A combined turn must start before discarding.')
     const outcome = inspectDiscard(s, action.playerId, action.cardIds).outcome
@@ -573,6 +653,7 @@ export function applyAction(
         )
       if (s.sevens!.participants.length === active(s).length) {
         const initiator = s.sevens!.initiator
+        const opening = s.sevens!.opening === true
         s.sevens = null
         emit(
           s,
@@ -590,6 +671,7 @@ export function applyAction(
           s,
           {
             type: 'POWER_SEVEN_CYCLE_COMPLETED',
+            opening,
             next: publicPlayer(s.players[initiator]),
           },
           now,
@@ -599,7 +681,7 @@ export function applyAction(
     } else {
       s.discardedRank = rank
       if (outcome === 'seven') finishNormalTurn(s, now, random)
-      else if (outcome === 'match') {
+      else if (outcome === 'opening' || outcome === 'match') {
         emit(
           s,
           {
@@ -607,6 +689,7 @@ export function applyAction(
             player: publicPlayer(player),
             cards: group,
             draw: 'none',
+            opening: outcome === 'opening',
           },
           now,
         )

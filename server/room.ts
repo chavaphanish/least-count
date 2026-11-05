@@ -227,10 +227,10 @@ export function gameAction(
         cardId: a.cardId,
       }
     } else action = { type: 'discard', playerId: id, cardIds: a.cardIds }
-  } else if (a.type === 'draw') {
+  } else if (a.type === 'draw' || a.type === 'opening-draw') {
     if (a.source !== 'pile' && a.source !== 'discard')
       throw new ApiError(400, 'Choose a draw source.')
-    action = { type: 'draw', playerId: id, source: a.source, cardId: a.cardId }
+    action = { type: a.type, playerId: id, source: a.source, cardId: a.cardId }
   } else throw new ApiError(400, 'That action is not available to a player.')
   try {
     r.game = applyAction(r.game, action, now, secureRandom)
@@ -281,6 +281,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
           drawCount: g.drawPile.length,
           deadline: g.deadline,
           penalty: g.sevens?.amount ?? 0,
+          openingPenalty: g.sevens?.opening === true,
           canShow: canShow(g, id),
           result: g.result,
           log: g.log,

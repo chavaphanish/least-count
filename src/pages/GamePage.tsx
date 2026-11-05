@@ -1,4 +1,4 @@
-import { gameEvents } from '../game/events'
+import { gameEvents, formatCardName } from '../game/events'
 import { GameActivity } from '../components/GameActivity'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PlayingCard } from '../components/PlayingCard'
@@ -152,8 +152,14 @@ export function GamePage({
   const playing = isPlaying(game)
   const yours = playing && game.current === 0 && !human.eliminated && !animation
   const canSelect =
-    yours && !choosing && (game.phase === 'turn' || game.phase === 'penalty')
-  const readyToDraw = yours && (choosing || game.phase === 'draw')
+    yours &&
+    !choosing &&
+    (game.phase === 'turn' ||
+      game.phase === 'penalty' ||
+      game.phase === 'opening-discard')
+  const openingChoice = game.phase === 'opening-draw'
+  const readyToDraw =
+    yours && (openingChoice || choosing || game.phase === 'draw')
   const seconds = Math.max(0, Math.ceil(((game.deadline ?? now) - now) / 1000))
   const group = latestGroup(game)
   const pickups = pickupCards(game)
@@ -177,7 +183,9 @@ export function GamePage({
             })
         : []
     const source =
-      action.type === 'draw' || action.type === 'play-turn'
+      action.type === 'draw' ||
+      action.type === 'play-turn' ||
+      action.type === 'opening-draw'
         ? action.source
         : action.type === 'discard' &&
             inspectDiscard(game, human.id, action.cardIds).outcome ===
@@ -187,7 +195,9 @@ export function GamePage({
     const incomingFrom =
       source === 'pile'
         ? cardRect(document.querySelector('[data-draw-source] .playing-card'))
-        : (action.type === 'draw' || action.type === 'play-turn') &&
+        : (action.type === 'draw' ||
+              action.type === 'play-turn' ||
+              action.type === 'opening-draw') &&
             action.cardId
           ? (cardRect(elementFor('data-discard-card', action.cardId)) ??
             (choosing
@@ -255,7 +265,12 @@ export function GamePage({
             source,
             cardId,
           }
-        : { type: 'draw', playerId: human.id, source, cardId },
+        : {
+            type: openingChoice ? 'opening-draw' : 'draw',
+            playerId: human.id,
+            source,
+            cardId,
+          },
     )
   }
   const message = animation
@@ -266,15 +281,19 @@ export function GamePage({
         ? `You were eliminated by ${human.eliminationReason}. You can watch the remaining local players.`
         : !yours
           ? `${current.name} is thinking…`
-          : choosing
-            ? 'Your cards are selected, not discarded yet. Choose a draw source to complete both actions, or go back to change your selection.'
-            : game.phase === 'draw'
-              ? 'Choose one replacement card below or draw from the pile.'
-              : game.phase === 'penalty'
-                ? `Play one or more 7s, or draw ${game.sevens!.amount} penalty cards and lose your normal turn.`
-                : !human.hand.length
-                  ? 'Your hand is empty. You must call Show now; passing is not allowed.'
-                  : 'Select one card or a group of the same rank, then choose your draw source. Matching the top rank skips the draw. Show is available before discarding at 5 or less.'
+          : openingChoice
+            ? 'Choose the opening card or draw a new card, then discard. You may call Show before choosing if eligible.'
+            : game.phase === 'opening-discard'
+              ? 'Opening card acquired. Discard one card or a same-rank group; no second draw is required.'
+              : choosing
+                ? 'Your cards are selected, not discarded yet. Choose a draw source to complete both actions, or go back to change your selection.'
+                : game.phase === 'draw'
+                  ? 'Choose one replacement card below or draw from the pile.'
+                  : game.phase === 'penalty'
+                    ? `${game.sevens?.opening ? 'Opening 7 penalty: ' : ''}Play one or more 7s, or draw ${game.sevens!.amount} penalty cards and lose your normal turn.`
+                    : !human.hand.length
+                      ? 'Your hand is empty. You must call Show now; passing is not allowed.'
+                      : 'Select one card or a group of the same rank, then choose your draw source. Matching the top rank skips the draw. Show is available before discarding at 5 or less.'
 
   return (
     <section
@@ -363,7 +382,11 @@ export function GamePage({
               className="pile-button"
               data-draw-source
               disabled={!readyToDraw}
-              aria-label="Draw one replacement card"
+              aria-label={
+                openingChoice
+                  ? 'Draw a new opening card'
+                  : 'Draw one replacement card'
+              }
               onClick={() => chooseDraw('pile')}
             >
               <PlayingCard faceDown />
@@ -372,7 +395,13 @@ export function GamePage({
           </div>
           <div className="sample-pile">
             <div className="discard-presentation">
-              <div className="discard-stack" data-discard-target>
+              <div
+                className={`discard-stack ${openingChoice ? 'opening-card' : ''} ${game.phase === 'penalty' ? 'power-card-active' : ''}`}
+                data-discard-target
+              >
+                {!group.length && (
+                  <div className="empty-discard">Awaiting discard</div>
+                )}
                 {group.slice(-3).map((card, index) => (
                   <div
                     key={card.id}
@@ -381,7 +410,18 @@ export function GamePage({
                       transform: `translateX(${index * 7}px) rotate(${index * 3}deg)`,
                     }}
                   >
-                    <PlayingCard card={card} />
+                    {openingChoice ? (
+                      <button
+                        className="pile-button"
+                        disabled={!readyToDraw}
+                        onClick={() => chooseDraw('discard', card.id)}
+                        aria-label={`Select opening card: ${cardLabel(card)}`}
+                      >
+                        <PlayingCard card={card} />
+                      </button>
+                    ) : (
+                      <PlayingCard card={card} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -397,8 +437,12 @@ export function GamePage({
               ) : null}
             </div>
             <span>
-              {choosing ? 'Previous discard' : 'Latest discard'} ·{' '}
-              {group.length}
+              {openingChoice
+                ? 'Opening card'
+                : choosing
+                  ? 'Previous discard'
+                  : 'Latest discard'}{' '}
+              · {group.length}
             </span>
           </div>
           <div className="sample-pile joker-indicator">
@@ -465,7 +509,9 @@ export function GamePage({
         {yours && (
           <div className="turn-actions">
             {!choosing &&
-              (game.phase === 'turn' || game.phase === 'penalty') && (
+              (game.phase === 'turn' ||
+                game.phase === 'penalty' ||
+                game.phase === 'opening-discard') && (
                 <button
                   className="button button-primary"
                   data-plan-discard
@@ -473,16 +519,20 @@ export function GamePage({
                   onClick={discardSelected}
                 >
                   {game.phase === 'penalty' || selectedCards[0]?.rank === '7'
-                    ? 'Play selected 7s'
-                    : matchesTop
-                      ? 'Match & Drop'
-                      : pickups.length
-                        ? 'Choose draw source'
-                        : 'Discard & draw automatically'}
+                    ? game.sevens?.opening
+                      ? 'Play 7'
+                      : 'Play selected 7s'
+                    : game.phase === 'opening-discard'
+                      ? 'Complete opening turn'
+                      : matchesTop
+                        ? 'Match & Drop'
+                        : pickups.length
+                          ? 'Choose draw source'
+                          : 'Discard & draw automatically'}
                   {selectedCards.length ? ` (${selectedCards.length})` : ''}
                 </button>
               )}
-            {game.phase === 'turn' && !choosing && (
+            {(game.phase === 'turn' || openingChoice) && !choosing && (
               <button
                 className="button button-secondary"
                 disabled={!canShow(game, human.id)}
@@ -500,7 +550,7 @@ export function GamePage({
                 data-primary-draw
                 onClick={() => chooseDraw('pile')}
               >
-                Draw from pile
+                {openingChoice ? 'Draw New Card' : 'Draw from pile'}
               </button>
             )}
             {game.phase === 'penalty' && (
@@ -511,7 +561,8 @@ export function GamePage({
                   send({ type: 'accept-penalty', playerId: human.id })
                 }}
               >
-                Draw {game.sevens!.amount} penalty cards
+                Draw {game.sevens!.amount}{' '}
+                {game.sevens?.opening ? 'Cards' : 'penalty cards'}
               </button>
             )}
             {choosing && (
@@ -534,23 +585,31 @@ export function GamePage({
         )}
         {readyToDraw && (
           <div className="pickup-panel">
-            <h3>Previous player’s eligible discard group</h3>
+            <h3>
+              {openingChoice
+                ? 'Opening card available for pickup'
+                : 'Previous player’s eligible discard group'}
+            </h3>
             {pickups.length ? (
               <>
                 <p>
-                  Choose one of these cards. Your selected discard and this
-                  pickup will complete together.
+                  {openingChoice
+                    ? 'Take this visible card or draw a new card, then discard without drawing again.'
+                    : 'Choose one of these cards. Your selected discard and this pickup will complete together.'}
                 </p>
                 <div className="pickup-cards">
                   {pickups.map((card) => (
                     <button
-                      className="pickup-button"
+                      className={`pickup-button ${openingChoice ? 'opening-pickup-action' : ''}`}
                       data-pickup-card={card.id}
                       key={card.id}
-                      aria-label={`Pick up ${cardLabel(card)}`}
+                      aria-label={`${openingChoice ? 'Pick up opening' : 'Pick up'} ${cardLabel(card)}`}
                       onClick={() => chooseDraw('discard', card.id)}
                     >
                       <PlayingCard card={card} />
+                      {openingChoice && (
+                        <span>Pick Up {formatCardName(card)}</span>
+                      )}
                     </button>
                   ))}
                 </div>

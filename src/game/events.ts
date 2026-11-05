@@ -2,13 +2,18 @@ import type { GameCard, GameRank } from './deck'
 
 export type EventPlayer = { id: string; name: string }
 export type GameEventData =
-  | { type: 'ROUND_STARTED'; indicatorRank: GameRank }
+  | { type: 'ROUND_STARTED'; indicatorRank: GameRank; openingCard?: GameCard }
+  | { type: 'OPENING_SEVEN_ACTIVATED'; player: EventPlayer }
+  | ({ type: 'OPENING_CARD_SELECTED'; player: EventPlayer } & (
+      { source: 'pile' } | { source: 'discard'; card: GameCard }
+    ))
   | {
       type: 'TURN_COMPLETED'
       player: EventPlayer
       cards: GameCard[]
       draw: 'pile' | 'automatic' | 'pickup' | 'none'
       pickup?: GameCard
+      opening?: boolean
     }
   | {
       type: 'POWER_SEVEN_PLAYED'
@@ -19,7 +24,11 @@ export type GameEventData =
       stacked: boolean
     }
   | { type: 'POWER_SEVEN_PENALTY_DRAWN'; player: EventPlayer; count: number }
-  | { type: 'POWER_SEVEN_CYCLE_COMPLETED'; next: EventPlayer }
+  | {
+      type: 'POWER_SEVEN_CYCLE_COMPLETED'
+      next: EventPlayer
+      opening?: boolean
+    }
   | { type: 'SHOW_DECLARED'; player: EventPlayer; total: number }
   | { type: 'SHOW_RESOLVED'; player: EventPlayer; successful: boolean }
   | {
@@ -89,9 +98,19 @@ export function formatCardGroup(cards: readonly GameCard[]): string {
 export function formatGameEvent(event: GameEvent): string {
   switch (event.type) {
     case 'ROUND_STARTED':
+      if (event.openingCard)
+        return `Round ${event.roundNumber} started. The opening card is the ${formatCardName(event.openingCard)}. Selected Joker rank ${event.indicatorRank}.`
       return `Round ${event.roundNumber} started: seven cards each; selected joker rank ${event.indicatorRank}.`
+    case 'OPENING_SEVEN_ACTIVATED':
+      return `The opening 7 activated a two-card penalty for ${event.player.name}.`
+    case 'OPENING_CARD_SELECTED':
+      return event.source === 'discard'
+        ? `${event.player.name} picked up the opening ${formatCardName(event.card)}.`
+        : `${event.player.name} drew a card from the draw pile instead of picking up the opening card.`
     case 'TURN_COMPLETED': {
       const action = `${event.player.name} discarded ${formatCardGroup(event.cards)}`
+      if (event.opening)
+        return `${action} and completed the opening turn. No additional replacement card was drawn.`
       if (event.draw === 'none')
         return `${action} using Match and Drop. No replacement card was required.`
       if (event.draw === 'pickup' && event.pickup)
@@ -105,7 +124,7 @@ export function formatGameEvent(event: GameEvent): string {
     case 'POWER_SEVEN_PENALTY_DRAWN':
       return `${event.player.name} drew ${event.count} penalty cards and skipped their turn.`
     case 'POWER_SEVEN_CYCLE_COMPLETED':
-      return `Full cycle of 7s: penalty cancelled. ${event.next.name} plays next.`
+      return `${event.opening ? 'Full cycle of opening 7s' : 'Full cycle of 7s'}: penalty cancelled. ${event.next.name} plays next.`
     case 'SHOW_DECLARED':
       return `${event.player.name} declared Show with a hand total of ${event.total}.`
     case 'SHOW_RESOLVED':

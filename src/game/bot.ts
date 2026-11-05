@@ -28,6 +28,15 @@ export function botView(state: GameState): BotView {
 
 export function chooseBotAction(view: BotView): Action {
   const { playerId, hand, selectedRank, phase } = view
+  if (phase === 'opening-draw') {
+    if (handTotal(hand, selectedRank) <= 5) return { type: 'show', playerId }
+    const best = [...view.pickup].sort(
+      (a, b) => cardValue(a, selectedRank) - cardValue(b, selectedRank),
+    )[0]
+    return best && cardValue(best, selectedRank) <= 4
+      ? { type: 'opening-draw', playerId, source: 'discard', cardId: best.id }
+      : { type: 'opening-draw', playerId, source: 'pile' }
+  }
   if (phase === 'draw') {
     const best = [...view.pickup].sort(
       (a, b) => cardValue(a, selectedRank) - cardValue(b, selectedRank),
@@ -42,8 +51,10 @@ export function chooseBotAction(view: BotView): Action {
       ? { type: 'discard', playerId, cardIds: sevens.map((c) => c.id) }
       : { type: 'accept-penalty', playerId }
   }
-  if (phase !== 'turn') throw new Error('The bot cannot act between rounds.')
-  if (handTotal(hand, selectedRank) <= 5) return { type: 'show', playerId }
+  if (phase !== 'turn' && phase !== 'opening-discard')
+    throw new Error('The bot cannot act between rounds.')
+  if (phase === 'turn' && handTotal(hand, selectedRank) <= 5)
+    return { type: 'show', playerId }
   const groups = new Map<GameRank, GameCard[]>()
   for (const card of hand)
     groups.set(card.rank, [...(groups.get(card.rank) ?? []), card])

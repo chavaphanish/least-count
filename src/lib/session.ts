@@ -31,7 +31,15 @@ export function isSavedGame(value: unknown): value is GameState {
     )
       return false
     if (
-      !['turn', 'draw', 'penalty', 'round-over', 'game-over'].includes(s.phase)
+      ![
+        'opening-draw',
+        'opening-discard',
+        'turn',
+        'draw',
+        'penalty',
+        'round-over',
+        'game-over',
+      ].includes(s.phase)
     )
       return false
     const index = (n: number) =>
@@ -64,7 +72,6 @@ export function isSavedGame(value: unknown): value is GameState {
       !Array.isArray(s.drawPile) ||
       !s.drawPile.every(validCard) ||
       !Array.isArray(s.discards) ||
-      !s.discards.length ||
       !s.discards.every(
         (g) => Array.isArray(g) && g.length && g.every(validCard),
       )
@@ -109,6 +116,24 @@ export function isSavedGame(value: unknown): value is GameState {
             Number.isFinite(e.timestamp) &&
             typeof formatGameEvent(e) === 'string',
         ))
+    )
+      return false
+    if (
+      s.phase === 'opening-draw' &&
+      (s.current !== s.starter ||
+        s.players[s.current].hand.length !== 7 ||
+        s.discards.length !== 1 ||
+        s.discards[0].length !== 1 ||
+        s.discards[0][0].rank === '7' ||
+        s.eligible.length !== 1 ||
+        s.eligible[0] !== s.discards[0][0].id)
+    )
+      return false
+    if (
+      s.phase === 'opening-discard' &&
+      (s.current !== s.starter ||
+        s.players[s.current].hand.length !== 8 ||
+        s.eligible.length !== 0)
     )
       return false
     const activeCount = s.players.filter((p) => !p.eliminated).length
@@ -156,7 +181,12 @@ export function isSavedGame(value: unknown): value is GameState {
         s.sevens.amount < 2 ||
         s.sevens.amount % 2 ||
         !Array.isArray(s.sevens.participants) ||
-        !s.sevens.participants.length ||
+        (!s.sevens.participants.length &&
+          !(
+            s.sevens.opening === true &&
+            s.sevens.amount === 2 &&
+            s.current === s.sevens.initiator
+          )) ||
         !s.sevens.participants.every(index) ||
         new Set(s.sevens.participants).size !== s.sevens.participants.length
       )
