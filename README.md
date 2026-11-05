@@ -11,8 +11,19 @@ Least Count is a responsive browser card game with a green felt table, local pra
 - Room defaults are four players, a 100-point cumulative elimination cutoff, and 60-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
 - Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
 - The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
+- Each round opens with a visible card. For a non-7, the starter explicitly picks it up or draws one closed card, then discards without a second draw. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
 - The online table uses the existing engine. Select cards, choose a legal draw source, call Show, handle 7 penalties, and play subsequent rounds. The server validates actions and sends each player only their own hand.
 - **Play Game** remains available for offline local practice against 1–7 simulated opponents, including the existing parallel discard/pickup animation, reduced-motion support, saved progress, and rule downloads.
+
+### Opening-card selection
+
+The shared engine uses explicit `opening-draw` and `opening-discard` phases. The server validates an `opening-draw` action, moves exactly one card, retains the same deadline, and enables only the final discard. Show is allowed only before the opening acquisition. Normal turns resume afterward. The initial visible card may be a Printed Joker or Selected Joker rank; only 7 starts the penalty path instead of a normal choice.
+
+An opening 7 starts at two penalty cards with an empty player-response list. The starting player is the initiator; playing their 7 adds the first real participant and raises the penalty to four. The computer's card never counts toward the full cycle. A player holding 7s may accept the penalty; without one the draw is automatic. The existing deck supply means an opening full cycle is unreachable at four/eight players (only three/seven 7s remain). No extra cards or unrelated deck rules are added.
+
+Public activity events record opening choices without revealing closed draws. Both opening phases and the shared timer persist through refresh/reconnection. Old saved normal turns keep their existing phase; subsequent new rounds use these opening rules. Local simulated opponents use the same phases and public-only choices.
+
+Test with `npm test -- src/game/opening.test.ts server/objects.test.ts` and, after building, `PLAYWRIGHT_PREVIEW=1 npm run test:e2e -- e2e/opening.spec.ts e2e/multiplayer.spec.ts`. Browser tests exercise both opening sources, opening 7 actions, timer expiry, 320px/desktop layouts, and saved-state restoration; server tests cover serialized competing pickups and retries.
 
 ### Automatic drawing and public activity
 

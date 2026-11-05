@@ -1,3 +1,4 @@
+import { formatCardName } from '../game/events'
 import { discardOutcome } from '../game/engine'
 import { GameActivity } from '../components/GameActivity'
 import { useEffect, useState } from 'react'
@@ -91,8 +92,11 @@ export function RoomPage({
     !!g &&
     g.currentPlayerId === id &&
     !own?.eliminated &&
-    ['turn', 'draw', 'penalty'].includes(g.phase) &&
+    ['opening-draw', 'opening-discard', 'turn', 'draw', 'penalty'].includes(
+      g.phase,
+    ) &&
     connection === 'live'
+  const openingChoice = g?.phase === 'opening-draw'
   const choosing = plan === room.revision
   const cards = g?.hand.filter((c) => selected.includes(c.id)) ?? []
   const matching =
@@ -121,14 +125,14 @@ export function RoomPage({
     const accepted = send(
       choosing
         ? { type: 'play-turn', cardIds: cards.map((c) => c.id), source, cardId }
-        : { type: 'draw', source, cardId },
+        : { type: openingChoice ? 'opening-draw' : 'draw', source, cardId },
     )
     if (accepted) {
       setSelected([])
       setPlan(null)
     }
   }
-  const ready = yours && (choosing || g?.phase === 'draw')
+  const ready = yours && (openingChoice || choosing || g?.phase === 'draw')
   const seconds =
     g?.deadline === null
       ? null
@@ -339,7 +343,11 @@ export function RoomPage({
                 <button
                   className="pile-button"
                   disabled={!ready || busy}
-                  aria-label="Draw one replacement card"
+                  aria-label={
+                    openingChoice
+                      ? 'Draw a new opening card'
+                      : 'Draw one replacement card'
+                  }
                   onClick={() => draw('pile')}
                 >
                   <PlayingCard faceDown />
@@ -347,8 +355,25 @@ export function RoomPage({
                 <span>Draw pile · {g.drawCount}</span>
               </div>
               <div className="sample-pile">
-                <PlayingCard card={g.latestDiscard.at(-1)} />
-                <span>Latest discard</span>
+                <div
+                  className={`${openingChoice ? 'opening-card' : ''} ${g.phase === 'penalty' ? 'power-card-active' : ''}`}
+                >
+                  {openingChoice && g.latestDiscard[0] ? (
+                    <button
+                      className="pile-button"
+                      disabled={!ready || busy}
+                      onClick={() => draw('discard', g.latestDiscard[0].id)}
+                      aria-label={`Select opening card: ${cardLabel(g.latestDiscard[0])}`}
+                    >
+                      <PlayingCard card={g.latestDiscard[0]} />
+                    </button>
+                  ) : g.latestDiscard.length ? (
+                    <PlayingCard card={g.latestDiscard.at(-1)} />
+                  ) : (
+                    <div className="empty-discard">Awaiting discard</div>
+                  )}
+                </div>
+                <span>{openingChoice ? 'Opening card' : 'Latest discard'}</span>
               </div>
               <div className="sample-pile joker-indicator">
                 <PlayingCard card={g.indicator} />
@@ -372,7 +397,9 @@ export function RoomPage({
                       !yours ||
                       busy ||
                       choosing ||
-                      (g.phase !== 'turn' && g.phase !== 'penalty') ||
+                      (g.phase !== 'turn' &&
+                        g.phase !== 'penalty' &&
+                        g.phase !== 'opening-discard') ||
                       (g.phase === 'penalty' && card.rank !== '7')
                     }
                     aria-label={`${cardLabel(card)}, card ${index + 1}`}
@@ -408,13 +435,17 @@ export function RoomPage({
                 ? 'Review the round results below.'
                 : !yours
                   ? 'Waiting for the current player.'
-                  : g.phase === 'penalty'
-                    ? `Respond with 7s or draw ${g.penalty} cards.`
-                    : choosing
-                      ? 'Your cards are not discarded yet. Choose a replacement source to commit both actions.'
-                      : g.hand.length
-                        ? 'Select cards of one rank, or call Show when eligible.'
-                        : 'Your hand is empty: call Show on this normal turn.'}
+                  : openingChoice
+                    ? 'Choose the opening card or draw a new card, then discard. Show is available before choosing if eligible.'
+                    : g.phase === 'opening-discard'
+                      ? 'Opening card acquired. Discard without drawing again.'
+                      : g.phase === 'penalty'
+                        ? `${g.openingPenalty ? 'Opening 7 penalty: ' : ''}Respond with 7s or draw ${g.penalty} cards.`
+                        : choosing
+                          ? 'Your cards are not discarded yet. Choose a replacement source to commit both actions.'
+                          : g.hand.length
+                            ? 'Select cards of one rank, or call Show when eligible.'
+                            : 'Your hand is empty: call Show on this normal turn.'}
             </p>
             {selectionError && (
               <p className="game-alert" role="alert">
@@ -423,22 +454,29 @@ export function RoomPage({
             )}
             {yours && (
               <div className="turn-actions">
-                {!choosing && (g.phase === 'turn' || g.phase === 'penalty') && (
-                  <button
-                    className="button button-primary"
-                    disabled={busy || !cards.length}
-                    onClick={discard}
-                  >
-                    {g.phase === 'penalty' || cards[0]?.rank === '7'
-                      ? 'Play selected 7s'
-                      : matching
-                        ? 'Match & Drop'
-                        : g.pickup.length
-                          ? 'Choose draw source'
-                          : 'Discard & draw automatically'}
-                  </button>
-                )}
-                {g.phase === 'turn' && !choosing && (
+                {!choosing &&
+                  (g.phase === 'turn' ||
+                    g.phase === 'penalty' ||
+                    g.phase === 'opening-discard') && (
+                    <button
+                      className="button button-primary"
+                      disabled={busy || !cards.length}
+                      onClick={discard}
+                    >
+                      {g.phase === 'penalty' || cards[0]?.rank === '7'
+                        ? g.openingPenalty
+                          ? 'Play 7'
+                          : 'Play selected 7s'
+                        : g.phase === 'opening-discard'
+                          ? 'Complete opening turn'
+                          : matching
+                            ? 'Match & Drop'
+                            : g.pickup.length
+                              ? 'Choose draw source'
+                              : 'Discard & draw automatically'}
+                    </button>
+                  )}
+                {(g.phase === 'turn' || openingChoice) && !choosing && (
                   <button
                     className="button button-secondary"
                     disabled={busy || !g.canShow}
@@ -453,7 +491,7 @@ export function RoomPage({
                     disabled={busy}
                     onClick={() => draw('pile')}
                   >
-                    Draw from pile
+                    {openingChoice ? 'Draw New Card' : 'Draw from pile'}
                   </button>
                 )}
                 {g.phase === 'penalty' && (
@@ -462,7 +500,8 @@ export function RoomPage({
                     disabled={busy}
                     onClick={() => send({ type: 'accept-penalty' })}
                   >
-                    Draw {g.penalty} penalty cards
+                    Draw {g.penalty}{' '}
+                    {g.openingPenalty ? 'Cards' : 'penalty cards'}
                   </button>
                 )}
                 {choosing && (
@@ -478,18 +517,25 @@ export function RoomPage({
             )}
             {ready && (
               <div className="pickup-panel">
-                <h3>Previous player’s eligible discard group</h3>
+                <h3>
+                  {openingChoice
+                    ? 'Opening card available for pickup'
+                    : 'Previous player’s eligible discard group'}
+                </h3>
                 {g.pickup.length ? (
                   <div className="pickup-cards">
                     {g.pickup.map((card) => (
                       <button
-                        className="pickup-button"
+                        className={`pickup-button ${openingChoice ? 'opening-pickup-action' : ''}`}
                         key={card.id}
                         disabled={busy}
-                        aria-label={`Pick up ${cardLabel(card)}`}
+                        aria-label={`${openingChoice ? 'Pick up opening' : 'Pick up'} ${cardLabel(card)}`}
                         onClick={() => draw('discard', card.id)}
                       >
                         <PlayingCard card={card} />
+                        {openingChoice && (
+                          <span>Pick Up {formatCardName(card)}</span>
+                        )}
                       </button>
                     ))}
                   </div>

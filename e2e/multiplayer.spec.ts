@@ -129,8 +129,8 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     const friendView = await (
       await other.request.get(`/api/rooms/${code}`)
     ).json()
-    expect(hostView.game.hand).toHaveLength(7)
-    expect(friendView.game.hand).toHaveLength(7)
+    expect([7, 9]).toContain(hostView.game.hand.length)
+    expect([7, 9]).toContain(friendView.game.hand.length)
     expect(hostView.game.deadline).toBeNull()
     expect(hostView.settings.eliminationThreshold).toBe(250)
     expect(hostView.game.players.every((p: object) => !('hand' in p))).toBe(
@@ -162,15 +162,33 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
       ).id
         ? page
         : other
-    const viewer = actor === page ? hostView : friendView
+    if (
+      (actor === page ? hostView : friendView).game.phase === 'opening-draw'
+    ) {
+      await actor
+        .getByRole('button', { name: 'Draw New Card', exact: true })
+        .click()
+      await expect
+        .poll(
+          async () =>
+            (await (await actor.request.get(`/api/rooms/${code}`)).json()).game
+              .phase,
+        )
+        .toBe('opening-discard')
+    }
+    const viewer = await (await actor.request.get(`/api/rooms/${code}`)).json()
     const hand = viewer.game.hand
     const buttons = actor
       .getByRole('group', { name: 'Your hand', exact: true })
       .getByRole('button')
-    await buttons.nth(0).click()
+    const selectedIndex =
+      viewer.game.phase === 'penalty'
+        ? hand.findIndex((c: { rank: string }) => c.rank === '7')
+        : 0
+    await buttons.nth(selectedIndex).click()
     await actor
       .getByRole('button', {
-        name: /Choose draw source|Match & Drop|Play selected 7s|Discard & draw automatically/,
+        name: /Choose draw source|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically|Complete opening turn/,
       })
       .click()
     if (
@@ -187,7 +205,7 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
           (await (await actor.request.get(`/api/rooms/${code}`)).json()).game
             .latestDiscard[0].id,
       )
-      .toBe(hand[0].id)
+      .toBe(hand[selectedIndex].id)
     const hostEvents = (
       await (await page.request.get(`/api/rooms/${code}`)).json()
     ).game.events

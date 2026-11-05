@@ -159,7 +159,9 @@ describe('server game integration and privacy', () => {
       const r = full(n)
       start(r, r.hostId, 1, () => 0.6)
       const g = r.game!
-      expect(g.players.every((p) => p.hand.length === 7)).toBe(true)
+      expect(
+        g.players.every((p) => p.hand.length === 7 || p.hand.length === 9),
+      ).toBe(true)
       expect(
         g.drawPile.length +
           g.players.flatMap((p) => p.hand).length +

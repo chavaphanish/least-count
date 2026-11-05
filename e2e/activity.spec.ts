@@ -6,6 +6,8 @@ import { createCard } from '../src/game/cards'
 import { SESSION_KEY } from '../src/lib/session'
 function fixture() {
   const s = createGame(['You', 'Alex', 'Ben'], Date.now(), () => 0.6)
+  s.phase = 'turn'
+  s.sevens = null
   s.current = 0
   s.starter = 0
   s.deadline = Date.now() + 60_000

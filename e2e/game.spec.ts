@@ -16,6 +16,8 @@ function fixture(count = 3): GameState {
   const s = createGame(
     Array.from({ length: count }, (_, i) => (i ? `Bot ${i}` : 'You')),
   )
+  s.phase = 'turn'
+  s.sevens = null
   s.current = 0
   s.starter = 0
   s.indicator = createCard('hearts', '9')
@@ -345,7 +347,7 @@ test('plays a complete local match through the real controls', async ({
             .click()
         await page
           .getByRole('button', {
-            name: /^(Choose draw source|Match & Drop|Play selected 7s|Discard & draw automatically)/,
+            name: /^(Choose draw source|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically|Complete opening turn)/,
           })
           .click()
         if (
@@ -369,6 +371,13 @@ test('plays a complete local match through the real controls', async ({
           }
         }
       }
+      if (action.type === 'opening-draw') {
+        if (action.source === 'pile')
+          await page
+            .getByRole('button', { name: 'Draw New Card', exact: true })
+            .click()
+        else await page.locator('.pickup-button').click()
+      }
       if (action.type === 'draw') {
         if (action.source === 'pile')
           await page
@@ -384,7 +393,7 @@ test('plays a complete local match through the real controls', async ({
       }
       if (action.type === 'accept-penalty')
         await page
-          .getByRole('button', { name: /^Draw \d+ penalty cards$/ })
+          .getByRole('button', { name: /^Draw \d+ (penalty cards|Cards)$/ })
           .click()
     }
   }

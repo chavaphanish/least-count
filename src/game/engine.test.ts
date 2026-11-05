@@ -37,6 +37,8 @@ function fixture(count = 3): GameState {
     0,
     seeded(12),
   )
+  s.phase = 'turn'
+  s.sevens = null
   s.current = 0
   s.starter = 0
   s.deadline = TURN_MS
@@ -86,10 +88,14 @@ describe('game deck and values', () => {
       expect(all.filter((c) => c.rank === 'PJ')).toHaveLength(
         count <= 4 ? 1 : 2,
       )
-      expect(s.players.every((p) => p.hand.length === 7)).toBe(true)
+      expect(
+        s.players.every((p) => p.hand.length === 7 || p.hand.length === 9),
+      ).toBe(true)
       expect(s.indicator.rank).not.toBe('7')
       expect(s.indicator.rank).not.toBe('PJ')
-      expect(s.eligible).toEqual([])
+      expect(s.eligible).toEqual(
+        latestGroup(s)[0].rank === '7' ? [] : [latestGroup(s)[0].id],
+      )
       expect(s.deadline).toBe(10 + TURN_MS)
     },
   )
@@ -103,13 +109,18 @@ describe('game deck and values', () => {
     expect(handTotal([card('J'), card('Q'), card('K')], '9')).toBe(30)
   })
 
-  it('does not start a penalty from an initial 7', () => {
+  it('starts a penalty from an initial 7 without counting the computer as a participant', () => {
     const s = Array.from({ length: 200 }, (_, seed) =>
       createGame(['A', 'B'], 0, seeded(seed)),
-    ).find((game) => latestGroup(game)[0].rank === '7')!
+    ).find((game) => game.sevens?.opening)!
     expect(s).toBeDefined()
-    expect(s.sevens).toBeNull()
-    expect(s.phase).toBe('turn')
+    expect(s.phase).toBe('penalty')
+    expect(s.sevens).toMatchObject({
+      amount: 2,
+      participants: [],
+      initiator: s.starter,
+      opening: true,
+    })
   })
 
   it.each([1, 9, 2.5])('rejects unsupported player count %s', (count) => {
@@ -416,7 +427,7 @@ describe('Show, scoring, and ordinary rounds', () => {
     expect(next.phase).toBe('round-over')
     const round = act(next, { type: 'next-round' })
     expect(round.players.map((p) => p.score)).toEqual([99, 99])
-    expect(round.phase).toBe('turn')
+    expect(['opening-draw', 'penalty', 'turn']).toContain(round.phase)
     expect(round.starter).toBe(1)
   })
 

@@ -25,6 +25,8 @@ function fixture(timedGame = true) {
     timedGame,
     eliminationThreshold: 100,
   })
+  s.phase = 'turn'
+  s.sevens = null
   s.current = 0
   s.starter = 0
   s.deadline = timedGame ? 60_000 : null

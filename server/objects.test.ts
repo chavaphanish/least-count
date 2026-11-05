@@ -4,7 +4,7 @@ import { createRoom, join, start, view } from './room'
 import type { Env } from './types'
 import { createCard } from '../src/game/cards'
 
-async function harness(seven = false) {
+async function harness(seven = false, phase: 'turn' | 'opening-draw' = 'turn') {
   const now = Date.now()
   const identity = (id: string) => ({
     id,
@@ -27,9 +27,11 @@ async function harness(seven = false) {
   })
   start(r, 'Alex', now, () => 0.6)
   const g = r.game!
+  g.phase = phase
+  g.sevens = null
   g.current = 0
   g.discards = [[{ ...createCard('clubs', '3'), id: 'old-public' }]]
-  g.eligible = []
+  g.eligible = phase === 'opening-draw' ? ['old-public'] : []
   g.players[0].hand = [
     { ...createCard('hearts', seven ? '7' : 'K'), id: 'played-public' },
     { ...createCard('clubs', 'Q'), id: 'own-private' },
@@ -53,9 +55,11 @@ async function harness(seven = false) {
     close: () => {},
   }
   const initial: Promise<unknown>[] = []
+  let queue: Promise<unknown> = Promise.resolve()
   const ctx = {
     blockConcurrencyWhile: (fn: () => Promise<unknown>) => {
-      const p = fn()
+      const p = queue.then(fn)
+      queue = p.catch(() => {})
       initial.push(p)
       return p
     },
@@ -118,4 +122,41 @@ describe('durable action commits and retries', () => {
     )
     expect((storage.get('room') as typeof r).game!.events).toEqual([])
   })
+})
+
+it('serializes competing opening pickups and deduplicates retries without exposing private cards', async () => {
+  const { room, ws, storage, r } = await harness(false, 'opening-draw')
+  const action = {
+    type: 'opening-draw',
+    source: 'discard',
+    cardId: 'old-public',
+  }
+  await Promise.all(
+    ['first', 'second'].map((requestId) =>
+      room.webSocketMessage(
+        ws,
+        JSON.stringify({ type: 'action', requestId, action }),
+      ),
+    ),
+  )
+  const once = structuredClone(storage.get('room')) as typeof r
+  expect(once.game!.phase).toBe('opening-discard')
+  expect(
+    once.game!.players[0].hand.filter((c) => c.id === 'old-public'),
+  ).toHaveLength(1)
+  expect(once.game!.discards).toEqual([])
+  expect(once.game!.events).toHaveLength(1)
+  expect(once.game!.events![0]).toMatchObject({
+    type: 'OPENING_CARD_SELECTED',
+    source: 'discard',
+  })
+  await room.webSocketMessage(
+    ws,
+    JSON.stringify({ type: 'action', requestId: 'first', action }),
+  )
+  expect((storage.get('room') as typeof r).game).toEqual(once.game)
+  expect(view(once, 'Ben', Date.now()).game!.phase).toBe('opening-discard')
+  expect(
+    JSON.stringify(view(once, 'Ben', Date.now()).game!.events),
+  ).not.toContain('own-private')
 })
