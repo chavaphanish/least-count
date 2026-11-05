@@ -1,4 +1,4 @@
-# Rule clarifications — confirmed decisions and open questions
+# Rule clarifications — confirmed decisions
 
 The supplied [Least Count rulebook](../RULEBOOK.md), Edition 2.0 (Working Draft), remains a **provisional reference**. Its original wording, including the “Official Game Rulebook” heading, is preserved unchanged. The decisions below were confirmed by the user on 5 November 2026 and take precedence over conflicting passages in that uploaded draft. Other rules may be refined in later stages.
 
@@ -12,7 +12,15 @@ This documentation does not implement gameplay. The application remains a visual
 
 **Example:** A discards two 5s using Match and Drop. B then discards a 5 using Match and Drop. C discards a King and must draw. C may take B's 5 or a card from the draw pile, but neither of A's 5s.
 
-**Still pending:** Does an intervening 7-penalty draw, skipped turn, or timeout clear open-pickup eligibility? The user has not answered this separate part of the original question. Do not infer that an older group becomes available again.
+**Confirmed — penalty draw:** Accepting a 7 penalty clears the previous discard group's pickup eligibility. The next player's required replacement draw must come from the draw pile. This covers the normal turn lost as part of accepting the penalty; it does not introduce any other kind of skipped turn.
+
+**Example:** A plays a 7. B draws the two-card penalty and loses their normal turn without discarding. C discards a King and must draw from the draw pile. C cannot take A's 7.
+
+**Confirmed — timeout:** A player's timeout also clears the previous discard group's pickup eligibility. The next player's required replacement draw must come from the draw pile.
+
+**Example:** A discards a 9 and completes their turn. B times out without discarding and is eliminated. C discards a King and must draw from the draw pile. C cannot take A's 9.
+
+These transitions do not make older discard groups available again. They do not add a draw to a Match and Drop turn, which still requires no replacement draw.
 
 ## 2. Empty hand and zero-point Show ties
 
@@ -38,4 +46,4 @@ When a zero-point Show is tied by other zero-point hands, the caller and all oth
 
 ## Next review
 
-Resolve the remaining pickup-eligibility question before implementing affected transitions. These notes record the user's current decisions without rewriting the uploaded source document or declaring the whole rulebook final. Any further unresolved case should remain explicit rather than being settled silently in code.
+The three initial clarification topics have been answered. These notes record the user's current decisions without rewriting the uploaded source document or declaring the whole rulebook final. Any further unresolved case should remain explicit rather than being settled silently in code.
