@@ -7,6 +7,7 @@ import {
   applyAction,
   canShow,
   createGame,
+  inspectDiscard,
   latestGroup,
   pickupCards,
   TURN_MS,
@@ -217,6 +218,143 @@ describe('normal turns and pickup', () => {
         s.players[0].hand.map((c) => c.id),
       ),
     ).toThrow()
+  })
+})
+
+describe('combined normal turns', () => {
+  it('previews a valid selection without changing the hand, discard, or deadline', () => {
+    const game = fixture()
+    const before = structuredClone(game)
+    const preview = inspectDiscard(game, 'p0', [game.players[0].hand[0].id])
+    expect(preview.needsDraw).toBe(true)
+    expect(preview.rank).toBe('K')
+    expect(game).toEqual(before)
+  })
+
+  it('commits discard and closed draw with the same result as the existing turn rules', () => {
+    const game = fixture()
+    const before = structuredClone(game)
+    const cardIds = [game.players[0].hand[0].id]
+    const combined = act(game, {
+      type: 'play-turn',
+      playerId: 'p0',
+      cardIds,
+      source: 'pile',
+    })
+    const sequential = act(discard(game, cardIds), {
+      type: 'draw',
+      playerId: 'p0',
+      source: 'pile',
+    })
+    expect(combined).toEqual(sequential)
+    expect(combined.phase).toBe('turn')
+    expect(combined.current).toBe(1)
+    expect(game).toEqual(before)
+  })
+
+  it('can pick any one card in the preceding group while replacing its visible discard', () => {
+    const game = fixture()
+    const previous = [card('3', 'hearts'), card('3', 'diamonds')]
+    game.discards = [previous]
+    game.eligible = previous.map((c) => c.id)
+    const outgoing = game.players[0].hand[0]
+    const next = act(game, {
+      type: 'play-turn',
+      playerId: 'p0',
+      cardIds: [outgoing.id],
+      source: 'discard',
+      cardId: previous[0].id,
+    })
+    expect(next.players[0].hand).toContainEqual(previous[0])
+    expect(latestGroup(next)).toEqual([outgoing])
+    expect(next.discards.flat()).not.toContainEqual(previous[0])
+    expect(game.discards).toEqual([previous])
+  })
+
+  it('rejects an unavailable pickup atomically without leaving a partial discard', () => {
+    const game = fixture()
+    const outgoing = game.players[0].hand[0]
+    const older = card('2')
+    game.discards.unshift([older])
+    game.eligible = latestGroup(game).map((c) => c.id)
+    const before = structuredClone(game)
+    for (const cardId of [older.id, outgoing.id, 'missing-card']) {
+      expect(() =>
+        act(game, {
+          type: 'play-turn',
+          playerId: 'p0',
+          cardIds: [outgoing.id],
+          source: 'discard',
+          cardId,
+        }),
+      ).toThrow(/eligible group/)
+      expect(game).toEqual(before)
+    }
+  })
+
+  it('keeps Match and Drop draw-free and rejects attaching a pickup to it', () => {
+    const game = fixture()
+    game.players[0].hand = [card('4')]
+    const ids = game.players[0].hand.map((c) => c.id)
+    expect(inspectDiscard(game, 'p0', ids).needsDraw).toBe(false)
+    expect(() =>
+      act(game, {
+        type: 'play-turn',
+        playerId: 'p0',
+        cardIds: ids,
+        source: 'pile',
+      }),
+    ).toThrow(/without a replacement draw/)
+    expect(game.players[0].hand).toHaveLength(1)
+    expect(discard(game, ids).players[0].hand).toHaveLength(0)
+  })
+
+  it('activates a normal 7 only after the combined replacement draw', () => {
+    const game = fixture()
+    game.players[0].hand = [card('7'), card('K')]
+    game.players[1].hand = [card('7')]
+    const drawn = game.drawPile.at(-1)!
+    const next = act(game, {
+      type: 'play-turn',
+      playerId: 'p0',
+      cardIds: [game.players[0].hand[0].id],
+      source: 'pile',
+    })
+    expect(next.players[0].hand).toContainEqual(drawn)
+    expect(next.phase).toBe('penalty')
+    expect(next.current).toBe(1)
+    expect(next.sevens!.amount).toBe(2)
+  })
+
+  it('accepts a final choice before the deadline and eliminates instead if the choice is late', () => {
+    const game = fixture()
+    const action: Action = {
+      type: 'play-turn',
+      playerId: 'p0',
+      cardIds: [game.players[0].hand[0].id],
+      source: 'pile',
+    }
+    const early = act(game, action, TURN_MS - 1)
+    expect(early.players[0].eliminated).toBe(false)
+    expect(early.deadline).toBe(2 * TURN_MS - 1)
+    const late = act(game, action, TURN_MS)
+    expect(late.players[0].eliminationReason).toBe('timeout')
+    expect(late.discards).toEqual(game.discards)
+    expect(late.eligible).toEqual([])
+  })
+
+  it('settles exhaustion after the selected discard if the closed draw cannot finish', () => {
+    const game = fixture()
+    game.drawPile = []
+    game.eligible = latestGroup(game).map((c) => c.id)
+    const next = act(game, {
+      type: 'play-turn',
+      playerId: 'p0',
+      cardIds: [game.players[0].hand[0].id],
+      source: 'pile',
+    })
+    expect(next.result!.reason).toBe('exhaustion')
+    expect(next.phase).toBe('round-over')
   })
 })
 

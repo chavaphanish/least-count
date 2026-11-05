@@ -49,6 +49,13 @@ export type GameState = {
 export type Action =
   | { type: 'discard'; playerId: string; cardIds: string[] }
   | {
+      type: 'play-turn'
+      playerId: string
+      cardIds: string[]
+      source: 'pile' | 'discard'
+      cardId?: string
+    }
+  | {
       type: 'draw'
       playerId: string
       source: 'pile' | 'discard'
@@ -71,6 +78,42 @@ export const canShow = (s: GameState, playerId: string) =>
   s.players[s.current].id === playerId &&
   !s.players[s.current].eliminated &&
   handTotal(s.players[s.current].hand, s.indicator.rank) <= 5
+
+/** Validate a selection without changing the hand, pile, timer, or random source. */
+export function inspectDiscard(
+  s: GameState,
+  playerId: string,
+  cardIds: string[],
+) {
+  const player = s.players[s.current]
+  if (player.id !== playerId || player.eliminated)
+    throw new RuleError('Wait for your turn.')
+  if (s.phase !== 'turn' && s.phase !== 'penalty')
+    throw new RuleError('Draw your replacement card first.')
+  if (!player.hand.length)
+    throw new RuleError(
+      'Your hand is empty. You must call Show on your normal turn.',
+    )
+  if (!cardIds.length || new Set(cardIds).size !== cardIds.length) {
+    throw new RuleError('Select one or more different cards from your hand.')
+  }
+  const cards = cardIds.map((id) => player.hand.find((c) => c.id === id))
+  if (cards.some((c) => !c))
+    throw new RuleError('You can only discard cards in your own hand.')
+  const group = cards as GameCard[]
+  const rank = group[0].rank
+  if (!group.every((c) => c.rank === rank))
+    throw new RuleError('All selected cards must have the same rank.')
+  if (s.phase === 'penalty' && rank !== '7')
+    throw new RuleError('Play one or more 7s, or accept the penalty.')
+  const matchesTop = latestGroup(s).at(-1)?.rank === rank
+  return {
+    cards: group,
+    rank,
+    matchesTop,
+    needsDraw: s.phase === 'turn' && !matchesTop,
+  }
+}
 
 function note(s: GameState, text: string) {
   s.log = [...s.log.slice(-39), text]
@@ -331,7 +374,38 @@ export function applyAction(
   const player = s.players[s.current]
   if (action.playerId !== player.id || player.eliminated)
     throw new RuleError('Wait for your turn.')
-  if (action.type === 'show') {
+  if (action.type === 'play-turn') {
+    if (s.phase !== 'turn')
+      throw new RuleError('A combined turn must start before discarding.')
+    if (!inspectDiscard(s, action.playerId, action.cardIds).needsDraw) {
+      throw new RuleError(
+        'Match and Drop requires a discard without a replacement draw.',
+      )
+    }
+    // Both steps validate before anything is returned or persisted. A rejected
+    // pickup cannot leave a partial discard behind. Both use the same deadline.
+    const discarded = applyAction(
+      state,
+      {
+        type: 'discard',
+        playerId: action.playerId,
+        cardIds: action.cardIds,
+      },
+      now,
+      random,
+    )
+    return applyAction(
+      discarded,
+      {
+        type: 'draw',
+        playerId: action.playerId,
+        source: action.source,
+        cardId: action.cardId,
+      },
+      now,
+      random,
+    )
+  } else if (action.type === 'show') {
     if (!canShow(s, player.id))
       throw new RuleError(
         'Show requires a total of 5 or less at the start of a normal turn.',
@@ -342,29 +416,11 @@ export function applyAction(
       throw new RuleError('There is no pending 7 penalty.')
     acceptPenalty(s, now, random)
   } else if (action.type === 'discard') {
-    if (s.phase !== 'turn' && s.phase !== 'penalty')
-      throw new RuleError('Draw your replacement card first.')
-    if (!player.hand.length)
-      throw new RuleError(
-        'Your hand is empty. You must call Show on your normal turn.',
-      )
-    if (
-      !action.cardIds.length ||
-      new Set(action.cardIds).size !== action.cardIds.length
-    )
-      throw new RuleError('Select one or more different cards from your hand.')
-    const cards = action.cardIds.map((id) =>
-      player.hand.find((c) => c.id === id),
-    )
-    if (cards.some((c) => !c))
-      throw new RuleError('You can only discard cards in your own hand.')
-    const group = cards as GameCard[]
-    const rank = group[0].rank
-    if (!group.every((c) => c.rank === rank))
-      throw new RuleError('All selected cards must have the same rank.')
-    if (s.phase === 'penalty' && rank !== '7')
-      throw new RuleError('Play one or more 7s, or accept the penalty.')
-    const matchesTop = latestGroup(s).at(-1)?.rank === rank
+    const {
+      cards: group,
+      rank,
+      matchesTop,
+    } = inspectDiscard(s, action.playerId, action.cardIds)
     player.hand = player.hand.filter((c) => !action.cardIds.includes(c.id))
     s.discards.push(group)
     note(
