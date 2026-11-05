@@ -2,7 +2,11 @@
 
 A browser card game built with React, TypeScript, Vite, and plain responsive CSS. The long-term vision is an online multiplayer card game for web and mobile browsers, featuring real-time gameplay, private game rooms, and strategic low-score challenges.
 
-**Current status: visual prototype only.** The landing page links to a sample card table and a rulebook placeholder. All players and hands are mock data. There is no playable game, scoring, backend, authentication, database, or online multiplayer. The exact rules will be implemented after the rulebook is supplied; the sample hand size, seats, and table piles do not establish game rules.
+**Current status: visual prototype only.** The landing page links to a sample card table and a rulebook placeholder. All players and hands are mock data. There is no playable game, scoring, backend, authentication, database, or online multiplayer. A provisional rulebook has been supplied; rules implementation awaits clarification. The sample hand size, seats, and table piles do not establish game rules.
+
+## Provisional rulebook
+
+The supplied [Rulebook — Edition 2.0 (Working Draft)](RULEBOOK.md) is preserved unchanged for review. Despite its “Official Game Rulebook” heading, it remains provisional and may be refined in later stages. [Pending rule clarifications](docs/rule-clarifications.md) cover open pickup, empty-hand turns, and tiebreaker scoring. No disputed interpretation has been selected or implemented.
 
 ## Development
 
@@ -53,6 +57,6 @@ Use the repository root, build command `npm run build`, and output directory `di
 
 ## Next steps
 
-1. Supply and confirm the rulebook, including deck composition, dealing, turns, card values, legal moves, scoring, and win conditions.
+1. Review the provisional rulebook and resolve the pending clarification questions before implementing affected gameplay behavior.
 2. Implement and test the rules in `src/game` before connecting them to the table interface.
 3. Add real gameplay interactions. Online rooms and multiplayer can follow in a separate phase.
