@@ -157,13 +157,11 @@ test('registered profile restores, saves name, rejects invalid image, and remove
   await page.getByLabel('Display name', { exact: true }).fill('Renamed Player')
   await page.getByRole('button', { name: 'Save profile', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('profile is saved')
-  await page
-    .getByLabel('Profile picture', { exact: true })
-    .setInputFiles({
-      name: 'fake.png',
-      mimeType: 'image/png',
-      buffer: Buffer.from('not an image'),
-    })
+  await page.getByLabel('Profile picture', { exact: true }).setInputFiles({
+    name: 'fake.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  })
   await expect(page.getByRole('alert')).toContainText(/image|PNG|file/)
   await page
     .getByRole('button', { name: 'Remove picture', exact: true })
@@ -173,4 +171,52 @@ test('registered profile restores, saves name, rejects invalid image, and remove
   await expect(page.getByLabel('Display name', { exact: true })).toHaveValue(
     'Renamed Player',
   )
+})
+
+test('Google checks provider configuration and recovers without redirecting to an error page', async ({
+  page,
+}) => {
+  await mockProvider(page)
+  await page.route('**/api/auth/providers', (route) =>
+    route.fulfill({ json: { google: false } }),
+  )
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Continue with Google' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Google sign-in is not enabled',
+  )
+  await expect(
+    page.getByRole('button', { name: 'Continue with Google' }),
+  ).toBeEnabled()
+  await expect(
+    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+  ).toBeVisible()
+})
+
+test('enabled Google uses PKCE and returns to this app callback', async ({
+  page,
+  baseURL,
+}) => {
+  await mockProvider(page)
+  await page.route('**/api/auth/providers', (route) =>
+    route.fulfill({ json: { google: true } }),
+  )
+  await page.route(
+    'https://mock-project.supabase.co/auth/v1/authorize**',
+    (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: '<h1>Mock Google consent</h1>',
+      }),
+  )
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Continue with Google' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Mock Google consent' }),
+  ).toBeVisible()
+  const url = new URL(page.url())
+  expect(url.searchParams.get('provider')).toBe('google')
+  expect(url.searchParams.get('redirect_to')).toBe(`${baseURL}/auth/callback`)
+  expect(url.searchParams.get('code_challenge')).toBeTruthy()
+  expect(url.searchParams.get('code_challenge_method')).toBe('s256')
 })

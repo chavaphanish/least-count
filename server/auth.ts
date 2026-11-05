@@ -45,6 +45,33 @@ export function publicConfig(env: Env) {
     supabase: { url: url.origin, publishableKey: env.SUPABASE_PUBLISHABLE_KEY },
   }
 }
+/** Public provider availability, queried only when Google sign-in is requested. */
+export async function authProviders(env: Env): Promise<{ google: boolean }> {
+  const config = publicConfig(env).supabase
+  if (!config)
+    throw new ApiError(503, 'Registered sign-in is not configured yet.')
+  let response: Response
+  try {
+    response = await fetch(`${config.url}/auth/v1/settings`, {
+      headers: { apikey: config.publishableKey },
+      signal: AbortSignal.timeout(8000),
+    })
+  } catch {
+    throw new ApiError(
+      503,
+      'Could not check Google sign-in availability. Please retry.',
+    )
+  }
+  if (!response.ok)
+    throw new ApiError(
+      503,
+      'Supabase authentication settings could not be loaded. Check the project URL and public key.',
+    )
+  const settings = (await response.json()) as {
+    external?: { google?: boolean }
+  }
+  return { google: settings.external?.google === true }
+}
 function provider(env: Env, token: string) {
   const config = publicConfig(env).supabase
   if (!config)

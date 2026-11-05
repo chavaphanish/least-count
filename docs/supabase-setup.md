@@ -72,3 +72,17 @@ These require the real project and cannot be proven by mocks:
 - Fill a mixed registered/guest room on separate browsers, verify host-only start and seven-card private hands, then test refresh/reconnect, host departure, timed deadlines, and untimed play. The browser network response must contain only the viewer's hand.
 
 Do not commit test passwords/tokens. If mail or OAuth fails, check Supabase Auth logs, redirect allowlists, Google testing audience, SMTP settings, and browser callback errors. If profiles fail, apply/check the migration and RLS policies. If guests fail too, check the Cloudflare Worker bindings/deployment before troubleshooting Supabase.
+
+## Google sign-in troubleshooting
+
+The project URL and public key do not enable Google automatically. The account flow now requests `/api/auth/providers`, which checks Supabase's public `/auth/v1/settings`. If Google is disabled, the app explains which provider settings are missing and keeps email/guest access available instead of redirecting to an opaque provider error. This diagnostic does not change dashboard settings or expose any OAuth secret.
+
+For this project, Google's authorized redirect URI is:
+
+```text
+https://ugyaoeckoqkhqaqezoqg.supabase.co/auth/v1/callback
+```
+
+Set that URI in the Google Cloud Web OAuth client, then save its client ID and secret directly in Supabase → Authentication → Providers → Google and enable it. The game's own `/auth/callback` belongs in Supabase's redirect allowlist. Google testing-mode users must be allowed by the OAuth audience. `redirect_uri_mismatch` points to the Google callback URI; `provider is not enabled` points to Supabase's Google provider switch/settings. A failed or cancelled callback preserves the invitation and offers another attempt.
+
+Live Google consent and the project's administrative settings have not been inspected from this managed environment: Supabase/Cloudflare dashboard access and outbound project access are unavailable here. Provider availability and error recovery are covered by mocked tests; a real successful sign-in still requires the dashboard configuration and a test account.

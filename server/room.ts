@@ -1,3 +1,4 @@
+import { gameEvents } from '../src/game/events'
 import {
   applyAction,
   canShow,
@@ -5,6 +6,7 @@ import {
   isPlaying,
   latestGroup,
   pickupCards,
+  resolveForcedDraw,
 } from '../src/game/engine'
 import type { Action, GameState } from '../src/game/engine'
 import {
@@ -118,6 +120,7 @@ export function leave(r: RoomRecord, id: string, now: number) {
   if (!r.members.length) r.status = 'closed'
 }
 export function sweep(r: RoomRecord, now: number) {
+  if (r.game) r.game = resolveForcedDraw(r.game, now, secureRandom)
   for (const m of r.members)
     if (
       m.connected &&
@@ -180,10 +183,8 @@ export function start(
       eliminationThreshold: r.settings.eliminationThreshold,
       timedGame: r.settings.timedGame,
     },
+    r.members.map((m) => m.id),
   )
-  r.game.players.forEach((p, i) => {
-    p.id = r.members[i].id
-  })
   r.status = 'in-game'
 }
 export function gameAction(
@@ -283,6 +284,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
           canShow: canShow(g, id),
           result: g.result,
           log: g.log,
+          events: gameEvents(g),
         }
       : null,
   }

@@ -32,7 +32,7 @@ function fixture(count = 3): GameState {
     card('3'),
   ]
   s.discards = [[card('4')]]
-  s.eligible = []
+  s.eligible = s.discards[0].map((c) => c.id)
   s.deadline = Date.now() + 60_000
   return s
 }
@@ -229,6 +229,7 @@ test('plays a responding 7 and cancels a full cycle', async ({ page }) => {
   game.phase = 'penalty'
   game.sevens = { initiator: 1, participants: [1], amount: 2 }
   game.discards = [[card('7')]]
+  game.eligible = []
   await load(page, game)
   await page.getByRole('button', { name: /^7 of/ }).click()
   await page.getByRole('button', { name: 'Play selected 7s (1)' }).click()
@@ -344,7 +345,7 @@ test('plays a complete local match through the real controls', async ({
             .click()
         await page
           .getByRole('button', {
-            name: /^(Choose draw source|Match & Drop|Play selected 7s)/,
+            name: /^(Choose draw source|Match & Drop|Play selected 7s|Discard & draw automatically)/,
           })
           .click()
         if (

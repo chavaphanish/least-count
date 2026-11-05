@@ -1,6 +1,7 @@
 import type { Env } from './types'
 import {
   authenticate,
+  authProviders,
   directory,
   publicConfig,
   requireAuth,
@@ -31,6 +32,8 @@ export default {
           service: 'least-count',
           lobbyGraceSeconds: 90,
         })
+      if (url.pathname === '/api/auth/providers' && request.method === 'GET')
+        return json(await authProviders(env))
       if (url.pathname === '/api/session' && request.method === 'GET') {
         const auth = await authenticate(request, env)
         const membership = auth

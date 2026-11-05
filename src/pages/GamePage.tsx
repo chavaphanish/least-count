@@ -1,3 +1,5 @@
+import { gameEvents } from '../game/events'
+import { GameActivity } from '../components/GameActivity'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PlayingCard } from '../components/PlayingCard'
 import { RoundSummary } from '../components/RoundSummary'
@@ -177,7 +179,11 @@ export function GamePage({
     const source =
       action.type === 'draw' || action.type === 'play-turn'
         ? action.source
-        : null
+        : action.type === 'discard' &&
+            inspectDiscard(game, human.id, action.cardIds).outcome ===
+              'automatic'
+          ? 'pile'
+          : null
     const incomingFrom =
       source === 'pile'
         ? cardRect(document.querySelector('[data-draw-source] .playing-card'))
@@ -229,7 +235,7 @@ export function GamePage({
     setSelectionError('')
     try {
       const ids = selectedCards.map((card) => card.id)
-      if (inspectDiscard(game, human.id, ids).needsDraw)
+      if (inspectDiscard(game, human.id, ids).needsChoice)
         setPending({ game, cardIds: ids })
       else executeMove({ type: 'discard', playerId: human.id, cardIds: ids })
     } catch (reason) {
@@ -466,11 +472,13 @@ export function GamePage({
                   disabled={!selectedCards.length}
                   onClick={discardSelected}
                 >
-                  {game.phase === 'penalty'
+                  {game.phase === 'penalty' || selectedCards[0]?.rank === '7'
                     ? 'Play selected 7s'
                     : matchesTop
                       ? 'Match & Drop'
-                      : 'Choose draw source'}
+                      : pickups.length
+                        ? 'Choose draw source'
+                        : 'Discard & draw automatically'}
                   {selectedCards.length ? ` (${selectedCards.length})` : ''}
                 </button>
               )}
@@ -583,14 +591,7 @@ export function GamePage({
             ))}
           </ul>
         </section>
-        <details className="activity-log">
-          <summary>Table activity</summary>
-          <ol>
-            {game.log.slice(-10).map((entry, index) => (
-              <li key={`${game.log.length}-${index}`}>{entry}</li>
-            ))}
-          </ol>
-        </details>
+        <GameActivity events={gameEvents(game)} />
       </div>
       <div className="table-footnote">
         <span>

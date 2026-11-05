@@ -169,7 +169,9 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
       .getByRole('button')
     await buttons.nth(0).click()
     await actor
-      .getByRole('button', { name: /Choose draw source|Match & Drop/ })
+      .getByRole('button', {
+        name: /Choose draw source|Match & Drop|Play selected 7s|Discard & draw automatically/,
+      })
       .click()
     if (
       await actor
@@ -186,6 +188,25 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
             .latestDiscard[0].id,
       )
       .toBe(hand[0].id)
+    const hostEvents = (
+      await (await page.request.get(`/api/rooms/${code}`)).json()
+    ).game.events
+    const friendEvents = (
+      await (await other.request.get(`/api/rooms/${code}`)).json()
+    ).game.events
+    expect(hostEvents).toEqual(friendEvents)
+    expect(hostEvents.length).toBeGreaterThan(1)
+    expect(new Set(hostEvents.map((e: { id: string }) => e.id)).size).toBe(
+      hostEvents.length,
+    )
+    await other.reload()
+    await expect(
+      other.getByRole('heading', { name: 'Round 1', exact: true }),
+    ).toBeVisible()
+    expect(
+      (await (await other.request.get(`/api/rooms/${code}`)).json()).game
+        .events,
+    ).toEqual(hostEvents)
     await expect(
       page.locator('.live-opponent [role="img"]').first(),
     ).toHaveAttribute('aria-label', 'Face-down card')
