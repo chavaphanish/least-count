@@ -19,6 +19,10 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Directory", "GameRoom"] },
   ],
+  "vars": {
+    "SUPABASE_URL": "https://ugyaoeckoqkhqaqezoqg.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_97YNUcL6PYOVLls_ZQ48fg_G7WRCyIU",
+  },
   "workers_dev": true,
   "preview_urls": true,
 }

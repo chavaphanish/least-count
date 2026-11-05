@@ -1,6 +1,6 @@
 # Supabase setup for Least Count
 
-No Supabase project exists for this task yet. Guests, rooms, and local practice have been tested independently. Google/email/profile code is implemented and tested with mocked provider responses; it is **not live-provider verified**. Follow these steps in your browser. Do not send passwords or private keys in chat.
+The supplied Supabase project is `ugyaoeckoqkhqaqezoqg`. Its public URL and publishable key are configured in `wrangler.jsonc` as Worker runtime variables. Database migration, provider settings, and live verification are still pending. Guests, rooms, and local practice have been tested independently. Google/email/profile code is implemented and tested with mocked provider responses; it is **not live-provider verified**. Follow these steps in your browser. Do not send passwords or private keys in chat.
 
 ## 1. Create the project
 
@@ -53,7 +53,7 @@ SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_PUBLISHABLE_KEY
 ```
 
-Both values are public configuration, returned by `/api/config`; do not substitute secrets. Set the same runtime configuration for the reviewed preview environment if you use one. Use configuration-driven `npx wrangler deploy` after review; if dashboard variables are being overwritten by Git builds, use `npx wrangler deploy --keep-vars`. Review the Worker migration in `wrangler.jsonc` before its first deployment. This task creates a PR, not an automatic production deployment.
+Both values are public configuration, returned by `/api/config`; do not substitute secrets. The supplied project values are already recorded in `wrangler.jsonc` under `vars` for configuration-driven deployments; dashboard copies are unnecessary unless overriding intentionally. Set the same runtime configuration for the reviewed preview environment if you use one. Use configuration-driven `npx wrangler deploy` after review; if dashboard variables are being overwritten by Git builds, use `npx wrangler deploy --keep-vars`. Review the Worker migration in `wrangler.jsonc` before its first deployment. The feature PR is merged; subsequent pushes to the production branch trigger the configured Cloudflare build. A packaging dry run does not verify a live deployment.
 
 For local development only, copy `.dev.vars.example` to `.dev.vars`, replace the two placeholders, and restart `npm run dev:server`. Keep `.dev.vars` out of Git. Start Vite in a second terminal as described in README.
 
