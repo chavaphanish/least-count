@@ -49,7 +49,7 @@ test('requires a discard before opening pickup and restores the pending replacem
   const opener = latestGroup(s)[0]
   await load(page, s)
   await expect(
-    page.getByRole('button', { name: 'Draw from pile', exact: true }),
+    page.getByRole('button', { name: 'Draw New Card', exact: true }),
   ).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Pick up/ })).toHaveCount(0)
   await expect(page.locator('[data-draw-source]')).toBeDisabled()
@@ -63,7 +63,7 @@ test('requires a discard before opening pickup and restores the pending replacem
     .nth(index)
     .click()
   await page
-    .getByRole('button', { name: 'Discard selected (1)', exact: true })
+    .getByRole('button', { name: 'Drop 1 Card', exact: true })
     .click()
   const waiting = await saved(page)
   expect(waiting.phase).toBe('draw')
@@ -100,11 +100,11 @@ test('closed replacement is offered only after the first discard and keeps its i
     .nth(index)
     .click()
   await page
-    .getByRole('button', { name: 'Discard selected (1)', exact: true })
+    .getByRole('button', { name: 'Drop 1 Card', exact: true })
     .click()
   expect((await saved(page)).players[0].hand).toHaveLength(6)
   await page
-    .getByRole('button', { name: 'Draw from pile', exact: true })
+    .getByRole('button', { name: 'Draw New Card', exact: true })
     .click()
   const done = await saved(page)
   expect(done.players[0].hand).toHaveLength(7)
@@ -122,13 +122,13 @@ test('opening 7 offers penalty acceptance or selected 7s, never ordinary pickup 
   const s = fixture(true)
   await load(page, s)
   await expect(
-    page.getByRole('button', { name: 'Draw 2 Cards', exact: true }),
+    page.getByRole('button', { name: 'Draw 2 Penalty Cards', exact: true }),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Play 7', exact: true }),
   ).toBeDisabled()
   await expect(
-    page.getByRole('button', { name: 'Call Show', exact: true }),
+    page.getByRole('button', { name: 'Declare Least', exact: true }),
   ).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: /Pick up opening/ }),
@@ -143,7 +143,7 @@ test('opening 7 offers penalty acceptance or selected 7s, never ordinary pickup 
       .nth(index)
       .click()
   await page
-    .getByRole('button', { name: `Play 7 (${sevens.length})`, exact: true })
+    .getByRole('button', { name: sevens.length === 1 ? 'Play 7' : `Play ${sevens.length} Sevens`, exact: true })
     .click()
   const done = await saved(page)
   expect(done.players[0].hand).toHaveLength(7 - sevens.length)
@@ -158,7 +158,7 @@ test('opening penalty acceptance draws two and skips discarding', async ({
 }) => {
   const s = fixture(true)
   await load(page, s)
-  await page.getByRole('button', { name: 'Draw 2 Cards', exact: true }).click()
+  await page.getByRole('button', { name: 'Draw 2 Penalty Cards', exact: true }).click()
   const done = await saved(page)
   expect(done.players[0].hand).toHaveLength(9)
   expect(done.current).toBe(1)

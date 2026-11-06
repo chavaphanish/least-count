@@ -271,3 +271,21 @@ it('preserves old public text history and continues its sequence after upgrade',
   })
   expect(done.events![1].sequenceNumber).toBe(2)
 })
+
+it('uses Round Joker in current and historical public round announcements', () => {
+  const s = createGame(['Alex', 'Ben'], 0, () => 0.6)
+  const opening = gameEvents(s).find(event => event.type === 'ROUND_STARTED')!
+  expect(formatGameEvent(opening)).toContain('Round Joker rank')
+  const legacy = { ...opening, type: 'LEGACY_ACTIVITY' as const, message: 'Round 1: selected joker rank 9. Selected Joker stays all round.' }
+  expect(formatGameEvent(legacy)).toBe('Round 1: Round Joker rank 9. Round Joker stays all round.')
+  expect(legacy.message).toContain('selected joker')
+})
+
+it('normalizes old public activity without rewriting stored events', () => {
+  const s = fixture()
+  s.events = undefined
+  s.log = ['Alex discarded a Queen. Ben called Show. Selected Joker rank 9.']
+  const event = gameEvents(s)[0]
+  expect(formatGameEvent(event)).toBe('Alex dropped a Queen. Ben declared Least. Round Joker rank 9.')
+  expect(s.log[0]).toContain('discarded')
+})

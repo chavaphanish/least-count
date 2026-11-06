@@ -34,7 +34,7 @@ export function GameActivity({ events }: { events: readonly GameEvent[] }) {
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >
-          {expanded ? 'Show Recent Activity' : 'View Full History'}
+          {expanded ? 'Recent Activity' : 'View Full History'}
         </button>
       </div>
       {!events.length && (
@@ -51,10 +51,10 @@ export function GameActivity({ events }: { events: readonly GameEvent[] }) {
       ) : (
         <>
           <ol className="compact-desktop" aria-label="Recent game activity">
-            {render(events.slice(-5))}
+            {render(events.slice(-5).reverse())}
           </ol>
           <ol className="compact-mobile" aria-label="Recent game activity">
-            {render(events.slice(-3))}
+            {render(events.slice(-3).reverse())}
           </ol>
         </>
       )}

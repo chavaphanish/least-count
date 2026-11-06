@@ -125,6 +125,13 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     await expect(
       other.getByRole('heading', { name: 'Round 1', exact: true }),
     ).toBeVisible()
+    for (const [table, name, initials] of [[page, 'Host One', 'HO'], [other, 'Friend Two', 'FR']] as const) {
+      await expect(table.locator('.hand-player')).toContainText(name)
+      await expect(table.locator('.hand-player .profile-avatar')).toHaveText(initials)
+      await expect(table.locator('.player-hand .card-value')).toHaveCount(0)
+      await expect(table.locator('.player-hand .hand-row')).toHaveCount(1)
+      await expect(table.locator('.joker-indicator')).toContainText('Round Joker')
+    }
     const hostView = await (await page.request.get(`/api/rooms/${code}`)).json()
     const friendView = await (
       await other.request.get(`/api/rooms/${code}`)
@@ -176,16 +183,16 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     await buttons.nth(selectedIndex).click()
     await actor
       .getByRole('button', {
-        name: /Discard selected|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically/,
+        name: /^(Drop|Play)/,
       })
       .click()
     if (
       await actor
-        .getByRole('button', { name: 'Draw from pile', exact: true })
+        .getByRole('button', { name: 'Draw New Card', exact: true })
         .isVisible()
     )
       await actor
-        .getByRole('button', { name: 'Draw from pile', exact: true })
+        .getByRole('button', { name: 'Draw New Card', exact: true })
         .click()
     await expect
       .poll(
@@ -345,7 +352,7 @@ test('online discards commit and finish animating before the eligible pickup is 
       ).game
       if (current.phase === 'penalty') {
         await actor
-          .getByRole('button', { name: /^Draw \d+ (Cards|penalty cards)$/ })
+          .getByRole('button', { name: /^Draw \d+ Penalty Cards$/ })
           .click()
         await expect
           .poll(
@@ -362,7 +369,7 @@ test('online discards commit and finish animating before the eligible pickup is 
       )
       expect(index).toBeGreaterThanOrEqual(0)
       await expect(
-        actor.getByRole('button', { name: 'Draw from pile', exact: true }),
+        actor.getByRole('button', { name: 'Draw New Card', exact: true }),
       ).toHaveCount(0)
       await actor
         .getByRole('group', { name: 'Your hand', exact: true })
@@ -372,7 +379,7 @@ test('online discards commit and finish animating before the eligible pickup is 
       if (!current.pickup.length) {
         await actor
           .getByRole('button', {
-            name: 'Discard & draw automatically',
+            name: 'Drop 1 Card',
             exact: true,
           })
           .click()
@@ -384,7 +391,7 @@ test('online discards commit and finish animating before the eligible pickup is 
       await actor.clock.install()
       await actor.clock.pauseAt(new Date())
       await actor
-        .getByRole('button', { name: 'Discard selected', exact: true })
+        .getByRole('button', { name: 'Drop 1 Card', exact: true })
         .click()
       await expect(actor.locator('.flight-outgoing')).toHaveCount(1)
       await expect(actor.locator('.flight-incoming')).toHaveCount(0)
@@ -396,7 +403,7 @@ test('online discards commit and finish animating before the eligible pickup is 
       expect(waiting.pickup).toEqual(current.pickup)
       expect(waiting.deadline).toBe(current.deadline)
       await expect(
-        actor.getByRole('button', { name: 'Draw from pile', exact: true }),
+        actor.getByRole('button', { name: 'Draw New Card', exact: true }),
       ).toHaveCount(0)
       await actor.clock.runFor(650)
       await expect(actor.getByTestId('turn-animation')).toHaveCount(0)

@@ -86,8 +86,8 @@ describe('standard discard-first opening', () => {
         type: 'ROUND_STARTED',
         openingCard: latestGroup(s)[0],
       })
-      expect(() => draw(s, 'pile')).toThrow(/Discard first/)
-      expect(() => draw(s, 'discard')).toThrow(/Discard first/)
+      expect(() => draw(s, 'pile')).toThrow(/Drop first/)
+      expect(() => draw(s, 'discard')).toThrow(/Drop first/)
       expect(() =>
         applyAction(
           s,

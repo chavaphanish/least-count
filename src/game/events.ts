@@ -99,23 +99,23 @@ export function formatGameEvent(event: GameEvent): string {
   switch (event.type) {
     case 'ROUND_STARTED':
       if (event.openingCard)
-        return `Round ${event.roundNumber} started. The opening card is the ${formatCardName(event.openingCard)}. Selected Joker rank ${event.indicatorRank}.`
-      return `Round ${event.roundNumber} started: seven cards each; selected joker rank ${event.indicatorRank}.`
+        return `Round ${event.roundNumber} started. The opening card is the ${formatCardName(event.openingCard)}. Round Joker rank ${event.indicatorRank}.`
+      return `Round ${event.roundNumber} started: seven cards each; Round Joker rank ${event.indicatorRank}.`
     case 'OPENING_SEVEN_ACTIVATED':
       return `The opening 7 activated a two-card penalty for ${event.player.name}.`
     case 'OPENING_CARD_SELECTED':
       return event.source === 'discard'
         ? `${event.player.name} picked up the opening ${formatCardName(event.card)}.`
-        : `${event.player.name} drew a card from the draw pile instead of picking up the opening card.`
+        : `${event.player.name} drew a card from the Draw Pile instead of picking up the opening card.`
     case 'TURN_COMPLETED': {
-      const action = `${event.player.name} discarded ${formatCardGroup(event.cards)}`
+      const action = `${event.player.name} dropped ${formatCardGroup(event.cards)}`
       if (event.opening)
         return `${action} and completed the opening turn. No additional replacement card was drawn.`
       if (event.draw === 'none')
         return `${action} using Match and Drop. No replacement card was required.`
       if (event.draw === 'pickup' && event.pickup)
-        return `${action} and picked up the ${formatCardName(event.pickup)} from the previous player's discard.`
-      return `${action} and ${event.draw === 'automatic' ? 'automatically ' : ''}drew a card from the draw pile.`
+        return `${action} and picked up the ${formatCardName(event.pickup)} from the Drop Pile.`
+      return `${action} and ${event.draw === 'automatic' ? 'automatically ' : ''}drew a card from the Draw Pile.`
     }
     case 'POWER_SEVEN_PLAYED':
       if (event.penalty === 0)
@@ -126,9 +126,9 @@ export function formatGameEvent(event: GameEvent): string {
     case 'POWER_SEVEN_CYCLE_COMPLETED':
       return `${event.opening ? 'Full cycle of opening 7s' : 'Full cycle of 7s'}: penalty cancelled. ${event.next.name} plays next.`
     case 'SHOW_DECLARED':
-      return `${event.player.name} declared Show with a hand total of ${event.total}.`
+      return `${event.player.name} declared Least with a hand total of ${event.total}.`
     case 'SHOW_RESOLVED':
-      return `${event.player.name}'s Show ${event.successful ? 'succeeded (zero-point ties allowed).' : 'failed. A 40-point penalty was applied.'}`
+      return `${event.player.name}'s Least ${event.successful ? 'succeeded (zero-point ties allowed).' : 'failed. A 40-point penalty was applied.'}`
     case 'ROUND_COMPLETED':
       return `Round ${event.roundNumber} completed${event.reason === 'exhaustion' ? ' by draw-pile exhaustion' : ''}. Scores: ${event.scores.map((p) => `${p.name} +${p.penalty} (${p.score} total)`).join('; ')}.`
     case 'PLAYER_ELIMINATED':
@@ -139,7 +139,15 @@ export function formatGameEvent(event: GameEvent): string {
       return `${event.winner.name} wins the match.`
     case 'LEGACY_ACTIVITY':
       return event.message
+        .replace(/selected joker/gi, 'Round Joker')
+        .replace(/\bdiscarding\b/gi, 'dropping')
+        .replace(/\bdiscarded\b/gi, 'dropped')
+        .replace(/\bdiscards\b/gi, 'drops')
+        .replace(/\bdiscard\b/gi, 'drop')
+        .replace(/\bshow\b/gi, 'Least')
+        .replace(/called Least/gi, 'declared Least')
+        .replace(/call Least/gi, 'declare Least')
     case 'PILE_RECYCLED':
-      return 'Older discards were reshuffled into the draw pile.'
+      return 'Older drops were reshuffled into the draw pile.'
   }
 }

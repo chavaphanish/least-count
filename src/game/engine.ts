@@ -120,14 +120,14 @@ export function inspectDiscard(
     throw new RuleError('Draw your replacement card first.')
   if (!player.hand.length)
     throw new RuleError(
-      'Your hand is empty. You must call Show on your normal turn.',
+      'Your hand is empty. You must declare Least on your normal turn.',
     )
   if (!cardIds.length || new Set(cardIds).size !== cardIds.length) {
     throw new RuleError('Select one or more different cards from your hand.')
   }
   const cards = cardIds.map((id) => player.hand.find((c) => c.id === id))
   if (cards.some((c) => !c))
-    throw new RuleError('You can only discard cards in your own hand.')
+    throw new RuleError('You can only drop cards in your own hand.')
   const group = cards as GameCard[]
   const rank = group[0].rank
   if (!group.every((c) => c.rank === rank))
@@ -522,7 +522,7 @@ export function applyAction(
     throw new RuleError('Wait for your turn.')
   if (action.type === 'play-turn') {
     if (s.phase !== 'turn')
-      throw new RuleError('A combined turn must start before discarding.')
+      throw new RuleError('A combined turn must start before dropping.')
     const outcome = inspectDiscard(s, action.playerId, action.cardIds).outcome
     if (outcome === 'automatic' && action.source !== 'pile')
       throw new RuleError('Only the draw pile is available.')
@@ -558,7 +558,7 @@ export function applyAction(
   } else if (action.type === 'show') {
     if (!canShow(s, player.id))
       throw new RuleError(
-        'Show requires a total of 5 or less at the start of a normal turn.',
+        'Least requires a total of 5 or less at the start of a normal turn.',
       )
     emit(
       s,
@@ -662,7 +662,7 @@ export function applyAction(
   } else if (action.type === 'draw') {
     if (s.phase !== 'draw')
       throw new RuleError(
-        'Discard first. Match and Drop does not allow a replacement draw.',
+        'Drop first. Match and Drop does not allow a replacement draw.',
       )
     const discardedCards = latestGroup(s)
     // Resolve older saves that were waiting for a now-unnecessary 7 draw.
@@ -674,7 +674,7 @@ export function applyAction(
       const card = pickupCards(s).find((c) => c.id === action.cardId)
       if (!card)
         throw new RuleError(
-          'Choose one card from the preceding eligible group, not your own discard.',
+          'Choose one card from the preceding eligible group, not your own drop.',
         )
       player.hand.push(card)
       s.discards = s.discards

@@ -11,31 +11,43 @@ Least Count is a responsive browser card game with a green felt table, local pra
 - Room defaults are four players, a 100-point cumulative elimination cutoff, and 60-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
 - Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
 - The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
-- Each round opens with a visible card. For a non-7, the starter discards first, then picks up the eligible opening card or draws one closed replacement when required. Match and Drop and playing 7s skip that replacement. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
-- The online table uses the existing engine. Select cards, choose a legal draw source, call Show, handle 7 penalties, and play subsequent rounds. The server validates actions and sends each player only their own hand.
-- **Play Game** remains available for offline local practice against 1–7 simulated opponents, including the sequential discard-then-pickup animation, reduced-motion support, saved progress, and rule downloads.
+- Each round opens with a visible card. For a non-7, the starter drops first, then picks up the eligible opening card or draws one closed replacement when required. Match and Drop and playing 7s skip that replacement. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
+- The online table uses the existing engine. Select cards, choose a legal draw source, declare Least, handle 7 penalties, and play subsequent rounds. The server validates actions and sends each player only their own hand.
+- **Play Game** remains available for offline local practice against 1–7 simulated opponents, including the sequential drop-then-pickup animation, reduced-motion support, saved progress, and rule downloads.
 
-### Discard-first opening and pickup eligibility
+### Guided gameplay controls
 
-The first player now uses the same authoritative `turn → draw → next turn` flow as every other normal player. The initial non-7 card is initialized as the eligible prior discard. Drawing is rejected before a legal discard; that discard preserves the old eligible reference while setting a new top group. Match and Drop and 7s finish without replacement. A matching card in hand does not force its use.
+Local and online play share a context-aware action bar: select matching cards, **Drop**, then **Draw New Card** or **Pick Up** an eligible open card only when required. Different-rank clicks replace the selection; **Select All Matching** groups a rank quickly. Buttons describe the selection, including **Play 2 Sevens**. Normal controls disappear during penalty responses and while waiting for another player.
 
-Both tables commit the discard before enabling a replacement choice. Discard animation finishes before incoming animation, including automatic closed replacements. Closed cards stay face down in flight. Online flights start only after an authoritative hand update; refreshes restore state without replaying animation. Selection, discard, and replacement share one server deadline.
+**Declare Least** is offered only before a Drop when the existing five-or-less eligibility check allows it. Empty hands must declare; zero-point ties and the 40-point failed-declaration penalty remain unchanged. Mandatory closed replacements and penalties without a held 7 continue to resolve automatically. Public Game Activity uses Drop/Least wording, lists newest recent entries first (up to five desktop / three mobile), and keeps full history chronological. Closed cards remain private.
+
+The countdown sits beside the active player's profile, warns at 15 seconds, and becomes urgent at 5 seconds. Untimed games hide it. Neither a Drop, replacement choice, animation, nor reconnect resets the authoritative deadline. The responsive action bar supports touch and keyboard selection alongside the existing overlapping hand and sequential card animations.
+
+### Player hand presentation
+
+Local and online hands use compact overlapping rows of up to seven cards, with raised selected cards and keyboard focus outlines. Larger hands continue on another row on desktop and mobile. The hand summary shows the total points and cumulative score; individual card point labels are omitted. Your profile image or initials appear beside your hand, with initials used if an image fails to load. “Round Joker” is the display name for the existing per-round zero-value rank; its rules have not changed.
+
+### Drop-first opening and pickup eligibility
+
+The first player now uses the same authoritative `turn → draw → next turn` flow as every other normal player. The initial non-7 card is initialized as the eligible prior drop. Drawing is rejected before a legal drop; that drop preserves the old eligible reference while setting a new top group. Match and Drop and 7s finish without replacement. A matching card in hand does not force its use.
+
+Both tables commit the drop before enabling a replacement choice. Drop animation finishes before incoming animation, including automatic closed replacements. Closed cards stay face down in flight. Online flights start only after an authoritative hand update; refreshes restore state without replaying animation. Selection, drop, and replacement share one server deadline.
 
 An opening 7 starts at two penalty cards with an empty player-response list. The starting player is the initiator; playing their 7 adds the first real participant and raises the penalty to four. The computer's card never counts toward the full cycle. A player holding 7s may accept the penalty; without one the draw is automatic. The existing deck supply means an opening full cycle is unreachable at four/eight players (only three/seven 7s remain). No extra cards or unrelated deck rules are added.
 
-Public activity events record completed turns without revealing closed draws. The committed discard, eligibility, normal draw phase, and shared timer survive refresh/reconnection. A one-time compatibility adapter restores old pending saves to normal turns; if the previous release already acquired a card, it preserves that hand and permits one discard without charging another replacement. No new round enters a special acquisition phase. Local opponents use their own cards and the same rules.
+Public activity events record completed turns without revealing closed draws. The committed drop, eligibility, normal draw phase, and shared timer survive refresh/reconnection. A one-time compatibility adapter restores old pending saves to normal turns; if the previous release already acquired a card, it preserves that hand and permits one drop without charging another replacement. No new round enters a special acquisition phase. Local opponents use their own cards and the same rules.
 
 Test with `npm test -- src/game/opening.test.ts server/objects.test.ts` and, after building, `PLAYWRIGHT_PREVIEW=1 npm run test:e2e -- e2e/opening.spec.ts e2e/multiplayer.spec.ts`. Browser tests exercise both opening sources, opening 7 actions, timer expiry, 320px/desktop layouts, and saved-state restoration; server tests cover serialized competing pickups and retries.
 
 ### Automatic drawing and public activity
 
-A normal nonmatching, non-7 discard automatically draws exactly one closed replacement when no immediately preceding eligible pickup exists. The engine resolves a forced discard/replacement atomically, including recycling/exhaustion, and advances without an extra Draw click. When open pickup is legal, the UI commits the discard, then offers the source choice. A 7 never draws a replacement, including when initiating a penalty; multiple 7s add only two penalty cards, and full-cycle cancellation is unchanged.
+A normal nonmatching, non-7 drop automatically draws exactly one closed replacement when no immediately preceding eligible pickup exists. The engine resolves a forced drop/replacement atomically, including recycling/exhaustion, and advances without an extra Draw click. When open pickup is legal, the UI commits the drop, then offers the source choice. A 7 never draws a replacement, including when initiating a penalty; multiple 7s add only two penalty cards, and full-cycle cancellation is unchanged.
 
 Both tables show **Game Activity**: five recent events on desktop, three on mobile, and **View Full History** for scrollable retained history. Events are structured in `src/game/events.ts`, generated by the shared engine during committed actions, persisted/broadcast by the authoritative room, and rendered by `GameActivity`. Public card/group formatters use full names. Closed draws and penalty draws never include card identities in event payloads. Online request deduplication prevents duplicate draws/events. Sequences are scoped to a match; retain the most recent 2,000 across rounds, restoring them on reconnect. Reading older history does not trigger scroll jumps. Old matches preserve up to 40 previously retained public text entries as clearly marked earlier activity. New events have full structured payloads. The legacy `log` string field is a derived compatibility view, not a separate history source.
 
-Printed Jokers use an original inline SVG jester and **JOKER** label. Internal `PJ` identity, zero value, matching, Selected Joker rules, and card dimensions remain unchanged.
+Printed Jokers use an original inline SVG jester and **JOKER** label. Internal `PJ` identity, zero value, matching, Round Joker rules, and card dimensions remain unchanged.
 
-To verify manually, start a guest room in two browsers: play one or several 7s onto a different rank and confirm no replacement draw; confirm only two penalty cards are added per action; complete a full cycle. Test normal discards after a penalty/timeout (automatic closed draw) and with a legal previous pickup (manual choice). Expand history, scroll upward, let another player act, then refresh and confirm the same retained public events. Check the three-event mobile panel and Joker at 320px. Automated tests cover the engine, Durable Object request retries/private projections, browser controls, and history rendering.
+To verify manually, start a guest room in two browsers: play one or several 7s onto a different rank and confirm no replacement draw; confirm only two penalty cards are added per action; complete a full cycle. Test normal drops after a penalty/timeout (automatic closed draw) and with a legal previous pickup (manual choice). Expand history, scroll upward, let another player act, then refresh and confirm the same retained public events. Check the three-event mobile panel and Joker at 320px. Automated tests cover the engine, Durable Object request retries/private projections, browser controls, and history rendering.
 
 ### Sessions, presence, and leaving
 
@@ -51,7 +63,7 @@ Local practice is stored in this tab's `sessionStorage`; other hands are only vi
 
 Read these documents together:
 
-1. [Current working rulebook](docs/RULEBOOK.md): authoritative gameplay amendments and references to the archived original. The original [Edition 2.0 draft](RULEBOOK.md) is preserved unchanged.
+1. [Current working rulebook](docs/RULEBOOK.md): authoritative gameplay amendments and references to the archived original. The original [Edition 2.0 draft](RULEBOOK.md) retains its gameplay rules, with Drop, Declare Least, and Round Joker terminology updated.
 2. [Confirmed rule decisions](docs/rule-clarifications.md): the user's clarifications, which **take precedence over conflicting text in the original draft**.
 
 The initial clarification topics have been answered. The overall rulebook remains provisional and can be refined in later stages; newly discovered ambiguities should be clarified before implementing affected behavior.
@@ -61,15 +73,15 @@ The initial clarification topics have been answered. The overall rulebook remain
 The shared engine follows these rules; the linked documents give the full details:
 
 - **Players and dealing:** 2–8 players, seven starting cards each; one standard deck plus one Printed Joker for 2–4 players, or two decks plus two Printed Jokers for 5–8 players.
-- **Selected Joker:** choose a new eligible indicator each round, excluding 7s and Printed Jokers. Remove that physical card from play; the remaining cards of its rank are worth zero.
-- **Normal turns:** discard one card or a same-rank group, then draw one replacement unless playing 7s or matching the previously visible top rank. That Match and Drop action requires no draw.
-- **Open pickup:** a required replacement draw may come from the immediately preceding player's latest eligible discard group or the draw pile. Older groups are unavailable. Accepting a 7 penalty or timing out clears eligibility, so the next required replacement draw must come from the draw pile. Match and Drop still requires no draw.
+- **Round Joker:** choose a new eligible indicator each round, excluding 7s and Printed Jokers. Remove that physical card from play; the remaining cards of its rank are worth zero.
+- **Normal turns:** drop one card or a same-rank group, then draw one replacement unless playing 7s or matching the previously visible top rank. That Match and Drop action requires no draw.
+- **Open pickup:** a required replacement draw may come from the immediately preceding player's latest eligible drop group or the draw pile. Older groups are unavailable. Accepting a 7 penalty or timing out clears eligibility, so the next required replacement draw must come from the draw pile. Match and Drop still requires no draw.
 - **Power card 7:** starts a two-card penalty, with two more cards per responding 7 action. Playing one or more 7s ends the action immediately with no replacement draw; it overrides normal drawing and Match and Drop. Multiple 7s in one action still add only two. A full uninterrupted cycle through all active players cancels the penalty.
-- **Show:** available at the start of a normal turn with a hand total of five or less. An empty-handed player must call Show at their next normal turn; passing is not allowed. Show cannot be called during a 7 penalty.
-- **Zero-point Show ties:** all zero-point players, including the caller, are tied round winners and receive zero round penalties. The caller does not receive the 40-point failed-Show penalty for a zero-point tie. This exception does not extend to positive-point ties.
+- **Least:** available at the start of a normal turn with a hand total of five or less. An empty-handed player must declare Least at their next normal turn; passing is not allowed. Least cannot be called during a 7 penalty.
+- **Zero-point Least ties:** all zero-point players, including the caller, are tied round winners and receive zero round penalties. The caller does not receive the 40-point failed-Least penalty for a zero-point tie. This exception does not extend to positive-point ties.
 - **Elimination and winning:** the default cumulative cutoff is 100 points; reaching or exceeding it eliminates a player. Turns have a 60-second limit, with immediate elimination on timeout. There are no special tiebreaker rounds. Ordinary rounds retain cumulative scores until elimination leaves one match winner.
 
-For example, if the final two players each have 99 cumulative points and tie on a zero-point Show, both remain at 99 and play another ordinary round. A tied round result is not a shared match victory.
+For example, if the final two players each have 99 cumulative points and tie on a zero-point Least, both remain at 99 and play another ordinary round. A tied round result is not a shared match victory.
 
 The linked documents contain the detailed scoring, hand-privacy, penalty, and draw-pile exhaustion rules. Online rooms enforce hand privacy and deadlines on the server. Room hosts may choose a positive custom elimination cutoff or disable turn deadlines; other rules are unchanged.
 

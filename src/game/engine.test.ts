@@ -420,7 +420,7 @@ describe('Show, scoring, and ordinary rounds', () => {
       p.score = 99
     })
     expect(canShow(s, 'p0')).toBe(true)
-    expect(() => discard(s, [])).toThrow(/must call Show/)
+    expect(() => discard(s, [])).toThrow(/must declare Least/)
     const next = act(s, { type: 'show', playerId: 'p0' })
     expect(next.result!.winners).toEqual(['p0', 'p1'])
     expect(next.players.map((p) => p.score)).toEqual([99, 99])
