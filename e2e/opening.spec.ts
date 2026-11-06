@@ -42,74 +42,79 @@ async function load(page: Page, s: GameState) {
     page.getByRole('heading', { name: 'Your hand', exact: true }),
   ).toBeVisible()
 }
-test('picks up the opening card once, restores across refresh, and ends with a discard only', async ({
+test('requires a discard before opening pickup and restores the pending replacement after refresh', async ({
   page,
 }) => {
   const s = fixture()
   const opener = latestGroup(s)[0]
   await load(page, s)
-  await expect(page.locator('[data-discard-target]')).toHaveClass(
-    /opening-card/,
+  await expect(
+    page.getByRole('button', { name: 'Draw from pile', exact: true }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Pick up/ })).toHaveCount(0)
+  await expect(page.locator('[data-draw-source]')).toBeDisabled()
+  expect((await saved(page)).players[0].hand).toHaveLength(7)
+  const index = s.players[0].hand.findIndex(
+    (c) => c.rank !== '7' && c.rank !== opener.rank,
   )
-  await expect(
-    page.getByRole('button', { name: 'Draw New Card', exact: true }),
-  ).toBeVisible()
-  await page
-    .getByRole('button', {
-      name: `Pick up opening ${cardLabel(opener)}`,
-      exact: true,
-    })
-    .click()
-  const selected = await saved(page)
-  expect(selected.phase).toBe('opening-discard')
-  expect(selected.players[0].hand).toHaveLength(8)
-  expect(selected.discards).toEqual([])
-  expect(selected.deadline).toBe(s.deadline)
-  await page.reload()
-  await expect(
-    page.getByRole('button', { name: 'Draw New Card', exact: true }),
-  ).toHaveCount(0)
-  await expect(
-    page.getByRole('button', { name: 'Call Show', exact: true }),
-  ).toHaveCount(0)
-  const index = selected.players[0].hand.findIndex((c) => c.rank !== '7')
   await page
     .getByRole('group', { name: 'Your hand', exact: true })
     .getByRole('button')
     .nth(index)
     .click()
   await page
-    .getByRole('button', { name: 'Complete opening turn (1)', exact: true })
+    .getByRole('button', { name: 'Discard selected (1)', exact: true })
+    .click()
+  const waiting = await saved(page)
+  expect(waiting.phase).toBe('draw')
+  expect(waiting.players[0].hand).toHaveLength(6)
+  expect(waiting.drawPile).toEqual(s.drawPile)
+  expect(waiting.eligible).toEqual([opener.id])
+  expect(latestGroup(waiting)[0].id).toBe(s.players[0].hand[index].id)
+  expect(waiting.deadline).toBe(s.deadline)
+  await page.reload()
+  expect((await saved(page)).phase).toBe('draw')
+  await page
+    .getByRole('button', { name: `Pick up ${cardLabel(opener)}`, exact: true })
     .click()
   const done = await saved(page)
-  expect(done.phase).toBe('turn')
-  expect(done.current).toBe(1)
   expect(done.players[0].hand).toHaveLength(7)
+  expect(done.players[0].hand).toContainEqual(opener)
+  expect(done.current).toBe(1)
+  expect(done.discards.flat().some((c) => c.id === opener.id)).toBe(false)
   expect(done.drawPile).toEqual(s.drawPile)
-  expect(done.events!.at(-1)).toMatchObject({
-    type: 'TURN_COMPLETED',
-    opening: true,
-  })
 })
-test('closed opening selection leaves the visible card and logs no closed-card identity', async ({
+test('closed replacement is offered only after the first discard and keeps its identity private in the log', async ({
   page,
 }) => {
   const s = fixture()
+  const opener = latestGroup(s)[0]
   const hidden = s.drawPile.at(-1)!
   await load(page, s)
-  await page.getByRole('button', { name: 'Draw New Card', exact: true }).click()
+  const index = s.players[0].hand.findIndex(
+    (c) => c.rank !== '7' && c.rank !== opener.rank,
+  )
+  await page
+    .getByRole('group', { name: 'Your hand', exact: true })
+    .getByRole('button')
+    .nth(index)
+    .click()
+  await page
+    .getByRole('button', { name: 'Discard selected (1)', exact: true })
+    .click()
+  expect((await saved(page)).players[0].hand).toHaveLength(6)
+  await page
+    .getByRole('button', { name: 'Draw from pile', exact: true })
+    .click()
   const done = await saved(page)
-  expect(done.players[0].hand).toHaveLength(8)
-  expect(done.discards).toEqual(s.discards)
+  expect(done.players[0].hand).toHaveLength(7)
+  expect(done.discards.flat()).toContainEqual(opener)
   expect(done.drawPile).toHaveLength(s.drawPile.length - 1)
   expect(done.events!.at(-1)).toMatchObject({
-    type: 'OPENING_CARD_SELECTED',
-    source: 'pile',
+    type: 'TURN_COMPLETED',
+    draw: 'pile',
   })
   expect(JSON.stringify(done.events!.at(-1))).not.toContain(hidden.id)
-  await expect(
-    page.getByRole('button', { name: 'Draw New Card', exact: true }),
-  ).toHaveCount(0)
 })
 test('opening 7 offers penalty acceptance or selected 7s, never ordinary pickup or Show', async ({
   page,
@@ -161,7 +166,7 @@ test('opening penalty acceptance draws two and skips discarding', async ({
   expect(done.sevens).toBeNull()
 })
 for (const width of [320, 1440])
-  test(`opening choices fit at ${width}px and preserve their deadline`, async ({
+  test(`discard-first opening fits at ${width}px and preserve their deadline`, async ({
     page,
   }) => {
     const s = fixture()
@@ -173,7 +178,7 @@ for (const width of [320, 1440])
       ),
     ).toBe(true)
     await page.screenshot({
-      path: `/tmp/least-count-opening-${width}.png`,
+      path: `/tmp/least-count-discard-first-${width}.png`,
       fullPage: true,
     })
     await page.clock.fastForward(60_000)

@@ -4,7 +4,7 @@ import { createRoom, join, start, view } from './room'
 import type { Env } from './types'
 import { createCard } from '../src/game/cards'
 
-async function harness(seven = false, phase: 'turn' | 'opening-draw' = 'turn') {
+async function harness(seven = false, phase: 'turn' | 'draw' = 'turn') {
   const now = Date.now()
   const identity = (id: string) => ({
     id,
@@ -31,11 +31,15 @@ async function harness(seven = false, phase: 'turn' | 'opening-draw' = 'turn') {
   g.sevens = null
   g.current = 0
   g.discards = [[{ ...createCard('clubs', '3'), id: 'old-public' }]]
-  g.eligible = phase === 'opening-draw' ? ['old-public'] : []
+  g.eligible = phase === 'draw' ? ['old-public'] : []
   g.players[0].hand = [
     { ...createCard('hearts', seven ? '7' : 'K'), id: 'played-public' },
     { ...createCard('clubs', 'Q'), id: 'own-private' },
   ]
+  if (phase === 'draw') {
+    g.discards.push([g.players[0].hand.shift()!])
+    g.discardedRank = 'K'
+  }
   g.players[1].hand = [{ ...createCard('spades', '7'), id: 'opponent-private' }]
   g.events = []
   g.eventSequence = 0
@@ -125,9 +129,9 @@ describe('durable action commits and retries', () => {
 })
 
 it('serializes competing opening pickups and deduplicates retries without exposing private cards', async () => {
-  const { room, ws, storage, r } = await harness(false, 'opening-draw')
+  const { room, ws, storage, r } = await harness(false, 'draw')
   const action = {
-    type: 'opening-draw',
+    type: 'draw',
     source: 'discard',
     cardId: 'old-public',
   }
@@ -140,23 +144,38 @@ it('serializes competing opening pickups and deduplicates retries without exposi
     ),
   )
   const once = structuredClone(storage.get('room')) as typeof r
-  expect(once.game!.phase).toBe('opening-discard')
+  expect(once.game!.phase).toBe('turn')
   expect(
     once.game!.players[0].hand.filter((c) => c.id === 'old-public'),
   ).toHaveLength(1)
-  expect(once.game!.discards).toEqual([])
+  expect(once.game!.discards.flat().map((c) => c.id)).toEqual(['played-public'])
   expect(once.game!.events).toHaveLength(1)
   expect(once.game!.events![0]).toMatchObject({
-    type: 'OPENING_CARD_SELECTED',
-    source: 'discard',
+    type: 'TURN_COMPLETED',
+    draw: 'pickup',
   })
   await room.webSocketMessage(
     ws,
     JSON.stringify({ type: 'action', requestId: 'first', action }),
   )
   expect((storage.get('room') as typeof r).game).toEqual(once.game)
-  expect(view(once, 'Ben', Date.now()).game!.phase).toBe('opening-discard')
+  expect(view(once, 'Ben', Date.now()).game!.phase).toBe('turn')
   expect(
     JSON.stringify(view(once, 'Ben', Date.now()).game!.events),
   ).not.toContain('own-private')
+})
+
+it('rejects both premature draws and retired opening actions without changing cards or events', async () => {
+  const { room, ws, storage, r } = await harness()
+  const before = structuredClone((storage.get('room') as typeof r).game)
+  for (const type of ['draw', 'opening-draw'])
+    await room.webSocketMessage(
+      ws,
+      JSON.stringify({
+        type: 'action',
+        requestId: type,
+        action: { type, source: 'pile' },
+      }),
+    )
+  expect((storage.get('room') as typeof r).game).toEqual(before)
 })

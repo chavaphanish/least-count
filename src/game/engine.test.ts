@@ -427,7 +427,7 @@ describe('Show, scoring, and ordinary rounds', () => {
     expect(next.phase).toBe('round-over')
     const round = act(next, { type: 'next-round' })
     expect(round.players.map((p) => p.score)).toEqual([99, 99])
-    expect(['opening-draw', 'penalty', 'turn']).toContain(round.phase)
+    expect(['penalty', 'turn']).toContain(round.phase)
     expect(round.starter).toBe(1)
   })
 
@@ -645,6 +645,7 @@ describe('simulated opponents and whole matches', () => {
   it('exposes only own cards and public information to the strategy', () => {
     const view = botView(fixture())
     expect(Object.keys(view).sort()).toEqual([
+      'canShow',
       'hand',
       'phase',
       'pickup',

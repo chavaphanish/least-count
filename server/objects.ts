@@ -1,3 +1,4 @@
+import { normalizeLegacyTurn } from '../src/game/engine'
 import type { Env, Identity } from './types'
 import { ApiError, body, failure, hash, json, randomToken } from './http'
 import {
@@ -179,6 +180,8 @@ export class GameRoom {
   ) {
     ctx.blockConcurrencyWhile(async () => {
       this.record = (await ctx.storage.get<RoomRecord>('room')) ?? null
+      if (this.record?.game)
+        this.record.game = normalizeLegacyTurn(this.record.game)
       this.seen = (await ctx.storage.get<string[]>('seen')) ?? []
     })
   }

@@ -40,6 +40,10 @@ export function TurnAnimation({
   onComplete: () => void
 }) {
   const [flights, setFlights] = useState<Flight[]>([])
+  const [stage, setStage] = useState('outgoing')
+  const sequential =
+    flights.some((f) => f.direction === 'outgoing') &&
+    flights.some((f) => f.direction === 'incoming')
   useLayoutEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (reduced.matches) {
@@ -83,6 +87,15 @@ export function TurnAnimation({
       return
     }
     setFlights(next)
+    const paired =
+      next.some((f) => f.direction === 'outgoing') &&
+      next.some((f) => f.direction === 'incoming')
+    setStage(
+      next.some((f) => f.direction === 'outgoing') ? 'outgoing' : 'incoming',
+    )
+    const nextStage = paired
+      ? window.setTimeout(() => setStage('incoming'), TURN_MOTION_MS / 2)
+      : undefined
     const timer = window.setTimeout(onComplete, TURN_MOTION_MS)
     // Document coordinates keep flights attached to the table while scrolling.
     // A resize invalidates layout measurements; finish without replaying the turn.
@@ -90,6 +103,7 @@ export function TurnAnimation({
     reduced.addEventListener('change', onComplete)
     return () => {
       window.clearTimeout(timer)
+      window.clearTimeout(nextStage)
       window.removeEventListener('resize', onComplete)
       reduced.removeEventListener('change', onComplete)
     }
@@ -98,37 +112,40 @@ export function TurnAnimation({
     <div
       className="turn-animation"
       data-testid="turn-animation"
+      data-phase={stage}
       aria-hidden="true"
     >
-      {flights.map((flight, index) => {
-        const dx = flight.to.left - flight.from.left
-        const dy = flight.to.top - flight.from.top
-        const style = {
-          left: flight.from.left,
-          top: flight.from.top,
-          width: flight.from.width,
-          height: flight.from.height,
-          '--flight-width': `${flight.from.width}px`,
-          '--flight-dx': `${dx}px`,
-          '--flight-dy': `${dy}px`,
-          '--flight-mid-x': `${dx * 0.5}px`,
-          '--flight-mid-y': `${dy * 0.5 - 35}px`,
-          '--flight-scale-x': flight.to.width / flight.from.width,
-          '--flight-scale-y': flight.to.height / flight.from.height,
-          '--flight-rotation': `${flight.rotation}deg`,
-          '--flight-duration': `${TURN_MOTION_MS}ms`,
-        } as CSSProperties
-        return (
-          <div
-            className={`card-flight flight-${flight.direction}`}
-            data-direction={flight.direction}
-            style={style}
-            key={`${flight.direction}-${index}`}
-          >
-            <PlayingCard card={flight.card} faceDown={flight.faceDown} />
-          </div>
-        )
-      })}
+      {flights
+        .filter((flight) => flight.direction === stage)
+        .map((flight, index) => {
+          const dx = flight.to.left - flight.from.left
+          const dy = flight.to.top - flight.from.top
+          const style = {
+            left: flight.from.left,
+            top: flight.from.top,
+            width: flight.from.width,
+            height: flight.from.height,
+            '--flight-width': `${flight.from.width}px`,
+            '--flight-dx': `${dx}px`,
+            '--flight-dy': `${dy}px`,
+            '--flight-mid-x': `${dx * 0.5}px`,
+            '--flight-mid-y': `${dy * 0.5 - 35}px`,
+            '--flight-scale-x': flight.to.width / flight.from.width,
+            '--flight-scale-y': flight.to.height / flight.from.height,
+            '--flight-rotation': `${flight.rotation}deg`,
+            '--flight-duration': `${sequential ? TURN_MOTION_MS / 2 : TURN_MOTION_MS}ms`,
+          } as CSSProperties
+          return (
+            <div
+              className={`card-flight flight-${flight.direction}`}
+              data-direction={flight.direction}
+              style={style}
+              key={`${flight.direction}-${index}`}
+            >
+              <PlayingCard card={flight.card} faceDown={flight.faceDown} />
+            </div>
+          )
+        })}
     </div>,
     document.body,
   )

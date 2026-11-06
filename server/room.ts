@@ -227,7 +227,7 @@ export function gameAction(
         cardId: a.cardId,
       }
     } else action = { type: 'discard', playerId: id, cardIds: a.cardIds }
-  } else if (a.type === 'draw' || a.type === 'opening-draw') {
+  } else if (a.type === 'draw') {
     if (a.source !== 'pile' && a.source !== 'discard')
       throw new ApiError(400, 'Choose a draw source.')
     action = { type: a.type, playerId: id, source: a.source, cardId: a.cardId }

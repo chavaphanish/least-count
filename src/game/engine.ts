@@ -10,14 +10,7 @@ export const ELIMINATION_SCORE = 100
 export type GameSettings = { eliminationThreshold: number; timedGame: boolean }
 export const gameSettings = (s: GameState): GameSettings =>
   s.settings ?? { eliminationThreshold: ELIMINATION_SCORE, timedGame: true }
-export type Phase =
-  | 'opening-draw'
-  | 'opening-discard'
-  | 'turn'
-  | 'draw'
-  | 'penalty'
-  | 'round-over'
-  | 'game-over'
+export type Phase = 'turn' | 'draw' | 'penalty' | 'round-over' | 'game-over'
 export type Player = {
   id: string
   name: string
@@ -43,6 +36,7 @@ export type RoundResult = {
 }
 export type GameState = {
   settings?: GameSettings
+  legacyOpeningDrawn?: boolean
   version: 1
   players: Player[]
   phase: Phase
@@ -81,12 +75,6 @@ export type Action =
       source: 'pile' | 'discard'
       cardId?: string
     }
-  | {
-      type: 'opening-draw'
-      playerId: string
-      source: 'pile' | 'discard'
-      cardId?: string
-    }
   | { type: 'show'; playerId: string }
   | { type: 'accept-penalty'; playerId: string }
   | { type: 'timeout' }
@@ -98,11 +86,10 @@ export const latestGroup = (s: GameState): GameCard[] => s.discards.at(-1) ?? []
 export const pickupCards = (s: GameState): GameCard[] =>
   s.discards.flat().filter((c) => s.eligible.includes(c.id))
 export const isPlaying = (s: GameState) =>
-  ['opening-draw', 'opening-discard', 'turn', 'draw', 'penalty'].includes(
-    s.phase,
-  )
+  ['turn', 'draw', 'penalty'].includes(s.phase)
 export const canShow = (s: GameState, playerId: string) =>
-  (s.phase === 'turn' || s.phase === 'opening-draw') &&
+  s.phase === 'turn' &&
+  !s.legacyOpeningDrawn &&
   s.players[s.current].id === playerId &&
   !s.players[s.current].eliminated &&
   handTotal(s.players[s.current].hand, s.indicator.rank) <= 5
@@ -114,7 +101,6 @@ export function discardOutcome(
   hasPickup: boolean,
 ) {
   if (rank === '7') return 'seven' as const
-  if (phase === 'opening-discard') return 'opening' as const
   if (phase === 'penalty')
     throw new RuleError('Play one or more 7s, or accept the penalty.')
   if (rank === topRank) return 'match' as const
@@ -130,11 +116,7 @@ export function inspectDiscard(
   const player = s.players[s.current]
   if (player.id !== playerId || player.eliminated)
     throw new RuleError('Wait for your turn.')
-  if (
-    s.phase !== 'turn' &&
-    s.phase !== 'penalty' &&
-    s.phase !== 'opening-discard'
-  )
+  if (s.phase !== 'turn' && s.phase !== 'penalty')
     throw new RuleError('Draw your replacement card first.')
   if (!player.hand.length)
     throw new RuleError(
@@ -153,12 +135,15 @@ export function inspectDiscard(
   if (s.phase === 'penalty' && rank !== '7')
     throw new RuleError('Play one or more 7s, or accept the penalty.')
   const matchesTop = latestGroup(s).at(-1)?.rank === rank
-  const outcome = discardOutcome(
-    s.phase,
-    rank,
-    latestGroup(s).at(-1)?.rank,
-    pickupCards(s).length > 0,
-  )
+  const outcome =
+    s.legacyOpeningDrawn && rank !== '7'
+      ? 'satisfied'
+      : discardOutcome(
+          s.phase,
+          rank,
+          latestGroup(s).at(-1)?.rank,
+          pickupCards(s).length > 0,
+        )
   return {
     cards: group,
     rank,
@@ -343,12 +328,12 @@ function beginTurn(
   index: number,
   now: number,
   random: () => number,
-  opening = false,
 ) {
   s.current = index
   s.discardedRank = null
+  delete s.legacyOpeningDrawn
   if (lastPlayerWins(s, now)) return
-  s.phase = s.sevens ? 'penalty' : opening ? 'opening-draw' : 'turn'
+  s.phase = s.sevens ? 'penalty' : 'turn'
   s.deadline = gameSettings(s).timedGame ? now + TURN_MS : null
   const player = s.players[index]
   if (s.sevens && !player.hand.some((c) => c.rank === '7')) {
@@ -424,7 +409,7 @@ function startRound(s: GameState, now: number, random: () => number) {
       },
       now,
     )
-  beginTurn(s, s.starter, now, random, true)
+  beginTurn(s, s.starter, now, random)
 }
 
 export function createGame(
@@ -499,7 +484,7 @@ export function applyAction(
   now = Date.now(),
   random = Math.random,
 ): GameState {
-  const s = structuredClone(state)
+  const s = normalizeLegacyTurn(structuredClone(state))
   if (action.type === 'next-round') {
     if (s.phase !== 'round-over')
       throw new RuleError('The round has not finished, or the match is over.')
@@ -535,49 +520,13 @@ export function applyAction(
   const player = s.players[s.current]
   if (action.playerId !== player.id || player.eliminated)
     throw new RuleError('Wait for your turn.')
-  if (action.type === 'opening-draw') {
-    if (s.phase !== 'opening-draw')
-      throw new RuleError('The opening selection is not available now.')
-    if (action.source === 'discard') {
-      const opening = latestGroup(s)[0]
-      if (!opening || opening.rank === '7' || action.cardId !== opening.id)
-        throw new RuleError('Choose the visible non-7 opening card.')
-      player.hand.push(opening)
-      s.discards = s.discards
-        .map((group) => group.filter((card) => card.id !== opening.id))
-        .filter((group) => group.length)
-      emit(
-        s,
-        {
-          type: 'OPENING_CARD_SELECTED',
-          player: publicPlayer(player),
-          source: 'discard',
-          card: opening,
-        },
-        now,
-      )
-    } else if (action.source === 'pile') {
-      if (!drawCards(s, player, 1, now, random)) return s
-      emit(
-        s,
-        {
-          type: 'OPENING_CARD_SELECTED',
-          player: publicPlayer(player),
-          source: 'pile',
-        },
-        now,
-      )
-    } else throw new RuleError('Choose the opening card or the draw pile.')
-    s.eligible = []
-    s.phase = 'opening-discard'
-    // Both opening actions share one deadline; a second acquisition is invalid.
-  } else if (action.type === 'play-turn') {
+  if (action.type === 'play-turn') {
     if (s.phase !== 'turn')
       throw new RuleError('A combined turn must start before discarding.')
     const outcome = inspectDiscard(s, action.playerId, action.cardIds).outcome
     if (outcome === 'automatic' && action.source !== 'pile')
       throw new RuleError('Only the draw pile is available.')
-    if (outcome === 'seven' || outcome === 'match') {
+    if (outcome === 'seven' || outcome === 'match' || outcome === 'satisfied') {
       throw new RuleError(
         'Playing 7s or Match and Drop requires no replacement draw.',
       )
@@ -681,7 +630,7 @@ export function applyAction(
     } else {
       s.discardedRank = rank
       if (outcome === 'seven') finishNormalTurn(s, now, random)
-      else if (outcome === 'opening' || outcome === 'match') {
+      else if (outcome === 'satisfied' || outcome === 'match') {
         emit(
           s,
           {
@@ -689,7 +638,7 @@ export function applyAction(
             player: publicPlayer(player),
             cards: group,
             draw: 'none',
-            opening: outcome === 'opening',
+            opening: outcome === 'satisfied',
           },
           now,
         )
@@ -756,7 +705,7 @@ export function applyAction(
       )
     }
     finishNormalTurn(s, now, random)
-  }
+  } else throw new RuleError('That action is not available.')
   return s
 }
 
@@ -766,6 +715,7 @@ export function resolveForcedDraw(
   now = Date.now(),
   random = Math.random,
 ): GameState {
+  state = normalizeLegacyTurn(state)
   if (
     state.phase !== 'draw' ||
     (state.discardedRank !== '7' && pickupCards(state).length)
@@ -777,4 +727,15 @@ export function resolveForcedDraw(
     now,
     random,
   )
+}
+
+/** One-time compatibility for saves from the retired draw-first release. New rounds never use these phases. */
+export function normalizeLegacyTurn(state: GameState): GameState {
+  const oldPhase = state.phase as string
+  if (oldPhase !== 'opening-draw' && oldPhase !== 'opening-discard')
+    return state
+  const next = structuredClone(state)
+  next.phase = 'turn'
+  if (oldPhase === 'opening-discard') next.legacyOpeningDrawn = true
+  return next
 }

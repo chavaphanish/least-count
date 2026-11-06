@@ -121,13 +121,7 @@ export type RoomView = {
 }
 export type ClientGameAction = {
   type:
-    | 'discard'
-    | 'play-turn'
-    | 'draw'
-    | 'opening-draw'
-    | 'show'
-    | 'accept-penalty'
-    | 'next-round'
+    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round'
   cardIds?: string[]
   source?: 'pile' | 'discard'
   cardId?: string

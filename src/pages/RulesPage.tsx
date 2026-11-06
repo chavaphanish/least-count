@@ -7,8 +7,8 @@ const rules = [
     text: 'Choose 2–8 players. Each round deals seven cards each. Up to four players use one deck plus one Printed Joker; five or more use two of each. A random player starts the first round; the starting seat rotates clockwise afterward.',
   },
   {
-    title: 'Choose the opening card',
-    text: 'Each round starts with a public face-up card. Unless it is a 7, the starter explicitly picks it up or draws one closed card, then discards a card or same-rank group without drawing again. Show is allowed before this choice at five or less, but not afterward. Both actions share one deadline. Later turns use the usual discard-first rules.',
+    title: 'Discard first, including the opening',
+    text: 'Each round starts with a public face-up card. Unless it is a 7, the starter discards first. If a replacement is required, choose that eligible opening card or the draw pile. Matching the opening rank skips drawing; playing a 7 starts its penalty without replacement. Show is allowed before discarding at five or less. One deadline covers the complete turn.',
   },
   {
     title: 'Keep your count low',
@@ -16,7 +16,7 @@ const rules = [
   },
   {
     title: 'Discard, then draw',
-    text: 'Select one card or multiple cards of the same rank. Choose your replacement source while the previous discard stays visible. Your discard and pickup commit together and animate at the same time. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Without an eligible open pickup, a required replacement is drawn automatically in the same action. Matching the previously visible top rank is Match and Drop: you must skip the draw. Playing 7s also skips replacement drawing.',
+    text: 'Select one card or multiple cards of the same rank. Commit a legal discard first, then choose any required replacement. The previous eligible group remains available while your new discard is on top. Discard animation finishes before pickup animation. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Without an eligible open pickup, a required replacement is drawn automatically in the same action. Matching the previously visible top rank is Match and Drop: you must skip the draw. Playing 7s also skips replacement drawing.',
   },
   {
     title: 'Watch the sevens',

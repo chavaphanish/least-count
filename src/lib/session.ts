@@ -1,7 +1,7 @@
 import { formatGameEvent, HISTORY_LIMIT } from '../game/events'
 import { RANKS, SUITS } from '../game/cards'
 import type { GameCard } from '../game/deck'
-import { gameSettings, isPlaying } from '../game/engine'
+import { gameSettings, isPlaying, normalizeLegacyTurn } from '../game/engine'
 import type { GameState } from '../game/engine'
 
 export const SESSION_KEY = 'least-count:local-game:v1'
@@ -31,15 +31,7 @@ export function isSavedGame(value: unknown): value is GameState {
     )
       return false
     if (
-      ![
-        'opening-draw',
-        'opening-discard',
-        'turn',
-        'draw',
-        'penalty',
-        'round-over',
-        'game-over',
-      ].includes(s.phase)
+      !['turn', 'draw', 'penalty', 'round-over', 'game-over'].includes(s.phase)
     )
       return false
     const index = (n: number) =>
@@ -119,21 +111,8 @@ export function isSavedGame(value: unknown): value is GameState {
     )
       return false
     if (
-      s.phase === 'opening-draw' &&
-      (s.current !== s.starter ||
-        s.players[s.current].hand.length !== 7 ||
-        s.discards.length !== 1 ||
-        s.discards[0].length !== 1 ||
-        s.discards[0][0].rank === '7' ||
-        s.eligible.length !== 1 ||
-        s.eligible[0] !== s.discards[0][0].id)
-    )
-      return false
-    if (
-      s.phase === 'opening-discard' &&
-      (s.current !== s.starter ||
-        s.players[s.current].hand.length !== 8 ||
-        s.eligible.length !== 0)
+      s.legacyOpeningDrawn !== undefined &&
+      typeof s.legacyOpeningDrawn !== 'boolean'
     )
       return false
     const activeCount = s.players.filter((p) => !p.eliminated).length
@@ -202,7 +181,7 @@ export function loadSession(store: SessionStore): GameState | null {
   const raw = store.getItem(SESSION_KEY)
   if (!raw) return null
   try {
-    const saved: unknown = JSON.parse(raw)
+    const saved: unknown = normalizeLegacyTurn(JSON.parse(raw) as GameState)
     if (isSavedGame(saved)) return saved
   } catch {
     /* Invalid JSON is discarded below. */
