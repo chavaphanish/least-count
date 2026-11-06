@@ -1,3 +1,4 @@
+import { CareerProfile, GameHistoryReport } from './career/CareerProfile'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Layout } from './components/Layout'
 import { GamePage } from './pages/GamePage'
@@ -13,18 +14,26 @@ import { useAuth } from './auth/AuthProvider'
 import { roomCode } from './shared/multiplayer'
 function route() {
   const hash = location.hash
+  const player = /^#\/player\/([a-z0-9_]+)$/.exec(hash)
+  const history = /^#\/history\/([a-f0-9-]{36})$/.exec(hash)
   const room = /^#\/room\/([^/]+)$/.exec(hash)
   return {
-    page: room
-      ? 'room'
-      : hash === '#/game'
-        ? 'game'
-        : hash === '#/rules'
-          ? 'rules'
-          : hash === '#/profile'
-            ? 'profile'
-            : 'home',
+    page: player
+      ? 'player'
+      : history
+        ? 'history'
+        : room
+          ? 'room'
+          : hash === '#/game'
+            ? 'game'
+            : hash === '#/rules'
+              ? 'rules'
+              : hash === '#/profile'
+                ? 'profile'
+                : 'home',
     code: room?.[1] ?? null,
+    username: player?.[1],
+    gameId: history?.[1],
   }
 }
 function invitation() {
@@ -100,6 +109,12 @@ export function App() {
     )
   else if (!auth.user) content = <AccessPage invitation={invite} />
   else if (recovery) content = <RecoveryPage />
+  else if (current.page === 'player')
+    content = (
+      <CareerProfile key={current.username} username={current.username} />
+    )
+  else if (current.page === 'history' && current.gameId)
+    content = <GameHistoryReport key={current.gameId} id={current.gameId} />
   else if (current.page === 'profile') content = <ProfilePage />
   else if (current.page === 'room' && current.code) {
     try {

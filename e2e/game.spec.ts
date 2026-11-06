@@ -67,7 +67,7 @@ for (const width of [1440, 768, 390, 320]) {
   test(`starts an eight-player local game without overflow at ${width}px`, async ({
     page,
   }) => {
-    // Hold the initial deal while measuring layout; bot moves are tested below.
+    // Hold later bot moves; an opening 7 may already trigger a mandatory draw during dealing.
     const now = Date.now()
     await page.clock.install({ time: new Date(now) })
     await page.clock.pauseAt(new Date(now + 1000))
@@ -82,9 +82,15 @@ for (const width of [1440, 768, 390, 320]) {
     await noOverflow(page)
     await page.getByLabel('Players at the table').selectOption('8')
     await page.getByRole('button', { name: 'Start local game' }).click()
+    const dealt = await saved(page)
+    const automaticPenalty = dealt.events?.find(
+      event => event.type === 'POWER_SEVEN_PENALTY_DRAWN' && event.player.id === 'p0',
+    )
+    const openingPenalty = automaticPenalty?.type === 'POWER_SEVEN_PENALTY_DRAWN' ? automaticPenalty.count : 0
+    expect([0, 2]).toContain(openingPenalty)
     await expect(
       page.getByRole('group', { name: 'Your hand' }).getByRole('button'),
-    ).toHaveCount(7)
+    ).toHaveCount(7 + openingPenalty)
     await expect(page.locator('.live-opponent')).toHaveCount(7)
     const opponentCardLabels = await page
       .locator('.live-opponent [role="img"]')

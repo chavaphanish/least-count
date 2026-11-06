@@ -1,3 +1,5 @@
+import { careerOriginAllowed } from './career'
+import { careerApi } from './career-api'
 import type { Env } from './types'
 import {
   authenticate,
@@ -83,6 +85,7 @@ export default {
           },
         })
       }
+      if (url.pathname === '/api/career' && ['GET','POST'].includes(request.method)) return careerApi(request, env)
       if (url.pathname === '/api/profile' && request.method === 'PATCH')
         return json({
           user: await updateProfile(request, env, await body(request)),
@@ -140,7 +143,7 @@ export default {
       }
       const response = await stub.fetch(`https://room/${operation}`, {
         method: 'POST',
-        body: JSON.stringify({ identity: auth.identity }),
+        body: JSON.stringify({ identity: auth.identity, careerAllowed: careerOriginAllowed(url.origin, env) }),
       })
       if (operation === 'join' && !response.ok)
         await directory(env, '/untrack', {

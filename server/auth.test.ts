@@ -182,3 +182,17 @@ describe('provider-backed identity and profile authorization', () => {
   it('offers guest mode when no Supabase project is configured', () =>
     expect(publicConfig({} as Env)).toEqual({ supabase: null }))
 })
+
+it('preserves the old photo when saving avatar removal fails',async()=>{
+  row.avatar_path=`${uid}/old.png`
+  const calls=mockProvider()
+  const provider=globalThis.fetch
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo | URL,options?:RequestInit)=>{
+    if(String(input).includes('/rest/v1/profiles') && options?.method==='PATCH')
+      return new Response(JSON.stringify({message:'database unavailable'}),{status:500,headers:{'Content-Type':'application/json'}})
+    return provider(input,options)
+  }))
+  await expect(updateProfile(new Request('https://game.test/api/profile/avatar',{method:'DELETE',headers:{Authorization:`Bearer ${token}`}}),env)).rejects.toMatchObject({status:503})
+  expect(calls.some(call=>call.method==='DELETE')).toBe(false)
+  expect(row.avatar_path).toBe(`${uid}/old.png`)
+})

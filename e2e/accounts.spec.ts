@@ -156,7 +156,7 @@ test('registered profile restores, saves name, rejects invalid image, and remove
   ).toBeVisible()
   await page.getByLabel('Display name', { exact: true }).fill('Renamed Player')
   await page.getByRole('button', { name: 'Save profile', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('profile is saved')
+  await expect(page.locator('.form-notice')).toContainText('profile is saved')
   await page.getByLabel('Profile picture', { exact: true }).setInputFiles({
     name: 'fake.png',
     mimeType: 'image/png',
@@ -166,7 +166,7 @@ test('registered profile restores, saves name, rejects invalid image, and remove
   await page
     .getByRole('button', { name: 'Remove picture', exact: true })
     .click()
-  await expect(page.getByRole('status')).toContainText('picture removed')
+  await expect(page.locator('.form-notice')).toContainText('picture removed')
   await page.reload()
   await expect(page.getByLabel('Display name', { exact: true })).toHaveValue(
     'Renamed Player',

@@ -1,3 +1,4 @@
+import { syncCareer } from './career'
 import { normalizeLegacyTurn } from '../src/game/engine'
 import type { Env, Identity } from './types'
 import { ApiError, body, failure, hash, json, randomToken } from './http'
@@ -193,12 +194,24 @@ export class GameRoom {
       body: JSON.stringify(data),
     })
   }
+  private careerSyncing = false
+  private async flushCareer() {
+    const career = this.record?.career
+    if (!career?.eligible || this.careerSyncing || career.revision === career.syncedRevision) return
+    this.careerSyncing = true
+    try {
+      if (await syncCareer(career, this.env)) await this.ctx.storage.put('room', this.record)
+    } catch { /* Durable snapshot remains pending for the next alarm. */ }
+    finally { this.careerSyncing = false }
+  }
   private async persist(broadcast = true) {
     const r = this.record!
     if (broadcast) r.revision++
     await this.ctx.storage.put({ room: r, seen: this.seen })
     const now = Date.now()
     const deadlines: number[] = []
+    const pendingCareer = r.career?.eligible && r.career.revision !== r.career.syncedRevision
+    if (pendingCareer) deadlines.push(now + 60_000)
     if (r.game?.deadline !== null && r.game?.deadline !== undefined)
       deadlines.push(r.game.deadline)
     for (const m of r.members) {
@@ -218,6 +231,8 @@ export class GameRoom {
         Math.max(now + 50, Math.min(...deadlines)),
       )
     else await this.ctx.storage.deleteAlarm()
+    if (pendingCareer && r.status === 'closed') await this.ctx.storage.setAlarm(now + 60_000)
+    if (pendingCareer) this.ctx.waitUntil(this.flushCareer())
     if (broadcast)
       for (const ws of this.ctx.getWebSockets()) {
         try {
@@ -305,7 +320,10 @@ export class GameRoom {
         }
         if (url.pathname === '/join') join(r, identity, Date.now())
         else {
-          member(r, identity.id)
+          const currentMember = member(r, identity.id)
+          // Refresh public identity on authenticated view/ticket requests after profile edits.
+          currentMember.displayName = identity.displayName
+          currentMember.avatarUrl = identity.avatarUrl
           if (url.pathname === '/ticket') {
             const tickets = await this.ctx.storage.list<Ticket>({
               prefix: 'ticket:',
@@ -345,7 +363,7 @@ export class GameRoom {
                 m.connected = false
                 m.disconnectedAt = Date.now()
               }
-            start(r, identity.id, Date.now())
+            start(r, identity.id, Date.now(), undefined, data.careerAllowed === true && this.env.CAREER_ENABLED === 'true' && !!this.env.SUPABASE_CAREER_KEY)
           } else if (url.pathname === '/leave') {
             leave(r, identity.id, Date.now())
             for (const ws of this.ctx.getWebSockets(identity.id))

@@ -1,3 +1,5 @@
+import { beginCareer, observeCareer } from './career'
+import type { CareerState } from './career'
 import { gameEvents } from '../src/game/events'
 import {
   applyAction,
@@ -33,6 +35,7 @@ export type RoomRecord = {
   revision: number
   createdAt: number
   game: GameState | null
+  career?: CareerState
 }
 export const secureRandom = () =>
   crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296
@@ -118,9 +121,10 @@ export function leave(r: RoomRecord, id: string, now: number) {
   }
   transferHost(r)
   if (!r.members.length) r.status = 'closed'
+  if (r.game) observeCareer(r, r.game, r.game, now, false)
 }
 export function sweep(r: RoomRecord, now: number) {
-  if (r.game) r.game = resolveForcedDraw(r.game, now, secureRandom)
+  if (r.game) replaceGame(r, resolveForcedDraw(r.game, now, secureRandom), now)
   for (const m of r.members)
     if (
       m.connected &&
@@ -146,13 +150,14 @@ export function sweep(r: RoomRecord, now: number) {
     r.game.deadline !== null &&
     r.game.deadline <= now
   )
-    r.game = applyAction(r.game, { type: 'timeout' }, now, secureRandom)
+    replaceGame(r, applyAction(r.game, { type: 'timeout' }, now, secureRandom), now)
 }
 export function start(
   r: RoomRecord,
   id: string,
   now: number,
   random = secureRandom,
+  careerEnabled = false,
 ) {
   if (r.hostId !== id)
     throw new ApiError(403, 'Only the host can start the game.')
@@ -186,6 +191,7 @@ export function start(
     r.members.map((m) => m.id),
   )
   r.status = 'in-game'
+  beginCareer(r, careerEnabled, now)
 }
 export function gameAction(
   r: RoomRecord,
@@ -233,7 +239,7 @@ export function gameAction(
     action = { type: a.type, playerId: id, source: a.source, cardId: a.cardId }
   } else throw new ApiError(400, 'That action is not available to a player.')
   try {
-    r.game = applyAction(r.game, action, now, secureRandom)
+    replaceGame(r, applyAction(r.game, action, now, secureRandom), now, true)
   } catch (error) {
     throw new ApiError(
       400,
@@ -264,6 +270,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
     })),
     game: g
       ? {
+          career: r.career ? { gameId: r.id, eligible: r.career.eligible, synced: r.career.syncedRevision === r.career.revision } : undefined,
           phase: g.phase,
           round: g.round,
           currentPlayerId: g.players[g.current].id,
@@ -289,4 +296,9 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
         }
       : null,
   }
+}
+
+function replaceGame(r: RoomRecord, next: GameState, now: number, manual = false) {
+  observeCareer(r, r.game, next, now, manual)
+  r.game = next
 }

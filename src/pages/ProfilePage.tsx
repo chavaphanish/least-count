@@ -1,3 +1,4 @@
+import { CareerProfile } from '../career/CareerProfile'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { Avatar } from '../components/Avatar'
@@ -15,6 +16,8 @@ export function ProfilePage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [processing, setProcessing] = useState(false)
+  const pending = !!file || name !== user.player.displayName
   useEffect(
     () => () => {
       if (preview) URL.revokeObjectURL(preview)
@@ -26,6 +29,16 @@ export function ProfilePage() {
       <section className="profile-panel">
         <h1>Guest player</h1>
         <p>Profile settings are available to registered accounts.</p>
+        <button
+          className="button button-secondary"
+          onClick={() =>
+            void auth.signOut().then(() => {
+              location.hash = '#/'
+            })
+          }
+        >
+          Leave guest session to register
+        </button>
         <a href="#/">Return to dashboard</a>
       </section>
     )
@@ -34,23 +47,54 @@ export function ProfilePage() {
     setFile(null)
     setPreview(null)
     if (!image) return
+    setProcessing(true)
     try {
       if (image.size > AVATAR_MAX_BYTES)
-        throw new Error('Choose an image no larger than 2 MB.')
+        throw new Error('Choose an image no larger than 5 MB.')
       avatarType(new Uint8Array(await image.arrayBuffer()), image.type)
+      // Decode, center-crop, and compress phone photos before sending them.
       const bitmap = await createImageBitmap(image)
-      const valid = bitmap.width <= 4096 && bitmap.height <= 4096
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 512
+      const context = canvas.getContext('2d')
+      if (!context) {
+        bitmap.close()
+        throw new Error('Image processing is unavailable in this browser.')
+      }
+      const edge = Math.min(bitmap.width, bitmap.height)
+      context.drawImage(
+        bitmap,
+        (bitmap.width - edge) / 2,
+        (bitmap.height - edge) / 2,
+        edge,
+        edge,
+        0,
+        0,
+        512,
+        512,
+      )
       bitmap.close()
-      if (!valid)
-        throw new Error('Choose an image no larger than 4096 × 4096 pixels.')
-      setFile(image)
-      setPreview(URL.createObjectURL(image))
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob(
+          (value) =>
+            value
+              ? resolve(value)
+              : reject(new Error('Could not resize this photo.')),
+          'image/webp',
+          0.85,
+        ),
+      )
+      const optimized = new File([blob], 'avatar.webp', { type: blob.type })
+      setFile(optimized)
+      setPreview(URL.createObjectURL(optimized))
     } catch (error) {
       setError(
         error instanceof Error
           ? error.message
           : 'This image could not be decoded.',
       )
+    } finally {
+      setProcessing(false)
     }
   }
   async function save(event: React.FormEvent) {
@@ -107,48 +151,74 @@ export function ProfilePage() {
       <h1>
         Player <em>profile.</em>
       </h1>
-      <Avatar
-        player={{ ...user.player, avatarUrl: preview ?? user.player.avatarUrl }}
-      />
-      <form onSubmit={save}>
-        <label>
-          Display name
-          <input
-            required
-            minLength={2}
-            maxLength={24}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        <label>
-          Profile picture
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => void choose(e.target.files?.[0])}
-          />
-        </label>
+      <CareerProfile />
+      <div id="profile-editor" className="career-section profile-editor">
+        <h2>Edit Profile</h2>
+        <Avatar
+          player={{
+            ...user.player,
+            avatarUrl: preview ?? user.player.avatarUrl,
+          }}
+        />
         <p className="field-hint">
-          JPG, PNG, or WebP · up to 2 MB · up to 4096 × 4096 pixels. Profile
-          pictures are visible to other players.
+          {processing
+            ? 'Preparing your preview…'
+            : pending
+              ? 'Unsaved changes'
+              : 'All changes saved'}
         </p>
-        <div className="auth-actions">
-          <button className="button button-primary" disabled={busy}>
-            {busy ? 'Saving…' : 'Save profile'}
-          </button>
-          {user.player.avatarUrl && (
+        <form onSubmit={save}>
+          <label>
+            Display name
+            <input
+              id="profile-name"
+              required
+              minLength={2}
+              maxLength={24}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label>
+            Profile picture
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={busy || processing}
+              onChange={(e) => void choose(e.target.files?.[0])}
+            />
+          </label>
+          <p className="field-hint">
+            JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped and
+            optimized to 512 × 512. Profile pictures are visible to other
+            players.
+          </p>
+          <div className="auth-actions">
             <button
-              type="button"
-              className="button button-secondary"
-              disabled={busy}
-              onClick={remove}
+              className="button button-primary"
+              disabled={busy || processing || !pending}
             >
-              Remove picture
+              {busy
+                ? 'Uploading / saving…'
+                : processing
+                  ? 'Preparing photo…'
+                  : error && pending
+                    ? 'Retry save'
+                    : 'Save profile'}
             </button>
-          )}
-        </div>
-      </form>
+            {user.player.avatarUrl && (
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={busy}
+                onClick={remove}
+              >
+                Remove picture
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
       <dl className="account-details">
         <dt>Email (private)</dt>
         <dd>{user.email}</dd>
