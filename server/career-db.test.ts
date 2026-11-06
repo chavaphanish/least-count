@@ -162,28 +162,26 @@ function report(roundCount = 5) {
     completedAt: 120000,
     status: 'completed',
     settings: { timedGame: true, eliminationThreshold: 100 },
-    players: ids
-      .slice(0, 2)
-      .map((id, i) => ({
-        id: `user:${id}`,
-        name: `Player ${i + 1}`,
-        score: i ? 100 : 20,
-        rank: i + 1,
-        outcome: i ? 'lost' : 'won',
-        stats: {
-          gamesStarted: 1,
-          gamesPlayed: 1,
-          gamesWon: i ? 0 : 1,
-          gamesLost: i ? 1 : 0,
-          roundsPlayed: roundCount,
-          roundsCompleted: roundCount,
-          playingMs: 119000,
-          completedTurns: 3,
-          decisionMs: 9000,
-          fastestMs: 1000,
-          slowestMs: 5000,
-        },
-      })),
+    players: ids.slice(0, 2).map((id, i) => ({
+      id: `user:${id}`,
+      name: `Player ${i + 1}`,
+      score: i ? 100 : 20,
+      rank: i + 1,
+      outcome: i ? 'lost' : 'won',
+      stats: {
+        gamesStarted: 1,
+        gamesPlayed: 1,
+        gamesWon: i ? 0 : 1,
+        gamesLost: i ? 1 : 0,
+        roundsPlayed: roundCount,
+        roundsCompleted: roundCount,
+        playingMs: 119000,
+        completedTurns: 3,
+        decisionMs: 9000,
+        fastestMs: 1000,
+        slowestMs: 5000,
+      },
+    })),
     rounds: Array.from({ length: roundCount }, (_, i) => ({
       round: i + 1,
       at: 10000 + i * 1000,
@@ -191,15 +189,13 @@ function report(roundCount = 5) {
       successful: true,
       caller: `user:${ids[0]}`,
       eligibleIds: ids.slice(0, 2).map((id) => `user:${id}`),
-      scores: ids
-        .slice(0, 2)
-        .map((id, j) => ({
-          id: `user:${id}`,
-          name: `Player ${j + 1}`,
-          total: j ? 20 : 0,
-          penalty: j ? 20 : 0,
-          score: j ? 20 * (i + 1) : 0,
-        })),
+      scores: ids.slice(0, 2).map((id, j) => ({
+        id: `user:${id}`,
+        name: `Player ${j + 1}`,
+        total: j ? 20 : 0,
+        penalty: j ? 20 : 0,
+        score: j ? 20 * (i + 1) : 0,
+      })),
     })),
   }
 }
@@ -219,7 +215,12 @@ describe('transactional career results and XP', () => {
     await ingest(value)
     const winner = await rpc('profile')
     expect(winner.profile.xp).toBe(150)
-    expect(winner.opponents[0]).toMatchObject({ id: ids[1], gamesTogether: 1, wins: 1, losses: 0 })
+    expect(winner.opponents[0]).toMatchObject({
+      id: ids[1],
+      gamesTogether: 1,
+      wins: 1,
+      losses: 0,
+    })
     expect(winner.statistics.gamesWon).toBe(1)
     expect(winner.statistics.currentWinStreak).toBe(1)
     expect(
@@ -341,17 +342,15 @@ it('breaks a win streak on explicit abandonment even while the next room remains
     startedAt: 200000,
     completedAt: null,
     revision: 1,
-    players: ids
-      .slice(0, 2)
-      .map((id, i) => ({
-        id: `user:${id}`,
-        name: 'Player',
-        score: 0,
-        rank: null,
-        outcome: i ? 'active' : 'abandoned',
-        abandonedAt: i ? undefined : 210000,
-        stats: { gamesStarted: 1, gamesAbandoned: i ? 0 : 1 },
-      })),
+    players: ids.slice(0, 2).map((id, i) => ({
+      id: `user:${id}`,
+      name: 'Player',
+      score: 0,
+      rank: null,
+      outcome: i ? 'active' : 'abandoned',
+      abandonedAt: i ? undefined : 210000,
+      stats: { gamesStarted: 1, gamesAbandoned: i ? 0 : 1 },
+    })),
   }
   await ingest(value)
   const stats = (await rpc('profile')).statistics
@@ -361,14 +360,57 @@ it('breaks a win streak on explicit abandonment even while the next room remains
 
 it('counts a shared third-player victory without inventing a head-to-head win or loss', async () => {
   const value = report(0)
-  value.players.forEach((p, i) => { p.outcome = 'lost'; p.stats.gamesWon = 0; p.stats.gamesLost = 1; p.rank = i + 2 })
-  value.players.push({ ...value.players[0], id: `user:${ids[2]}`, name: 'Third winner', outcome: 'won', rank: 1, stats: { ...value.players[0].stats, gamesWon: 1, gamesLost: 0 } })
+  value.players.forEach((p, i) => {
+    p.outcome = 'lost'
+    p.stats.gamesWon = 0
+    p.stats.gamesLost = 1
+    p.rank = i + 2
+  })
+  value.players.push({
+    ...value.players[0],
+    id: `user:${ids[2]}`,
+    name: 'Third winner',
+    outcome: 'won',
+    rank: 1,
+    stats: { ...value.players[0].stats, gamesWon: 1, gamesLost: 0 },
+  })
   await ingest(value)
   const owner = await rpc('profile')
-  expect(owner.opponents.find((p: any) => p.id === ids[1])).toMatchObject({ gamesTogether: 1, wins: 0, losses: 0 })
-  expect(owner.opponents.find((p: any) => p.id === ids[2])).toMatchObject({ gamesTogether: 1, wins: 0, losses: 1 })
+  expect(owner.opponents.find((p: any) => p.id === ids[1])).toMatchObject({
+    gamesTogether: 1,
+    wins: 0,
+    losses: 0,
+  })
+  expect(owner.opponents.find((p: any) => p.id === ids[2])).toMatchObject({
+    gamesTogether: 1,
+    wins: 0,
+    losses: 1,
+  })
 })
 it('searches display-name prefixes and treats wildcards as literal input', async () => {
   expect(await rpc('search', { query: 'Player' })).toHaveLength(3)
   expect(await rpc('search', { query: '%%' })).toHaveLength(0)
+})
+
+it('merges acknowledged round packets into complete history while preserving unique rewards', async () => {
+  const full = report(2)
+  const early = {
+    ...full,
+    revision: 1,
+    status: 'active',
+    completedAt: null,
+    rounds: full.rounds.slice(0, 1),
+    players: full.players.map((p) => ({
+      ...p,
+      outcome: 'active',
+      stats: { gamesStarted: 1, roundsPlayed: 1, roundsCompleted: 1 },
+    })),
+  }
+  await ingest(early)
+  await ingest({ ...early, revision: 2, rounds: [] })
+  const later = { ...full, revision: 3, rounds: full.rounds.slice(1) }
+  await ingest(later)
+  const game = await rpc('game', { game: gameId })
+  expect(game.rounds).toHaveLength(2)
+  expect((await rpc('profile')).profile.xp).toBe(120)
 })

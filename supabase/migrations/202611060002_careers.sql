@@ -124,20 +124,27 @@ end; $$;
 
 create function public.ingest_career_match(report jsonb) returns void language plpgsql security definer set search_path='' as $$
 declare gid uuid; rev bigint; old_rev bigint; p jsonb; u uuid; old_metrics jsonb; new_metrics jsonb; agg jsonb;
- k text; n numeric; prev numeric; v numeric; rr jsonb; cfg jsonb; streak integer; best integer; needs_streak boolean := false;
+ k text; n numeric; prev numeric; v numeric; rr jsonb; cfg jsonb; streak integer; best integer; needs_streak boolean := false; old_rounds jsonb; combined_rounds jsonb;
 begin
  if coalesce(auth.role(),'') <> 'service_role' then raise exception 'Trusted game service required'; end if;
  if report->>'eligible' is distinct from 'true' or jsonb_array_length(report->'players') not between 2 and 8 then raise exception 'Invalid career match'; end if;
  gid := (report->>'id')::uuid; rev := (report->>'revision')::bigint;
  -- Serialize ingests across rooms: protects multi-user totals, streaks and daily caps without deadlocks.
  perform pg_advisory_xact_lock(61730902);
- select revision into old_rev from public.career_matches where id=gid;
+ select revision, public.career_matches.report->'rounds' into old_rev,old_rounds from public.career_matches where id=gid;
  if old_rev is not null and old_rev>=rev then return; end if;
  if exists(select 1 from public.career_matches where id=gid and status in ('completed','abandoned')) then return; end if;
  if exists(select 1 from jsonb_array_elements(report->'players') x where x->>'id' not like 'user:%' or not exists(select 1 from public.career_public_profiles where id=substring(x->>'id' from 6)::uuid)) then raise exception 'Registered players required'; end if;
+ if jsonb_array_length(coalesce(report->'rounds','[]'))=0 then combined_rounds:=coalesce(old_rounds,'[]');
+ else
+ select coalesce(jsonb_agg(value order by (value->>'round')::integer),'[]') into combined_rounds from (
+   select distinct on ((value->>'round')::integer) value from jsonb_array_elements(coalesce(old_rounds,'[]') || coalesce(report->'rounds','[]'))
+   order by (value->>'round')::integer
+ ) rounds;
+ end if;
  insert into public.career_matches values(gid,rev,to_timestamp((report->>'startedAt')::numeric/1000),
  case when report->>'completedAt' is not null then to_timestamp((report->>'completedAt')::numeric/1000) end,report->>'status',
- jsonb_build_object('id',gid,'startedAt',report->'startedAt','completedAt',report->'completedAt','status',report->'status','settings',report->'settings','rounds',report->'rounds','players',report->'players'))
+ jsonb_build_object('id',gid,'startedAt',report->'startedAt','completedAt',report->'completedAt','status',report->'status','settings',report->'settings','rounds',combined_rounds,'players',report->'players'))
  on conflict(id) do update set revision=excluded.revision,completed_at=excluded.completed_at,status=excluded.status,report=excluded.report;
  for p in select * from jsonb_array_elements(report->'players') loop
    u := substring(p->>'id' from 6)::uuid;

@@ -271,7 +271,7 @@ export function observeCareer(
   }
 }
 
-/** Snapshot coalesces an outbox: newer revisions contain all prior rounds/counters. */
+/** Snapshot coalesces an outbox: newer revisions contain all unacknowledged rounds and cumulative counters. */
 export async function syncCareer(c: CareerState, env: Env) {
   if (!c.eligible || !env.SUPABASE_CAREER_KEY || !env.SUPABASE_URL) return false
   const client = createClient(env.SUPABASE_URL, env.SUPABASE_CAREER_KEY, {
@@ -282,11 +282,13 @@ export async function syncCareer(c: CareerState, env: Env) {
     },
   })
   const revision = c.revision
+  const sentRounds = new Set(c.rounds.map((round) => round.round))
   const { error } = await client.rpc('ingest_career_match', {
     report: structuredClone(c),
   })
   if (error) return false
   c.syncedRevision = Math.max(c.syncedRevision, revision)
+  c.rounds = c.rounds.filter((round) => !sentRounds.has(round.round))
   return true
 }
 
