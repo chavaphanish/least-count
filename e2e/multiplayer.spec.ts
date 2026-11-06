@@ -155,6 +155,8 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
             .length,
       )
       .toBe(2)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await other.emulateMedia({ reducedMotion: 'reduce' })
     const actor =
       hostView.game.currentPlayerId ===
       hostView.members.find(
@@ -162,20 +164,6 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
       ).id
         ? page
         : other
-    if (
-      (actor === page ? hostView : friendView).game.phase === 'opening-draw'
-    ) {
-      await actor
-        .getByRole('button', { name: 'Draw New Card', exact: true })
-        .click()
-      await expect
-        .poll(
-          async () =>
-            (await (await actor.request.get(`/api/rooms/${code}`)).json()).game
-              .phase,
-        )
-        .toBe('opening-discard')
-    }
     const viewer = await (await actor.request.get(`/api/rooms/${code}`)).json()
     const hand = viewer.game.hand
     const buttons = actor
@@ -188,7 +176,7 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     await buttons.nth(selectedIndex).click()
     await actor
       .getByRole('button', {
-        name: /Choose draw source|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically|Complete opening turn/,
+        name: /Discard selected|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically/,
       })
       .click()
     if (
@@ -327,4 +315,114 @@ test('dashboard and lobby work at 320px', async ({ page }) => {
     path: '/tmp/least-count-lobby-mobile.png',
     fullPage: true,
   })
+})
+
+test('online discards commit and finish animating before the eligible pickup is enabled', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ baseURL })
+  const friend = await context.newPage()
+  try {
+    await guest(page, 'Animation Host')
+    const code = await create(page)
+    await guest(friend, 'Animation Friend')
+    await enter(friend, code)
+    await page.getByRole('button', { name: 'Start Game', exact: true }).click()
+    await expect(
+      page.getByRole('heading', { name: 'Round 1', exact: true }),
+    ).toBeVisible()
+    const hostId = (await (await page.request.get('/api/session')).json()).user
+      .player.id
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const publicView = (
+        await (await page.request.get(`/api/rooms/${code}`)).json()
+      ).game
+      const actor = publicView.currentPlayerId === hostId ? page : friend
+      const current = (
+        await (await actor.request.get(`/api/rooms/${code}`)).json()
+      ).game
+      if (current.phase === 'penalty') {
+        await actor
+          .getByRole('button', { name: /^Draw \d+ (Cards|penalty cards)$/ })
+          .click()
+        await expect
+          .poll(
+            async () =>
+              (await (await actor.request.get(`/api/rooms/${code}`)).json())
+                .game.currentPlayerId,
+          )
+          .not.toBe(current.currentPlayerId)
+        continue
+      }
+      const index = current.hand.findIndex(
+        (c: { rank: string }) =>
+          c.rank !== '7' && c.rank !== current.latestDiscard.at(-1)?.rank,
+      )
+      expect(index).toBeGreaterThanOrEqual(0)
+      await expect(
+        actor.getByRole('button', { name: 'Draw from pile', exact: true }),
+      ).toHaveCount(0)
+      await actor
+        .getByRole('group', { name: 'Your hand', exact: true })
+        .getByRole('button')
+        .nth(index)
+        .click()
+      if (!current.pickup.length) {
+        await actor
+          .getByRole('button', {
+            name: 'Discard & draw automatically',
+            exact: true,
+          })
+          .click()
+        await expect(actor.locator('.flight-incoming')).toHaveCount(1)
+        await expect(actor.getByTestId('turn-animation')).toHaveCount(0)
+        continue
+      }
+      const eligible = current.pickup[0]
+      await actor.clock.install()
+      await actor.clock.pauseAt(new Date())
+      await actor
+        .getByRole('button', { name: 'Discard selected', exact: true })
+        .click()
+      await expect(actor.locator('.flight-outgoing')).toHaveCount(1)
+      await expect(actor.locator('.flight-incoming')).toHaveCount(0)
+      const waiting = (
+        await (await actor.request.get(`/api/rooms/${code}`)).json()
+      ).game
+      expect(waiting.phase).toBe('draw')
+      expect(waiting.hand).toHaveLength(current.hand.length - 1)
+      expect(waiting.pickup).toEqual(current.pickup)
+      expect(waiting.deadline).toBe(current.deadline)
+      await expect(
+        actor.getByRole('button', { name: 'Draw from pile', exact: true }),
+      ).toHaveCount(0)
+      await actor.clock.runFor(650)
+      await expect(actor.getByTestId('turn-animation')).toHaveCount(0)
+      const pickup = actor.locator(`[data-pickup-card="${eligible.id}"]`)
+      await pickup.click()
+      await expect(actor.locator('.flight-incoming')).toHaveCount(1)
+      await expect(actor.locator('.flight-outgoing')).toHaveCount(0)
+      const done = (
+        await (await actor.request.get(`/api/rooms/${code}`)).json()
+      ).game
+      expect(done.hand).toHaveLength(current.hand.length)
+      expect(done.hand.some((c: { id: string }) => c.id === eligible.id)).toBe(
+        true,
+      )
+      const peer = (
+        await (
+          await (actor === page ? friend : page).request.get(
+            `/api/rooms/${code}`,
+          )
+        ).json()
+      ).game
+      expect(peer.events).toEqual(done.events)
+      return
+    }
+    throw new Error('No manual pickup turn reached')
+  } finally {
+    await context.close()
+  }
 })

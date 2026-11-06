@@ -6,15 +6,17 @@ These amendments are authoritative for the current implementation. Read them wit
 
 At every new round, prepare the existing one- or two-deck composition, choose an eligible Selected Joker (excluding 7s and Printed Jokers), remove that physical indicator, deal exactly seven cards to each active player, and reveal one remaining card face up. The starting player is random for the first round and rotates clockwise among active players on later rounds. The opening card is public to everyone.
 
-### Non-7 opening card: draw first, then discard
+### Non-7 opening card: standard discard first
 
-The starting player explicitly chooses **Pick Up the Opening Card** or **Draw New Card**. No closed draw is selected automatically while the face-up card is a legal choice. This also applies if the opening card is a Printed Joker or has the Selected Joker's rank.
+**The first player follows the standard discard-first turn sequence. The initial face-up discard card is treated as an eligible previous discard for matching and pickup purposes. The player may pick up this card only after making a legal discard that requires a replacement draw. If the player performs Match and Drop or plays a 7, no replacement card is drawn.**
 
-Taking the face-up card moves that same physical card into the starting player's private hand and removes it from the discard pile. The pile may temporarily be empty. Choosing the closed pile instead draws exactly one private card and leaves the opening card visible. Either choice takes the hand from seven to eight cards and may be made only once.
+The starting player sees seven cards and may declare Show if eligible, or discard one card or a legal same-rank group. Drawing and pickup controls are inactive before a legal discard. Having a card matching the opening rank does not force Match and Drop; the player may legally discard another rank.
 
-The player then discards one card or a legal same-rank group and ends the opening turn. **No second replacement draw occurs**, whether or not the discard matches the prior visible rank. Playing one or more 7s here starts the normal two-card penalty without an additional replacement. The next eligible normal turn uses the existing discard-first rules; the draw-first opening is not repeated after a skipped or timed-out opening turn.
+After a normal nonmatching discard, the opening card remains the eligible pickup while the player's new discard becomes the visible latest group. The player chooses exactly one card from that eligible group or the closed pile. Taking the opening card moves that same physical ID into the hand and removes it from the pile; the new discard remains in place. The player cannot take their own new discard. This also applies to Printed Joker and Selected Joker rank openings.
 
-Show remains available before acquiring an opening card if the original seven-card hand is worth five or less. After either opening acquisition, Show is unavailable for the rest of that turn. A timed opening has one shared 60-second deadline across choosing and discarding; refreshes and the partial acquisition do not reset it. Untimed rooms remain untimed. Timeout elimination continues to clear pickup eligibility and any penalty.
+The discard is committed and animated before the replacement choice is made. A refresh during that choice restores the committed discard, eligible reference, and remaining deadline. The replacement ends the turn. Discard flights finish before incoming pickup flights; an automatic closed replacement is presented in the same order without another click.
+
+Match and Drop and legally playing 7s end the first player's action without a replacement. Show is available at the beginning of the normal turn, before discarding, and is unavailable afterward. One timed deadline covers discarding and any required replacement; discarding, animations, refreshes, and reconnecting do not reset it. Untimed rooms stay untimed.
 
 ### Opening 7: immediate two-card penalty
 
@@ -28,11 +30,12 @@ For full-cycle tracking, the starting player is the initiator but is recorded as
 
 ### Opening examples and quick start
 
-- **Opening 3♠:** Alex chooses the visible 3 or one closed card, then discards two Queens. Alex draws no second card; Ben takes a normal turn.
+- **Opening 9♥:** Alex discards K♠ first, then chooses the eligible 9♥ or one closed replacement. The 9♥ remains eligible while K♠ is the latest discard. Ben acts after the replacement.
+- **Opening 9♥, matching group:** Alex discards 9♠ and 9♦, draws nothing, and Ben acts immediately. Alex may instead discard another rank and make a normal replacement choice.
 - **Opening 7♥:** Alex holds a 7 and may draw two and skip, or play 7♠ with no replacement; Ben then faces four penalty cards. If Alex holds no 7, the two-card draw and skipped turn resolve automatically.
 - **Three-player opening cycle:** With one revealed 7 and one remaining 7 per player, Alex, Ben, and Chris each respond. The penalty is cancelled, and Alex takes the next normal turn without another opening acquisition.
 
-The activity log records the revealed card, the public opening pickup or unnamed closed draw, completion of the opening discard, and opening penalties/full cycles. Closed acquisition and penalty card identities are never included in public events. The phase, single acquisition, and shared deadline persist on the server and survive reconnection; retries cannot acquire the card twice.
+The activity log records the revealed card, completed discard/replacement summaries with public pickups or unnamed closed draws, and opening penalties/full cycles. Closed acquisition and penalty card identities are never included in public events. The normal turn/draw phase, committed discard, eligible reference, and shared deadline persist on the server; retries cannot acquire a card twice.
 
 ## Normal turns and replacement draws
 
@@ -41,7 +44,7 @@ Discard one card or a group of the same rank. A normal discard requires exactly 
 **When a player must draw a replacement card and no eligible card from the immediately preceding player's discard is available, the game automatically draws exactly one card from the face-down draw pile.**
 
 - Discard and automatic draw are one authoritative action. No additional click is required.
-- If an eligible preceding discard exists, the player chooses one card from that group or the draw pile. The UI keeps the previous group visible while planning; it commits the discard and selected pickup together.
+- If an eligible preceding discard exists, the player chooses one card from that group or the draw pile. The discard is committed first. The previous eligible group remains available until the player chooses the replacement; it is not overwritten by the new top discard.
 - Only the immediately preceding eligible group is available. Older groups and the player's own new discard cannot be picked up.
 - Match and Drop requires no replacement draw when the played rank matches the prior top rank, except that 7 always follows its Power Card transition.
 - Automatic replacement drawing never applies to 7 actions, Show, ended rounds, or eliminated players. Penalty draws are separate.
@@ -81,4 +84,4 @@ PJ remains the rulebook/internal abbreviation for **Printed Joker**. The visible
 
 Online rooms default to four players, a cumulative cutoff of 100, and timed 60-second turns. Hosts may choose 2–8 players, another positive integer cutoff, or untimed play. Deal seven cards each using one standard deck plus one Printed Joker for 2–4 active players, or two decks plus two Printed Jokers for 5–8.
 
-First resolve the opening choice or opening 7 penalty as described above. On subsequent normal turns, call Show if eligible or select same-rank cards. Play 7s immediately; use Match and Drop when the prior top rank matches; otherwise draw automatically when there is no open choice, or choose a source when there is. Follow the live activity panel. Round scoring, zero-point ties, cumulative elimination, and ordinary next rounds follow the confirmed decisions; no special tiebreaker round is introduced.
+On the first and all subsequent normal turns, call Show if eligible or discard same-rank cards before any required replacement. Resolve an opening 7 as a penalty instead. Play 7s immediately; use Match and Drop when the prior top rank matches; otherwise draw automatically when there is no open choice, or choose a source when there is. Follow the live activity panel. Round scoring, zero-point ties, cumulative elimination, and ordinary next rounds follow the confirmed decisions; no special tiebreaker round is introduced.

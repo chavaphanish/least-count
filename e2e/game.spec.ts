@@ -101,7 +101,7 @@ for (const width of [1440, 768, 390, 320]) {
   })
 }
 
-test('plans without changing the pile or hand, survives refresh, then commits both actions', async ({
+test('commits the discard first, preserves the prior pickup across refresh, then draws once', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -109,38 +109,38 @@ test('plans without changing the pile or hand, survives refresh, then commits bo
   game.players[0].hand = [card('K'), card('K'), card('A')]
   game.eligible = game.discards[0].map((c) => c.id)
   await load(page, game)
-  const selectKings = async () => {
-    const kings = page
-      .getByRole('group', { name: 'Your hand' })
-      .getByRole('button', { name: /^K of/ })
-    await kings.nth(0).click()
-    await kings.nth(1).click()
-    await page.getByRole('button', { name: 'Choose draw source (2)' }).click()
-  }
-  await selectKings()
-  await expect(
-    page.getByRole('button', { name: 'Draw from pile', exact: true }),
-  ).toBeFocused()
-  await expect(
-    page
-      .locator('[data-discard-target]')
-      .getByRole('img', { name: '4 of clubs' }),
-  ).toBeVisible()
-  expect(await saved(page)).toEqual(game)
-  await page.reload()
   await expect(
     page.getByRole('button', { name: 'Draw from pile', exact: true }),
   ).toHaveCount(0)
-  expect((await saved(page)).deadline).toBe(game.deadline)
-  await selectKings()
-  await page.getByRole('button', { name: 'Back to selection' }).click()
-  expect(await saved(page)).toEqual(game)
-  await page.getByRole('button', { name: 'Choose draw source (2)' }).click()
-  await page.getByRole('button', { name: 'Pick up 4 of clubs' }).click()
-  const next = await saved(page)
-  expect(next.players[0].hand.map((c) => c.rank)).toEqual(['A', '4'])
-  expect(next.current).toBe(1)
-  await expect(page.getByTestId('turn-animation')).toHaveCount(0)
+  const kings = page
+    .getByRole('group', { name: 'Your hand' })
+    .getByRole('button', { name: /^K of/ })
+  await kings.nth(0).click()
+  await kings.nth(1).click()
+  await page
+    .getByRole('button', { name: 'Discard selected (2)', exact: true })
+    .click()
+  const waiting = await saved(page)
+  expect(waiting.phase).toBe('draw')
+  expect(waiting.players[0].hand.map((c) => c.rank)).toEqual(['A'])
+  expect(waiting.drawPile).toEqual(game.drawPile)
+  expect(waiting.deadline).toBe(game.deadline)
+  await expect(
+    page
+      .locator('[data-discard-target]')
+      .getByRole('img', { name: 'K of clubs' }),
+  ).toHaveCount(2)
+  await page.reload()
+  expect((await saved(page)).phase).toBe('draw')
+  await expect(
+    page.getByRole('button', { name: 'Back to selection' }),
+  ).toHaveCount(0)
+  await page
+    .getByRole('button', { name: 'Pick up 4 of clubs', exact: true })
+    .click()
+  const done = await saved(page)
+  expect(done.players[0].hand.map((c) => c.rank)).toEqual(['A', '4'])
+  expect(done.current).toBe(1)
 })
 
 test('rejects mixed ranks without changing the turn or deadline', async ({
@@ -153,7 +153,7 @@ test('rejects mixed ranks without changing the turn or deadline', async ({
     .getByRole('button')
   await cards.nth(0).click()
   await cards.nth(1).click()
-  await page.getByRole('button', { name: 'Choose draw source (2)' }).click()
+  await page.getByRole('button', { name: 'Discard selected (2)' }).click()
   await expect(page.getByRole('alert')).toHaveText(
     'All selected cards must have the same rank.',
   )
@@ -347,7 +347,7 @@ test('plays a complete local match through the real controls', async ({
             .click()
         await page
           .getByRole('button', {
-            name: /^(Choose draw source|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically|Complete opening turn)/,
+            name: /^(Discard selected|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically)/,
           })
           .click()
         if (
@@ -371,13 +371,6 @@ test('plays a complete local match through the real controls', async ({
           }
         }
       }
-      if (action.type === 'opening-draw') {
-        if (action.source === 'pile')
-          await page
-            .getByRole('button', { name: 'Draw New Card', exact: true })
-            .click()
-        else await page.locator('.pickup-button').click()
-      }
       if (action.type === 'draw') {
         if (action.source === 'pile')
           await page
@@ -400,10 +393,9 @@ test('plays a complete local match through the real controls', async ({
   throw new Error('The local match did not finish within 1500 actions.')
 })
 
-test('animates outgoing cards and an open pickup concurrently after committing once', async ({
+test('finishes discard animation before allowing the public pickup animation', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 1500 })
   const now = Date.now()
   await page.clock.install({ time: new Date(now) })
   await page.clock.pauseAt(new Date(now + 1000))
@@ -411,60 +403,39 @@ test('animates outgoing cards and an open pickup concurrently after committing o
   game.players[0].hand = [card('K'), card('K'), card('A')]
   game.eligible = game.discards[0].map((c) => c.id)
   await load(page, game)
-  const cards = page
+  const kings = page
     .getByRole('group', { name: 'Your hand' })
     .getByRole('button', { name: /^K of/ })
-  await cards.nth(0).click()
-  await cards.nth(1).click()
-  await page.getByRole('button', { name: 'Choose draw source (2)' }).click()
-  await page.getByRole('button', { name: 'Pick up 4 of clubs' }).click()
+  await kings.nth(0).click()
+  await kings.nth(1).click()
+  await page
+    .getByRole('button', { name: 'Discard selected (2)', exact: true })
+    .click()
   await expect(page.locator('.flight-outgoing')).toHaveCount(2)
+  await expect(page.locator('.flight-incoming')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Pick up 4 of clubs', exact: true }),
+  ).toHaveCount(0)
+  const waiting = await saved(page)
+  expect(waiting.phase).toBe('draw')
+  expect(waiting.players[0].hand.map((c) => c.rank)).toEqual(['A'])
+  expect(waiting.drawPile).toEqual(game.drawPile)
+  await page.clock.runFor(650)
+  await page
+    .getByRole('button', { name: 'Pick up 4 of clubs', exact: true })
+    .click()
+  await expect(page.locator('.flight-outgoing')).toHaveCount(0)
   await expect(page.locator('.flight-incoming')).toHaveCount(1)
-  const timings = await page
-    .locator('.card-flight')
-    .evaluateAll(async (elements) => {
-      const animations = elements.map((element) => element.getAnimations()[0])
-      await Promise.all(animations.map((animation) => animation.ready))
-      return animations.map((animation) => ({
-        start: animation.startTime,
-        duration: animation.effect!.getTiming().duration,
-        delay: animation.effect!.getTiming().delay,
-      }))
-    })
-  expect(
-    timings.every(
-      (t) => t.start !== null && t.duration === 650 && t.delay === 0,
-    ),
-  ).toBe(true)
-  const starts = timings.map((t) => Number(t.start))
-  expect(Math.max(...starts) - Math.min(...starts)).toBeLessThan(25)
-  expect((await saved(page)).players[0].hand.map((c) => c.rank)).toEqual([
-    'A',
-    '4',
-  ])
   await expect(page.locator('.flight-incoming [role="img"]')).toHaveAttribute(
     'aria-label',
     '4 of clubs',
   )
-  await expect(
-    page.getByRole('button', { name: 'New game', exact: true }),
-  ).toBeDisabled()
-  await page.locator('.card-flight').evaluateAll((elements) =>
-    elements.forEach((element) =>
-      element.getAnimations().forEach((animation) => {
-        animation.pause()
-        animation.currentTime = 325
-      }),
-    ),
-  )
-  await page.screenshot({
-    path: '/tmp/least-count-card-exchange.png',
-    fullPage: false,
-  })
-  await expect(page.locator('.flight-outgoing')).toHaveCount(2)
+  expect((await saved(page)).players[0].hand.map((c) => c.rank)).toEqual([
+    'A',
+    '4',
+  ])
   await page.clock.runFor(650)
   await expect(page.getByTestId('turn-animation')).toHaveCount(0)
-  expect((await saved(page)).players[0].hand).toHaveLength(2)
 })
 
 test('keeps a closed-pile card face down in flight and preserves the accepted move through reload', async ({
@@ -476,7 +447,8 @@ test('keeps a closed-pile card face down in flight and preserves the accepted mo
   const game = fixture()
   await load(page, game)
   await page.getByRole('button', { name: /^K of/ }).click()
-  await page.getByRole('button', { name: 'Choose draw source (1)' }).click()
+  await page.getByRole('button', { name: 'Discard selected (1)' }).click()
+  await page.clock.runFor(650)
   await page
     .getByRole('button', { name: 'Draw from pile', exact: true })
     .click()
@@ -519,14 +491,14 @@ test('keeps the deadline running while the draw source is being chosen', async (
   game.deadline = now + 60_000
   await load(page, game)
   await page.getByRole('button', { name: /^K of/ }).click()
-  await page.getByRole('button', { name: 'Choose draw source (1)' }).click()
+  await page.getByRole('button', { name: 'Discard selected (1)' }).click()
   await page.clock.fastForward(60_000)
   await expect(
     page.getByRole('heading', { name: 'Bot 1 wins the match!' }),
   ).toBeVisible()
   const next = await saved(page)
   expect(next.players[0].eliminationReason).toBe('timeout')
-  expect(next.discards).toEqual(game.discards)
+  expect(next.discards.at(-1)![0].rank).toBe('K')
   await expect(page.getByTestId('turn-animation')).toHaveCount(0)
 })
 
@@ -551,10 +523,10 @@ test('keeps the previous group and all pickup choices usable on a narrow phone',
     .getByRole('button', { name: /^K of/ })
   await kings.nth(0).click()
   await kings.nth(1).click()
-  await page.getByRole('button', { name: 'Choose draw source (2)' }).click()
+  await page.getByRole('button', { name: 'Discard selected (2)' }).click()
   await expect(page.locator('.pickup-button')).toHaveCount(8)
   await noOverflow(page)
-  expect((await saved(page)).players[0].hand).toHaveLength(3)
+  expect((await saved(page)).players[0].hand).toHaveLength(1)
   await page.screenshot({
     path: '/tmp/least-count-pickup-choice-mobile.png',
     fullPage: true,
@@ -565,4 +537,39 @@ test('keeps the previous group and all pickup choices usable on a narrow phone',
     'A',
     '4',
   ])
+})
+
+test('automatic replacement animates after the discard, never alongside it', async ({
+  page,
+}) => {
+  const now = Date.now()
+  await page.clock.install({ time: new Date(now) })
+  await page.clock.pauseAt(new Date(now + 1000))
+  const s = fixture()
+  s.eligible = []
+  await load(page, s)
+  await page.getByRole('button', { name: /^K of/ }).click()
+  await page
+    .getByRole('button', {
+      name: 'Discard & draw automatically (1)',
+      exact: true,
+    })
+    .click()
+  await expect(page.locator('.flight-outgoing')).toHaveCount(1)
+  await expect(page.locator('.flight-incoming')).toHaveCount(0)
+  await page.clock.runFor(325)
+  await expect(page.locator('.flight-outgoing')).toHaveCount(0)
+  await expect(page.locator('.flight-incoming')).toHaveCount(1)
+  await expect(page.locator('.flight-incoming [role="img"]')).toHaveAttribute(
+    'aria-label',
+    'Face-down card',
+  )
+  await expect(
+    page
+      .locator('[data-discard-target]')
+      .getByRole('img', { name: 'K of clubs' }),
+  ).toBeVisible()
+  await page.clock.runFor(325)
+  await expect(page.getByTestId('turn-animation')).toHaveCount(0)
+  expect((await saved(page)).players[0].hand).toHaveLength(2)
 })
