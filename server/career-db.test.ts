@@ -414,3 +414,44 @@ it('merges acknowledged round packets into complete history while preserving uni
   expect(game.rounds).toHaveLength(2)
   expect((await rpc('profile')).profile.xp).toBe(120)
 })
+
+it('preserves verified first-login profile creation under the new column grants', async () => {
+  const newcomer = '44444444-4444-4444-8444-444444444444'
+  await db.query(
+    'insert into auth.users(id,email_confirmed_at) values($1,now())',
+    [newcomer],
+  )
+  await db.query(
+    "select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claim.role','authenticated',false)",
+    [newcomer],
+  )
+  await db.exec('set role authenticated')
+  const result = await db.query<{ username: string; display_name: string }>(
+    "select * from public.ensure_player_profile('New Player')",
+  )
+  expect(result.rows[0]).toMatchObject({
+    display_name: 'New Player',
+    username: `lc_${newcomer.replaceAll('-', '')}`,
+  })
+  await expect(
+    db.query("update public.profiles set username='impersonated' where id=$1", [
+      newcomer,
+    ]),
+  ).rejects.toThrow(/permission/)
+})
+it('retains owner-folder avatar storage policies and rejects another player folder', async () => {
+  await db.exec(
+    'grant select,insert,update,delete on storage.objects to authenticated',
+  )
+  await rpc('profile')
+  await db.query(
+    "insert into storage.objects(id,bucket_id,name) values('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','avatars',$1)",
+    [`${ids[0]}/photo.png`],
+  )
+  await expect(
+    db.query(
+      "insert into storage.objects(id,bucket_id,name) values('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','avatars',$1)",
+      [`${ids[1]}/photo.png`],
+    ),
+  ).rejects.toThrow(/row-level security/)
+})
