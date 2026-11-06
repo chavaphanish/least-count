@@ -221,15 +221,8 @@ export async function updateProfile(
       if (upload.error)
         throw new ApiError(
           400,
-          'The image could not be uploaded. Check the avatar storage policies.',
+          'Avatar upload failed. Retry; if it persists, check the avatars bucket, 5 MB limit, and owner upload policy.',
         )
-    }
-    if (request.method === 'DELETE' && old.data.avatar_path) {
-      const removed = await client.storage
-        .from('avatars')
-        .remove([old.data.avatar_path])
-      if (removed.error)
-        throw new ApiError(503, 'The image could not be removed. Please retry.')
     }
     const saved = await client
       .from('profiles')
@@ -239,7 +232,7 @@ export async function updateProfile(
       if (path) await client.storage.from('avatars').remove([path])
       throw new ApiError(503, 'The profile picture could not be saved.')
     }
-    if (path && old.data.avatar_path)
+    if (old.data.avatar_path)
       await client.storage.from('avatars').remove([old.data.avatar_path])
   }
   return (await requireAuth(request, env)).user

@@ -91,6 +91,7 @@ export type PublicGamePlayer = PublicPlayer & {
   eliminationReason?: 'score' | 'timeout'
 }
 export type GameView = {
+  career?: { gameId: string; eligible: boolean; synced: boolean }
   phase: Phase
   round: number
   currentPlayerId: string
@@ -131,13 +132,13 @@ export type SocketMessage =
   | { type: 'state'; room: RoomView }
   | { type: 'error'; message: string; requestId?: string }
   | { type: 'pong'; serverNow: number }
-export const AVATAR_MAX_BYTES = 2 * 1024 * 1024
+export const AVATAR_MAX_BYTES = 5 * 1024 * 1024
 export function avatarType(
   bytes: Uint8Array,
   mime: string,
 ): 'jpg' | 'png' | 'webp' {
   if (!bytes.length || bytes.length > AVATAR_MAX_BYTES)
-    throw new Error('Choose an image no larger than 2 MB.')
+    throw new Error('Choose an image no larger than 5 MB.')
   if (
     mime === 'image/jpeg' &&
     bytes[0] === 255 &&
