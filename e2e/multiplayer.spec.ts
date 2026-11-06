@@ -388,8 +388,9 @@ test('online discards commit and finish animating before the eligible pickup is 
         continue
       }
       const eligible = current.pickup[0]
-      await actor.clock.install()
-      await actor.clock.pauseAt(new Date())
+      const animationClock = Date.now()
+      await actor.clock.install({ time: new Date(animationClock) })
+      await actor.clock.pauseAt(new Date(animationClock + 1000))
       await actor
         .getByRole('button', { name: 'Drop 1 Card', exact: true })
         .click()

@@ -1,3 +1,4 @@
+import { Leaderboard } from '../career/Leaderboard'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { Avatar } from '../components/Avatar'
@@ -217,6 +218,7 @@ export function DashboardPage() {
       <button className="text-button" disabled={busy} onClick={logout}>
         {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
       </button>
+      {mode === 'home' && <Leaderboard />}
     </section>
   )
 }

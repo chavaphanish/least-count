@@ -2,7 +2,15 @@
 
 Least Count is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
 
-**This branch adds onboarding and multiplayer.** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
+**Accounts and multiplayer:** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
+
+## Player careers and social features
+
+Registered profiles now include Overview, Statistics, Game History, and Buddies, with public profile discovery, XP/levels, frequent opponents, and Global/Buddies XP Rankings on the dashboard. Large avatar photos are previewed, center-cropped and compressed before upload (5 MB input limit).
+
+**Production setup required before enabling career tracking:** apply the two new Supabase migrations, configure the Worker-only `SUPABASE_CAREER_KEY` secret, and configure `CAREER_ORIGIN` plus `CAREER_ENABLED=true` as Worker secret bindings for production. See [player careers: setup, definitions, privacy, and testing](docs/player-careers.md). Keep tracking disabled in previews/tests connected to production data. Existing guest play and local practice remain casual and do not earn permanent XP.
+
+Career results come from accepted Worker game transitions, with durable retries and a transactional XP ledger. Defaults are +10 XP per completed round, +25 for a finalized game, and +75 for victory. Levels follow `50 × (level − 1) × level`. Finalized wins/losses, round participation, Least/Power Card metrics, card actions, server-recorded time, and score/timeout eliminations are tracked without exposing hidden cards. Detailed history and frequent opponents remain private; public rankings show XP, levels and win performance. These metagame features do not change the card rules.
 
 ## Playing
 

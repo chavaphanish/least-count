@@ -1,3 +1,4 @@
+import { CareerRewards } from '../career/CareerRewards'
 import { useActiveSeat } from '../hooks/useActiveSeat'
 import { TurnActions } from '../components/TurnActions'
 import { TurnTimer } from '../components/TurnTimer'
@@ -275,6 +276,7 @@ export function RoomPage({
         </>
       ) : (
         <>
+          <p className="field-hint">{g.career?.eligible ? 'Career game · verified players · server-confirmed XP' : 'Casual game · no permanent XP or career statistics'}</p>
           <div className="match-toolbar">
             <strong>
               {g.players.find((p) => p.id === g.currentPlayerId)?.displayName}’s
@@ -402,6 +404,7 @@ export function RoomPage({
             onSelectAll={() => setSelected(g.hand.filter(card => card.rank === cards[0]?.rank).map(card => card.id))}
             onClear={() => setSelected([])}
           />
+          {g.result && g.career?.eligible && <CareerRewards key={g.round} game={g.career.gameId} round={g.round} />}
           {g.result && (
             <section className="round-summary">
               <h2>

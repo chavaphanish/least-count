@@ -62,3 +62,8 @@ These require the real project and cannot be proven by mocks:
 - Fill a mixed registered/guest room on separate browsers, verify host-only start and seven-card private hands, then test refresh/reconnect, host departure, timed deadlines, and untimed play. The browser network response must contain only the viewer's hand.
 
 Do not commit test passwords/tokens. If email verification or recovery fails, check Supabase Auth logs, redirect allowlists, SMTP settings, and browser callback errors. If profiles fail, apply/check the migration and RLS policies. If guests fail too, check the Cloudflare Worker bindings/deployment before troubleshooting Supabase.
+
+
+## Career features and larger avatar photos
+
+The careers PR adds forward migrations `202611060001_avatar_limits.sql` and `202611060002_careers.sql`. Apply them after the original profiles migration; do not rerun or edit the original migration on production. See [the career deployment guide](player-careers.md) for the Worker-only ingestion secret and opt-in runtime flag. Authentication itself still uses the public publishable key; the new secret is used only by the server's career ingestion path. Never expose it to the browser.
