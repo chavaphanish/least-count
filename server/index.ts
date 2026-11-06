@@ -85,7 +85,10 @@ export default {
           },
         })
       }
-      if (url.pathname === '/api/career' && ['GET','POST'].includes(request.method)) return careerApi(request, env)
+      if (url.pathname === '/api/career' && ['GET','POST'].includes(request.method)) {
+        // Await here so asynchronous failures use the JSON error handler below.
+        return await careerApi(request, env)
+      }
       if (url.pathname === '/api/profile' && request.method === 'PATCH')
         return json({
           user: await updateProfile(request, env, await body(request)),
