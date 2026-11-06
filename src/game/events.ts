@@ -99,8 +99,8 @@ export function formatGameEvent(event: GameEvent): string {
   switch (event.type) {
     case 'ROUND_STARTED':
       if (event.openingCard)
-        return `Round ${event.roundNumber} started. The opening card is the ${formatCardName(event.openingCard)}. Selected Joker rank ${event.indicatorRank}.`
-      return `Round ${event.roundNumber} started: seven cards each; selected joker rank ${event.indicatorRank}.`
+        return `Round ${event.roundNumber} started. The opening card is the ${formatCardName(event.openingCard)}. Round Joker rank ${event.indicatorRank}.`
+      return `Round ${event.roundNumber} started: seven cards each; Round Joker rank ${event.indicatorRank}.`
     case 'OPENING_SEVEN_ACTIVATED':
       return `The opening 7 activated a two-card penalty for ${event.player.name}.`
     case 'OPENING_CARD_SELECTED':
@@ -138,7 +138,7 @@ export function formatGameEvent(event: GameEvent): string {
     case 'GAME_COMPLETED':
       return `${event.winner.name} wins the match.`
     case 'LEGACY_ACTIVITY':
-      return event.message
+      return event.message.replace(/selected joker/gi, 'Round Joker')
     case 'PILE_RECYCLED':
       return 'Older discards were reshuffled into the draw pile.'
   }

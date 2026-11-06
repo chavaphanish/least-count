@@ -1,9 +1,11 @@
+import { useAuth } from '../auth/AuthProvider'
+import { PlayerHand } from '../components/PlayerHand'
 import { gameEvents } from '../game/events'
 import { GameActivity } from '../components/GameActivity'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PlayingCard } from '../components/PlayingCard'
 import { RoundSummary } from '../components/RoundSummary'
-import { cardLabel, cardValue, handTotal } from '../game/deck'
+import { cardLabel, handTotal } from '../game/deck'
 import {
   canShow,
   inspectDiscard,
@@ -22,6 +24,7 @@ export function GamePage({
 }: {
   local: ReturnType<typeof useLocalGame>
 }) {
+  const auth = useAuth()
   const { game, now, error, canSave, send, start, reset } = local
   const [count, setCount] = useState(4)
   const [selected, setSelected] = useState<string[]>([])
@@ -384,55 +387,43 @@ export function GamePage({
           </div>
           <div className="sample-pile joker-indicator">
             <PlayingCard card={game.indicator} />
-            <span>Selected Joker · {game.indicator.rank}</span>
+            <span>Round Joker · {game.indicator.rank}</span>
             <small>This rank is worth 0</small>
           </div>
         </div>
-        <div className="your-live-seat">
-          <div className="hand-heading">
-            <h2>Your hand</h2>
-            <strong data-testid="hand-total">
-              {handTotal(human.hand, game.indicator.rank)} points
-            </strong>
-            <span>
-              {human.hand.length} cards · {human.score} cumulative
-            </span>
-          </div>
-          <div className="player-hand" role="group" aria-label="Your hand">
-            {human.hand.map((card, index) => (
-              <button
-                className={`hand-card ${selected.includes(card.id) ? 'selected-card' : ''} ${animation?.incoming?.card.id === card.id ? 'incoming-card-placeholder' : ''}`}
-                data-hand-card={card.id}
-                key={card.id}
-                disabled={
-                  !canSelect || (game.phase === 'penalty' && card.rank !== '7')
-                }
-                aria-label={`${cardLabel(card)}, ${cardValue(card, game.indicator.rank)} points, card ${index + 1}`}
-                aria-pressed={selected.includes(card.id)}
-                onClick={() => {
-                  setSelectionError('')
-                  setSelected((ids) =>
-                    ids.includes(card.id)
-                      ? ids.filter((id) => id !== card.id)
-                      : [...ids, card.id],
-                  )
-                }}
-              >
-                <PlayingCard card={card} />
-                <span className="card-value">
-                  {cardValue(card, game.indicator.rank)} pts
-                </span>
-              </button>
-            ))}
-            {!human.hand.length && (
-              <p className="empty-hand">
-                {human.eliminated
-                  ? 'Your cards have been removed from play.'
-                  : 'An empty hand is worth zero.'}
-              </p>
-            )}
-          </div>
-        </div>
+        <PlayerHand
+          player={auth.user?.player ?? { displayName: human.name, avatarUrl: null }}
+          total={handTotal(human.hand, game.indicator.rank)}
+          score={human.score}
+          empty={
+            human.eliminated
+              ? 'Your cards have been removed from play.'
+              : 'An empty hand is worth zero.'
+          }
+        >
+          {human.hand.map((card, index) => (
+            <button
+              className={`hand-card ${selected.includes(card.id) ? 'selected-card' : ''} ${animation?.incoming?.card.id === card.id ? 'incoming-card-placeholder' : ''}`}
+              data-hand-card={card.id}
+              key={card.id}
+              disabled={
+                !canSelect || (game.phase === 'penalty' && card.rank !== '7')
+              }
+              aria-label={`${cardLabel(card)}, card ${index + 1}`}
+              aria-pressed={selected.includes(card.id)}
+              onClick={() => {
+                setSelectionError('')
+                setSelected((ids) =>
+                  ids.includes(card.id)
+                    ? ids.filter((id) => id !== card.id)
+                    : [...ids, card.id],
+                )
+              }}
+            >
+              <PlayingCard card={card} />
+            </button>
+          ))}
+        </PlayerHand>
       </div>
       <div className="turn-panel">
         <p className="turn-message" role="status">

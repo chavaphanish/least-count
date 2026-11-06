@@ -278,17 +278,25 @@ select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); ou
 .joker-indicator { padding-left: 30px; border-left: 1px solid #e9cd9133; }
 .joker-indicator > small { font-size: 9px; color: #cfdbc3; }
 .your-live-seat { position: relative; z-index: 1; margin-top: 5px; }
-.hand-heading { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-.hand-heading h2 { font-size: 14px; font-weight: 500; }
-.hand-heading > strong { color: var(--gold); font-size: 12px; }
-.hand-heading > span { color: #c5d5bf; font-size: 10px; }
-.player-hand { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 10px; padding: 6px 0 2px; }
-.player-hand .playing-card { --card-width: 73px; border-radius: 5px; }
-.hand-card { transition: transform .15s; }
-.hand-card:not(:disabled):hover { transform: translateY(-5px); }
-.hand-card.selected-card { outline: 2px solid var(--gold); outline-offset: 4px; transform: translateY(-8px); }
-.hand-card:focus-visible { outline: 3px solid #fff1c9; outline-offset: 4px; }
-.card-value { display: block; font-size: 9px; margin-top: 9px; color: #d7e2ca; }
+.hand-heading { display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap; margin: 0 auto 12px; }
+.hand-player { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hand-player .profile-avatar { width: 40px; height: 40px; }
+.hand-heading h2 { font-size: 14px; font-weight: 500; margin: 0 0 3px; }
+.hand-player-name { display: block; max-width: 160px; overflow-wrap: anywhere; color: #c5d5bf; font-size: 11px; }
+.hand-summary { display: flex; flex-direction: column; gap: 4px; }
+.hand-summary strong { color: var(--gold); font-size: 12px; }
+.hand-summary > span { color: #c5d5bf; font-size: 10px; }
+.player-hand { --hand-card-width: 73px; --hand-step: 44px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 0 2px; }
+.hand-row { display: flex; width: max-content; padding: 16px 6px 6px; }
+.player-hand .playing-card { --card-width: var(--hand-card-width); border-radius: 5px; pointer-events: none; }
+/* Buttons occupy their exposed strip; artwork overflows so every strip has its own hit target. */
+.hand-row .hand-card { flex: 0 0 var(--hand-step); width: var(--hand-step); position: relative; overflow: visible; transition: transform .15s; touch-action: manipulation; }
+.hand-row .hand-card:last-child { flex-basis: var(--hand-card-width); width: var(--hand-card-width); }
+.hand-card.selected-card { transform: translateY(-12px); }
+.hand-card.selected-card > .playing-card { outline: 2px solid var(--gold); outline-offset: 3px; }
+.hand-card:focus-visible { outline: none; }
+.hand-card:focus-visible > .playing-card { outline: 3px solid #fff1c9; outline-offset: 3px; }
+@media (hover: hover) { .hand-card:not(:disabled):hover { transform: translateY(-6px); } .hand-card.selected-card:not(:disabled):hover { transform: translateY(-12px); } }
 .empty-hand { padding: 22px; font-size: 13px; color: #d7e2ca; }
 .joker-corner { position: absolute; left: 8px; top: 8px; font-size: calc(var(--card-width) * .18); color: #8d4339; }
 .joker-center { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: calc(var(--card-width) * .58); color: #8d4339; }
@@ -348,7 +356,7 @@ select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); ou
   .live-piles .sample-pile .playing-card { --card-width: 65px; }
   .joker-indicator { padding-left: 16px; }
   .live-piles .sample-pile > span { font-size: 7px; letter-spacing: .4px; }
-  .player-hand .playing-card { --card-width: 60px; }
+  .player-hand { --hand-card-width: 60px; --hand-step: 34px; }
   .game-below-table, .rules-grid { grid-template-columns: 1fr; }
   .game-setup { padding: 25px; }
   .round-summary { padding: 20px; }
@@ -368,10 +376,8 @@ select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); ou
   .joker-indicator { padding-left: 10px; }
   .joker-indicator > small { font-size: 7px; }
   .live-piles .sample-pile > span { font-size: 6px; }
-  .player-hand { gap: 8px; }
-  .player-hand .playing-card { --card-width: 54px; }
+  .player-hand { gap: 8px; --hand-card-width: 54px; --hand-step: 26px; }
   .hand-heading { gap: 8px; }
-  .hand-heading > span { width: 100%; text-align: center; }
   .live-opponent { flex-basis: 95px; }
   .live-opponent > span { font-size: 9px; }
   .turn-actions .button { font-size: 12px; padding: 13px 16px; }

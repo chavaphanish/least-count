@@ -12,7 +12,7 @@ const rules = [
   },
   {
     title: 'Keep your count low',
-    text: 'Ace is 1; number cards use their number; J, Q, and K are 10. Printed Jokers are 0. A Selected Joker indicator is removed each round, and all remaining cards of that rank are 0. A 7 can never be the Selected Joker. Jokers are not wild cards.',
+    text: 'Ace is 1; number cards use their number; J, Q, and K are 10. Printed Jokers are 0. A Round Joker indicator is removed each round, and all remaining cards of that rank are 0. A 7 can never be the Round Joker. Jokers are not wild cards.',
   },
   {
     title: 'Discard, then draw',

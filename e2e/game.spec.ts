@@ -573,3 +573,94 @@ test('automatic replacement animates after the discard, never alongside it', asy
   await expect(page.getByTestId('turn-animation')).toHaveCount(0)
   expect((await saved(page)).players[0].hand).toHaveLength(2)
 })
+
+for (const width of [320, 768, 1440]) {
+  for (const count of [7, 14, 21]) {
+    test(`overlapping ${count}-card hand stays selectable at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 1100 })
+      const now = Date.now()
+      await page.clock.install({ time: new Date(now) })
+      await page.clock.pauseAt(new Date(now + 1000))
+      const game = fixture(2)
+      game.players[0].hand = Array.from({ length: count }, (_, i) => card(i % 2 ? '10' : 'K'))
+      await load(page, game)
+      const hand = page.getByRole('group', { name: 'Your hand' })
+      const buttons = hand.getByRole('button')
+      await expect(buttons).toHaveCount(count)
+      await expect(hand.locator('.hand-row')).toHaveCount(Math.ceil(count / 7))
+      await expect(hand.locator('.card-value')).toHaveCount(0)
+      await expect(page.getByTestId('hand-total')).toHaveText(`${count * 10} points`)
+      const geometry = await hand.locator('.hand-row').first().locator('.playing-card').evaluateAll(cards =>
+        cards.map(card => {
+          const box = card.getBoundingClientRect()
+          const corner = card.querySelector('.card-corner')!.getBoundingClientRect()
+          return { left: box.left, right: box.right, cornerRight: corner.right }
+        }),
+      )
+      geometry.slice(0, -1).forEach((box, i) => {
+        expect(box.right).toBeGreaterThan(geometry[i + 1].left)
+        expect(box.cornerRight).toBeLessThanOrEqual(geometry[i + 1].left)
+      })
+      for (let i = 0; i < count; i++) {
+        // Default center clicks must hit each exposed strip, including adjacent selected cards.
+        await buttons.nth(i).click()
+        await expect(buttons.nth(i)).toHaveAttribute('aria-pressed', 'true')
+      }
+      await buttons.first().focus()
+      await page.keyboard.press('Space')
+      await expect(buttons.first()).toHaveAttribute('aria-pressed', 'false')
+      await page.keyboard.press('Enter')
+      await expect(buttons.first()).toHaveAttribute('aria-pressed', 'true')
+      await expect(buttons.first()).toHaveClass(/selected-card/)
+      await expect.poll(() => buttons.first().evaluate(card =>
+        new DOMMatrixReadOnly(getComputedStyle(card).transform).m42,
+      )).toBeLessThan(-11)
+      await expect(page.locator('.hand-player .profile-avatar')).toHaveText('YO')
+      await expect(page.getByText('Round Joker · 9', { exact: true })).toBeVisible()
+      await noOverflow(page)
+      await page.mouse.move(0, 0)
+      await page.locator('.your-live-seat').screenshot({ path: `/tmp/least-count-hand-${width}-${count}.png` })
+    })
+  }
+}
+
+test('own hand uses restored profile image and falls back to initials after an image error', async ({ page }) => {
+  await page.route('**/api/config', route => route.fulfill({ json: { supabase: null, service: 'least-count' } }))
+  await page.route('**/api/session', route => route.fulfill({ json: {
+    user: { player: { id: 'user:test', displayName: 'Profile Tester', avatarUrl: '/test-avatar.svg', accountType: 'registered' }, email: 'test@example.test', createdAt: '2026-01-01', lastActiveAt: '2026-01-01' },
+    room: null,
+  } }))
+  let broken = false
+  await page.route('**/test-avatar.svg', route => broken
+    ? route.fulfill({ status: 404 })
+    : route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="20" fill="green"/></svg>' }))
+  await load(page, fixture())
+  const identity = page.locator('.hand-player')
+  await expect(identity).toContainText('Profile Tester')
+  await expect(identity.getByRole('img', { name: "Profile Tester's profile picture" })).toBeVisible()
+  broken = true
+  await page.reload()
+  await expect(identity.locator('img')).toHaveCount(0)
+  await expect(identity.locator('.profile-avatar')).toHaveText('PR')
+})
+
+
+test('touch users can select and deselect adjacent overlapping cards', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, viewport: { width: 320, height: 900 }, hasTouch: true, isMobile: true })
+  try {
+    const page = await context.newPage()
+    const game = fixture(2)
+    game.players[0].hand = Array.from({ length: 7 }, () => card('10'))
+    await load(page, game)
+    const buttons = page.locator('.player-hand button')
+    await buttons.nth(0).tap()
+    await buttons.nth(1).tap()
+    await expect(buttons.nth(0)).toHaveAttribute('aria-pressed', 'true')
+    await expect(buttons.nth(1)).toHaveAttribute('aria-pressed', 'true')
+    await buttons.nth(0).tap()
+    await expect(buttons.nth(0)).toHaveAttribute('aria-pressed', 'false')
+    await noOverflow(page)
+  } finally {
+    await context.close()
+  }
+})

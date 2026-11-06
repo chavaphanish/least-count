@@ -33,7 +33,7 @@ The primary objectives are to:
 
 1. Reduce the total point value of cards in your hand.
 2. Use matching-card discards to reduce the number of cards held.
-3. Use Printed Jokers (PJ) and Selected Jokers (SJ) to maintain low hand values.
+3. Use Printed Jokers (PJ) and Round Jokers (RJ) to maintain low hand values.
 4. Strategically use the 7 Power Card against opponents.
 5. Declare Show when eligible and when your hand is likely to have the lowest total.
 6. Avoid accumulating 100 or more penalty points.
@@ -100,9 +100,9 @@ The most recent legal discard is displayed face up.
 
 The game must preserve the most recent discard group when it is eligible for pickup by the next player.
 
-### 2.2.4 Selected Joker Indicator
+### 2.2.4 Round Joker Indicator
 
-Displays the Selected Joker (SJ) card for the current round.
+Displays the Round Joker (RJ) card for the current round.
 
 The selected card is physically removed from the playable deck and remains visible throughout the round.
 
@@ -132,7 +132,7 @@ The point values of cards are defined as follows.
 | Card | Point Value |
 |---|---|
 | Printed Joker (PJ) | 0 |
-| Selected Joker (SJ) | 0 |
+| Round Joker (RJ) | 0 |
 | Ace | 1 |
 | 2 | 2 |
 | 3 | 3 |
@@ -147,9 +147,9 @@ The point values of cards are defined as follows.
 | Queen | 10 |
 | King | 10 |
 
-When a rank is selected as the SJ, its normal value is overridden and becomes zero.
+When a rank is selected as the RJ, its normal value is overridden and becomes zero.
 
-The rank 7 is always worth seven points and cannot be selected as an SJ.
+The rank 7 is always worth seven points and cannot be selected as an RJ.
 
 ## 3.2 Printed Joker (PJ)
 
@@ -159,21 +159,21 @@ The following rules apply:
 
 1. Exactly one PJ is included per deck.
 2. PJ always has a point value of zero.
-3. PJ cannot be selected as the SJ indicator.
+3. PJ cannot be selected as the RJ indicator.
 4. PJ does not automatically substitute for any other card rank.
 5. PJ is treated as its own rank for matching-card discards.
 
 For a game using two decks, the two PJs may be discarded together as a matching group.
 
-## 3.3 Selected Joker (SJ)
+## 3.3 Round Joker (RJ)
 
-At the beginning of each round, one eligible card is randomly selected to determine the SJ rank.
+At the beginning of each round, one eligible card is randomly selected to determine the RJ rank.
 
 All cards matching that rank become zero-point cards for the entire round, regardless of suit.
 
 **Example:**
 
-Suppose 4♥ is selected as the SJ.
+Suppose 4♥ is selected as the RJ.
 
 The following cards are worth zero:
 
@@ -188,25 +188,25 @@ Therefore, in a single-deck game, only the other three 4s remain available for g
 
 In a two-deck game, seven playable cards of rank 4 remain after removing the selected indicator.
 
-### 3.3.1 SJ Selection Restrictions
+### 3.3.1 RJ Selection Restrictions
 
 The following rules apply:
 
-1. The SJ is selected randomly at the beginning of every round.
+1. The RJ is selected randomly at the beginning of every round.
 2. A card with rank 7 cannot be selected.
 3. A Printed Joker cannot be selected.
 4. If an ineligible card is drawn, it is returned to the deck and the selection is repeated.
 5. The selected physical card is removed from the playable deck for the entire round.
-6. The selected card is displayed in the SJ indicator area.
+6. The selected card is displayed in the RJ indicator area.
 7. Every remaining card with the selected rank receives a value of zero.
-8. The SJ remains unchanged until the round ends.
-9. A new SJ is selected for the next round.
+8. The RJ remains unchanged until the round ends.
+9. A new RJ is selected for the next round.
 
-### 3.3.2 SJ Matching Rules
+### 3.3.2 RJ Matching Rules
 
-Although SJ cards have a value of zero, they retain their original rank.
+Although RJ cards have a value of zero, they retain their original rank.
 
-For example, if 9 is the SJ, two cards of rank 9 can be discarded together.
+For example, if 9 is the RJ, two cards of rank 9 can be discarded together.
 
 However, a 9 and a Printed Joker cannot be discarded together because they do not have the same rank.
 
@@ -226,7 +226,7 @@ At the beginning of each round, the computer:
 2. Determines the number of decks required.
 3. Includes exactly one PJ per deck.
 4. Shuffles all cards.
-5. Selects an eligible SJ indicator.
+5. Selects an eligible RJ indicator.
 6. Removes the selected card from the playable deck.
 7. Reshuffles the remaining playable cards.
 8. Deals seven cards to each active player.
@@ -297,7 +297,7 @@ With two decks, duplicate cards are also considered matching when their ranks ar
 - 3♠ + 5♠
 - 4♣ + 5♣ + 6♣
 - K♠ + Q♠
-- PJ + SJ
+- PJ + RJ
 - Any unrelated combination of cards
 
 Illegal discards are prohibited and must be blocked by the application.
@@ -380,7 +380,7 @@ The penalty can be transferred repeatedly between consecutive players.
 
 The card 7 always has a hand value of seven points.
 
-It can never become an SJ.
+It can never become an RJ.
 
 ## 6.2 Initiating a 7 Penalty
 
@@ -479,7 +479,7 @@ While responding to an active penalty:
 2. The player may instead draw the accumulated penalty.
 3. A player holding a 7 is not required to play it.
 4. PJ cannot replace a 7.
-5. SJ cannot replace a 7.
+5. RJ cannot replace a 7.
 6. A normal discard is not permitted.
 7. Show cannot be declared.
 8. Drawing the penalty immediately ends the sequence.
@@ -869,7 +869,7 @@ If the draw pile becomes empty, the computer reshuffles older discarded cards to
 
 The following cards remain excluded from reshuffling:
 
-- The current SJ indicator
+- The current RJ indicator
 - Cards currently held by players
 - The latest discard group that is still eligible for pickup
 
@@ -938,10 +938,10 @@ At the end of a round, the computer:
 3. Identifies players who reached the score-elimination threshold.
 4. Eliminates those players.
 5. Checks whether the game has a winner.
-6. Collects all cards, including the SJ indicator.
+6. Collects all cards, including the RJ indicator.
 7. Determines the number of decks required for the next round.
 8. Shuffles the deck.
-9. Selects a new SJ.
+9. Selects a new RJ.
 10. Deals seven cards to each remaining player.
 11. Determines the next starting player.
 12. Begins the next round.
@@ -980,7 +980,7 @@ B's hand decreases by two cards.
 
 ## Example 3: Successful Show
 
-The SJ rank is 9.
+The RJ rank is 9.
 
 Player A holds:
 
@@ -1087,11 +1087,11 @@ The following settings define the standard Least Count game.
 | Decks for 2 to 4 players | 1 |
 | Decks for 5 to 8 players | 2 |
 | Printed Jokers per deck | 1 |
-| SJ selection | Random every round |
-| Rank 7 eligible as SJ | No |
-| PJ eligible as SJ | No |
-| Physical SJ indicator | Removed from playable deck |
-| SJ point value | 0 |
+| RJ selection | Random every round |
+| Rank 7 eligible as RJ | No |
+| PJ eligible as RJ | No |
+| Physical RJ indicator | Removed from playable deck |
+| RJ point value | 0 |
 | PJ point value | 0 |
 | Normal rank 7 value | 7 |
 | Power Card | 7 |
@@ -1122,7 +1122,7 @@ The elimination score threshold will be configurable in a future game settings m
 
 2. **Receive cards.** The computer automatically deals seven cards to every player.
 
-3. **Check the SJ.** The computer selects a random rank, excluding 7. Every remaining card of that rank is worth zero.
+3. **Check the RJ.** The computer selects a random rank, excluding 7. Every remaining card of that rank is worth zero.
 
 4. **Play your turn.** Discard one card or a group of matching cards, then draw one replacement card unless the matching-discard exception applies.
 

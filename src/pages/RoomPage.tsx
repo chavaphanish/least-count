@@ -1,3 +1,4 @@
+import { PlayerHand } from '../components/PlayerHand'
 import { TurnAnimation } from '../components/TurnAnimation'
 import { useRoomCardMotion } from '../hooks/useRoomCardMotion'
 import { GameActivity } from '../components/GameActivity'
@@ -6,7 +7,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
 import { Avatar } from '../components/Avatar'
 import { PlayingCard } from '../components/PlayingCard'
-import { cardLabel, cardValue, handTotal } from '../game/deck'
+import { cardLabel, handTotal } from '../game/deck'
 export function RoomPage({
   code,
   onJoined,
@@ -351,56 +352,46 @@ export function RoomPage({
               </div>
               <div className="sample-pile joker-indicator">
                 <PlayingCard card={g.indicator} />
-                <span>Selected Joker · {g.indicator.rank}</span>
+                <span>Round Joker · {g.indicator.rank}</span>
               </div>
             </div>
-            <div className="your-live-seat">
-              <div className="hand-heading">
-                <h2>Your hand</h2>
-                <strong>{handTotal(g.hand, g.indicator.rank)} points</strong>
-                <span>
-                  {g.hand.length} cards · {own?.score} cumulative
-                </span>
-              </div>
-              <div className="player-hand" role="group" aria-label="Your hand">
-                {g.hand.map((card, index) => (
-                  <button
-                    className={`hand-card ${selected.includes(card.id) ? 'selected-card' : ''} ${animation?.incoming?.card.id === card.id ? 'incoming-card-placeholder' : ''}`}
-                    data-hand-card={card.id}
-                    key={card.id}
-                    disabled={
-                      !yours ||
-                      busy ||
-                      choosing ||
-                      (g.phase !== 'turn' && g.phase !== 'penalty') ||
-                      (g.phase === 'penalty' && card.rank !== '7')
-                    }
-                    aria-label={`${cardLabel(card)}, card ${index + 1}`}
-                    aria-pressed={selected.includes(card.id)}
-                    onClick={() => {
-                      setSelectionError('')
-                      setSelected((ids) =>
-                        ids.includes(card.id)
-                          ? ids.filter((value) => value !== card.id)
-                          : [...ids, card.id],
-                      )
-                    }}
-                  >
-                    <PlayingCard card={card} />
-                    <span className="card-value">
-                      {cardValue(card, g.indicator.rank)} pts
-                    </span>
-                  </button>
-                ))}
-                {!g.hand.length && (
-                  <p className="empty-hand">
-                    {own?.eliminated
-                      ? 'Your hand was removed from play.'
-                      : 'An empty hand is worth zero.'}
-                  </p>
-                )}
-              </div>
-            </div>
+            <PlayerHand
+              player={auth.user!.player}
+              total={handTotal(g.hand, g.indicator.rank)}
+              score={own?.score ?? 0}
+              empty={
+                own?.eliminated
+                  ? 'Your hand was removed from play.'
+                  : 'An empty hand is worth zero.'
+              }
+            >
+              {g.hand.map((card, index) => (
+                <button
+                  className={`hand-card ${selected.includes(card.id) ? 'selected-card' : ''} ${animation?.incoming?.card.id === card.id ? 'incoming-card-placeholder' : ''}`}
+                  data-hand-card={card.id}
+                  key={card.id}
+                  disabled={
+                    !yours ||
+                    busy ||
+                    choosing ||
+                    (g.phase !== 'turn' && g.phase !== 'penalty') ||
+                    (g.phase === 'penalty' && card.rank !== '7')
+                  }
+                  aria-label={`${cardLabel(card)}, card ${index + 1}`}
+                  aria-pressed={selected.includes(card.id)}
+                  onClick={() => {
+                    setSelectionError('')
+                    setSelected((ids) =>
+                      ids.includes(card.id)
+                        ? ids.filter((value) => value !== card.id)
+                        : [...ids, card.id],
+                    )
+                  }}
+                >
+                  <PlayingCard card={card} />
+                </button>
+              ))}
+            </PlayerHand>
           </div>
           <div className="turn-panel">
             <p className="turn-message" role="status">

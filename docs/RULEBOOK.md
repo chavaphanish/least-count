@@ -1,10 +1,10 @@
 # Least Count — current working rules
 
-These amendments are authoritative for the current implementation. Read them with the original [Edition 2.0 working draft](../RULEBOOK.md) and [confirmed decisions](rule-clarifications.md). These amendments and confirmed decisions take precedence over conflicting wording in the archived original, which is preserved unchanged. Unaffected scoring, Show, ownership, elimination, and deck rules remain in effect.
+These amendments are authoritative for the current implementation. Read them with the original [Edition 2.0 working draft](../RULEBOOK.md) and [confirmed decisions](rule-clarifications.md). These amendments and confirmed decisions take precedence over conflicting wording in the archived original, which retains its gameplay text, with Round Joker terminology updated. Unaffected scoring, Show, ownership, elimination, and deck rules remain in effect.
 
 ## Round initialization and the opening turn
 
-At every new round, prepare the existing one- or two-deck composition, choose an eligible Selected Joker (excluding 7s and Printed Jokers), remove that physical indicator, deal exactly seven cards to each active player, and reveal one remaining card face up. The starting player is random for the first round and rotates clockwise among active players on later rounds. The opening card is public to everyone.
+At every new round, prepare the existing one- or two-deck composition, choose an eligible Round Joker (excluding 7s and Printed Jokers), remove that physical indicator, deal exactly seven cards to each active player, and reveal one remaining card face up. The starting player is random for the first round and rotates clockwise among active players on later rounds. The opening card is public to everyone.
 
 ### Non-7 opening card: standard discard first
 
@@ -12,7 +12,7 @@ At every new round, prepare the existing one- or two-deck composition, choose an
 
 The starting player sees seven cards and may declare Show if eligible, or discard one card or a legal same-rank group. Drawing and pickup controls are inactive before a legal discard. Having a card matching the opening rank does not force Match and Drop; the player may legally discard another rank.
 
-After a normal nonmatching discard, the opening card remains the eligible pickup while the player's new discard becomes the visible latest group. The player chooses exactly one card from that eligible group or the closed pile. Taking the opening card moves that same physical ID into the hand and removes it from the pile; the new discard remains in place. The player cannot take their own new discard. This also applies to Printed Joker and Selected Joker rank openings.
+After a normal nonmatching discard, the opening card remains the eligible pickup while the player's new discard becomes the visible latest group. The player chooses exactly one card from that eligible group or the closed pile. Taking the opening card moves that same physical ID into the hand and removes it from the pile; the new discard remains in place. The player cannot take their own new discard. This also applies to Printed Joker and Round Joker rank openings.
 
 The discard is committed and animated before the replacement choice is made. A refresh during that choice restores the committed discard, eligible reference, and remaining deadline. The replacement ends the turn. Discard flights finish before incoming pickup flights; an automatic closed replacement is presented in the same order without another click.
 
@@ -78,7 +78,7 @@ Discarded cards and publicly picked-up cards may be named. Closed-pile replaceme
 
 ## Printed Joker presentation
 
-PJ remains the rulebook/internal abbreviation for **Printed Joker**. The visible card shows an original jester illustration and the word **JOKER**, without visible PJ letters. It remains worth zero, matches only other Printed Jokers, and is not a universal wildcard. Selected Joker rules are unchanged.
+PJ remains the rulebook/internal abbreviation for **Printed Joker**. The visible card shows an original jester illustration and the word **JOKER**, without visible PJ letters. It remains worth zero, matches only other Printed Jokers, and is not a universal wildcard. Round Joker rules are unchanged.
 
 ## Room defaults and quick start
 

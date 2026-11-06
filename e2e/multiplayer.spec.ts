@@ -125,6 +125,13 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     await expect(
       other.getByRole('heading', { name: 'Round 1', exact: true }),
     ).toBeVisible()
+    for (const [table, name, initials] of [[page, 'Host One', 'HO'], [other, 'Friend Two', 'FR']] as const) {
+      await expect(table.locator('.hand-player')).toContainText(name)
+      await expect(table.locator('.hand-player .profile-avatar')).toHaveText(initials)
+      await expect(table.locator('.player-hand .card-value')).toHaveCount(0)
+      await expect(table.locator('.player-hand .hand-row')).toHaveCount(1)
+      await expect(table.locator('.joker-indicator')).toContainText('Round Joker')
+    }
     const hostView = await (await page.request.get(`/api/rooms/${code}`)).json()
     const friendView = await (
       await other.request.get(`/api/rooms/${code}`)
