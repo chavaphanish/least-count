@@ -26,15 +26,15 @@ export function RoundSummary({
           : result.reason === 'exhaustion'
             ? 'The draw pile is exhausted.'
             : result.successful
-              ? 'Show! Lowest hand wins the round.'
-              : 'Show did not beat the table.'}
+              ? 'Least successful! Lowest hand wins the round.'
+              : 'Least failed! The declaration did not beat the table.'}
       </h2>
       <p>
         {result.reason === 'last-player'
           ? 'Only one active player remains.'
           : result.reason === 'exhaustion'
             ? 'The lowest hand totals receive zero; other players score their hand totals.'
-            : `${caller?.name} called Show. ${result.successful ? 'Zero-point ties share the round win.' : 'The caller receives 40 penalty points.'}`}{' '}
+            : `${caller?.name} declared Least. ${result.successful ? 'Zero-point ties share the round win.' : 'The caller receives 40 penalty points.'}`}{' '}
         Individual opponent cards stay concealed.
       </p>
       {!!result.scores.length && (

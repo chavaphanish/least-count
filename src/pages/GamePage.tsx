@@ -1,3 +1,7 @@
+import { useActiveSeat } from '../hooks/useActiveSeat'
+import { TurnActions } from '../components/TurnActions'
+import { TurnTimer } from '../components/TurnTimer'
+import { latestActionHint, toggleHandCard } from '../lib/handSelection'
 import { useAuth } from '../auth/AuthProvider'
 import { PlayerHand } from '../components/PlayerHand'
 import { gameEvents } from '../game/events'
@@ -26,6 +30,7 @@ export function GamePage({
 }) {
   const auth = useAuth()
   const { game, now, error, canSave, send, start, reset } = local
+  useActiveSeat(game?.current)
   const [count, setCount] = useState(4)
   const [selected, setSelected] = useState<string[]>([])
   const [motion, setMotion] = useState<
@@ -88,7 +93,7 @@ export function GamePage({
       </div>
       <p className="preview-notice">
         Practice with simulated opponents on this device. All hands and timers
-        run locally; online play is not available.
+        run locally. Use a game room for live online play.
       </p>
     </>
   )
@@ -103,7 +108,7 @@ export function GamePage({
           <p className="eyebrow">A FRESH DECK. A NEW BEGINNING.</p>
           <h2>Pull up a chair.</h2>
           <p>
-            Seven cards each. Keep your count low. Call Show at five or less,
+            Seven cards each. Keep your count low. Declare Least at five or less,
             and stay below 100 points.
           </p>
           <label htmlFor="player-count">Players at the table</label>
@@ -156,9 +161,6 @@ export function GamePage({
   const group = latestGroup(game)
   const pickups = pickupCards(game)
   const selectedCards = human.hand.filter((c) => selected.includes(c.id))
-  const matchesTop =
-    selectedCards.length > 0 &&
-    selectedCards.every((card) => card.rank === group.at(-1)?.rank)
   const elementFor = (attribute: string, id: string) =>
     Array.from(document.querySelectorAll(`[${attribute}]`))
       .find((element) => element.getAttribute(attribute) === id)
@@ -240,24 +242,6 @@ export function GamePage({
     executeMove({ type: 'draw', playerId: human.id, source, cardId })
   }
 
-  const message = animation
-    ? 'Moving your cards… Discard finishes before pickup.'
-    : !playing
-      ? 'Round complete. Review the results below.'
-      : human.eliminated
-        ? `You were eliminated by ${human.eliminationReason}. You can watch the remaining local players.`
-        : !yours
-          ? `${current.name} is thinking…`
-          : choosing
-            ? 'Your discard is committed. Choose one card from the eligible previous group or the draw pile.'
-            : game.phase === 'draw'
-              ? 'Choose one replacement card below or draw from the pile.'
-              : game.phase === 'penalty'
-                ? `Play one or more 7s, or draw ${game.sevens!.amount} penalty cards and lose your normal turn.`
-                : !human.hand.length
-                  ? 'Your hand is empty. You must call Show now; passing is not allowed.'
-                  : 'Select and discard one card or a same-rank group first. Choose a replacement only if required. Match and Drop and playing 7s skip drawing. Show is available before discarding at 5 or less.'
-
   return (
     <section
       className={`game-page active-game ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
@@ -277,16 +261,6 @@ export function GamePage({
             100
           </span>
         </div>
-        {playing && (
-          <div
-            className={`turn-clock ${seconds <= 10 ? 'clock-urgent' : ''}`}
-            role="timer"
-            aria-label={`${current.name}'s turn: ${seconds} seconds remaining`}
-          >
-            <span>{yours ? 'Your turn' : `${current.name}'s turn`}</span>
-            <strong>{seconds}s</strong>
-          </div>
-        )}
         <button
           className="button button-secondary compact-button"
           onClick={newGame}
@@ -314,6 +288,7 @@ export function GamePage({
                 {player.name[0]}
               </div>
               <strong>{player.name}</strong>
+              {playing && game.current === index + 1 && <TurnTimer seconds={game.deadline === null ? null : seconds} name={player.name} />}
               <span>
                 {player.eliminated
                   ? `Out · ${player.eliminationReason}`
@@ -382,7 +357,7 @@ export function GamePage({
               ) : null}
             </div>
             <span>
-              {'Latest discard'} · {group.length}
+              {'Drop Pile'} · {group.length}
             </span>
           </div>
           <div className="sample-pile joker-indicator">
@@ -395,6 +370,8 @@ export function GamePage({
           player={auth.user?.player ?? { displayName: human.name, avatarUrl: null }}
           total={handTotal(human.hand, game.indicator.rank)}
           score={human.score}
+          active={playing && game.current === 0}
+          timer={playing && game.current === 0 ? <TurnTimer seconds={game.deadline === null ? null : seconds} name={human.name} /> : null}
           empty={
             human.eliminated
               ? 'Your cards have been removed from play.'
@@ -413,11 +390,7 @@ export function GamePage({
               aria-pressed={selected.includes(card.id)}
               onClick={() => {
                 setSelectionError('')
-                setSelected((ids) =>
-                  ids.includes(card.id)
-                    ? ids.filter((id) => id !== card.id)
-                    : [...ids, card.id],
-                )
+                setSelected((ids) => toggleHandCard(human.hand, ids, card))
               }}
             >
               <PlayingCard card={card} />
@@ -425,106 +398,26 @@ export function GamePage({
           ))}
         </PlayerHand>
       </div>
-      <div className="turn-panel">
-        <p className="turn-message" role="status">
-          {message}
-        </p>
-        {visibleError && (
-          <p role="alert" className="game-alert">
-            {visibleError}
-          </p>
-        )}
-        {yours && (
-          <div className="turn-actions">
-            {!choosing &&
-              (game.phase === 'turn' || game.phase === 'penalty') && (
-                <button
-                  className="button button-primary"
-                  data-plan-discard
-                  disabled={!selectedCards.length}
-                  onClick={discardSelected}
-                >
-                  {game.phase === 'penalty' || selectedCards[0]?.rank === '7'
-                    ? game.sevens?.opening
-                      ? 'Play 7'
-                      : 'Play selected 7s'
-                    : matchesTop
-                      ? 'Match & Drop'
-                      : pickups.length
-                        ? 'Discard selected'
-                        : 'Discard & draw automatically'}
-                  {selectedCards.length ? ` (${selectedCards.length})` : ''}
-                </button>
-              )}
-            {game.phase === 'turn' && !choosing && (
-              <button
-                className="button button-secondary"
-                disabled={!canShow(game, human.id)}
-                onClick={() => {
-                  setSelected([])
-                  send({ type: 'show', playerId: human.id })
-                }}
-              >
-                Call Show
-              </button>
-            )}
-            {readyToDraw && (
-              <button
-                className="button button-primary"
-                data-primary-draw
-                onClick={() => chooseDraw('pile')}
-              >
-                Draw from pile
-              </button>
-            )}
-            {game.phase === 'penalty' && (
-              <button
-                className="button button-secondary"
-                onClick={() => {
-                  setSelected([])
-                  send({ type: 'accept-penalty', playerId: human.id })
-                }}
-              >
-                Draw {game.sevens!.amount}{' '}
-                {game.sevens?.opening ? 'Cards' : 'penalty cards'}
-              </button>
-            )}
-            {!!selectedCards.length && canSelect && (
-              <button className="text-button" onClick={() => setSelected([])}>
-                Clear selection
-              </button>
-            )}
-          </div>
-        )}
-        {readyToDraw && (
-          <div className="pickup-panel">
-            <h3>Previous player’s eligible discard group</h3>
-            {pickups.length ? (
-              <>
-                <p>
-                  Your discard is complete. Choose one eligible card or draw
-                  from the pile.
-                </p>
-                <div className="pickup-cards">
-                  {pickups.map((card) => (
-                    <button
-                      className="pickup-button"
-                      data-pickup-card={card.id}
-                      key={card.id}
-                      aria-label={`Pick up ${cardLabel(card)}`}
-                      onClick={() => chooseDraw('discard', card.id)}
-                    >
-                      <PlayingCard card={card} />
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p>No group is eligible. You must draw from the draw pile.</p>
-            )}
-          </div>
-        )}
-      </div>
+      <TurnActions
+        phase={game.phase}
+        yours={yours}
+        activeName={current.name}
+        moving={!!animation}
+        hand={human.hand}
+        selected={selectedCards}
+        pickups={pickups}
+        canDeclare={canShow(game, human.id)}
+        penalty={game.sevens?.amount ?? 0}
+        feedback={latestActionHint(gameEvents(game))}
+        error={visibleError}
+        onDrop={discardSelected}
+        onDraw={() => chooseDraw('pile')}
+        onPickup={(id) => chooseDraw('discard', id)}
+        onDeclare={() => { setSelected([]); send({ type: 'show', playerId: human.id }) }}
+        onPenalty={() => { setSelected([]); send({ type: 'accept-penalty', playerId: human.id }) }}
+        onSelectAll={() => setSelected(human.hand.filter(card => card.rank === selectedCards[0]?.rank).map(card => card.id))}
+        onClear={() => setSelected([])}
+      />
       {animation && (
         <TurnAnimation motion={animation} onComplete={finishMotion} />
       )}

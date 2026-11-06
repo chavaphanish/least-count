@@ -280,3 +280,12 @@ it('uses Round Joker in current and historical public round announcements', () =
   expect(formatGameEvent(legacy)).toBe('Round 1: Round Joker rank 9. Round Joker stays all round.')
   expect(legacy.message).toContain('selected joker')
 })
+
+it('normalizes old public activity without rewriting stored events', () => {
+  const s = fixture()
+  s.events = undefined
+  s.log = ['Alex discarded a Queen. Ben called Show. Selected Joker rank 9.']
+  const event = gameEvents(s)[0]
+  expect(formatGameEvent(event)).toBe('Alex dropped a Queen. Ben declared Least. Round Joker rank 9.')
+  expect(s.log[0]).toContain('discarded')
+})

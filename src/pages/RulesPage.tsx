@@ -7,28 +7,28 @@ const rules = [
     text: 'Choose 2–8 players. Each round deals seven cards each. Up to four players use one deck plus one Printed Joker; five or more use two of each. A random player starts the first round; the starting seat rotates clockwise afterward.',
   },
   {
-    title: 'Discard first, including the opening',
-    text: 'Each round starts with a public face-up card. Unless it is a 7, the starter discards first. If a replacement is required, choose that eligible opening card or the draw pile. Matching the opening rank skips drawing; playing a 7 starts its penalty without replacement. Show is allowed before discarding at five or less. One deadline covers the complete turn.',
+    title: 'Drop first, including the opening',
+    text: 'Each round starts with a public face-up card. Unless it is a 7, the starter drops first. If a replacement is required, choose that eligible opening card or the draw pile. Matching the opening rank skips drawing; playing a 7 starts its penalty without replacement. Least is allowed before dropping at five or less. One deadline covers the complete turn.',
   },
   {
     title: 'Keep your count low',
     text: 'Ace is 1; number cards use their number; J, Q, and K are 10. Printed Jokers are 0. A Round Joker indicator is removed each round, and all remaining cards of that rank are 0. A 7 can never be the Round Joker. Jokers are not wild cards.',
   },
   {
-    title: 'Discard, then draw',
-    text: 'Select one card or multiple cards of the same rank. Commit a legal discard first, then choose any required replacement. The previous eligible group remains available while your new discard is on top. Discard animation finishes before pickup animation. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own discard. Without an eligible open pickup, a required replacement is drawn automatically in the same action. Matching the previously visible top rank is Match and Drop: you must skip the draw. Playing 7s also skips replacement drawing.',
+    title: 'Drop, then draw',
+    text: 'Select one card or multiple cards of the same rank. Commit a legal drop first, then choose any required replacement. The previous eligible group remains available while your new drop is on top. Drop animation finishes before pickup animation. You may draw from the pile or the immediately preceding player’s eligible group. Never take an older card or your own drop. Without an eligible open pickup, a required replacement is drawn automatically in the same action. Matching the previously visible top rank is Match and Drop: you must skip the draw. Playing 7s also skips replacement drawing.',
   },
   {
     title: 'Watch the sevens',
     text: 'Playing one or more 7s ends the action immediately without drawing a replacement, even when the top rank differs. The next player faces a two-card penalty. Respond with one or more 7s to add two, or draw the accumulated penalty and lose your normal turn. Multiple 7s in one action still add only two. If every active player responds, the penalty is cancelled and the initiator takes a normal turn. An opening 7 immediately makes the starter respond to a two-card penalty, automatically drawn if they hold no 7. The computer does not count as a full-cycle participant. After every active player actually responds, the starter takes a normal turn. With the existing 7 supply, an opening full cycle cannot naturally occur at four/eight players.',
   },
   {
-    title: 'Call Show at five or less',
-    text: 'Call Show at the beginning of your normal turn, before discarding. You cannot call it during a 7 penalty. Emptying your hand does not end the round: you must call Show on your next normal turn, without passing. A unique lowest Show scores 0; other players score their totals. A failed positive-point Show costs the caller 40 instead of their hand value; lowest opponents score 0 and the rest score their totals.',
+    title: 'Declare Least at five or less',
+    text: 'Declare Least at the beginning of your normal turn, before dropping. You cannot call it during a 7 penalty. Emptying your hand does not end the round: you must declare Least on your next normal turn, without passing. A unique lowest Least scores 0; other players score their totals. A failed positive-point Least costs the caller 40 instead of their hand value; lowest opponents score 0 and the rest score their totals.',
   },
   {
     title: 'Zero ties share the round',
-    text: 'If the caller has 0 and others also have 0, all zero-point players receive 0 penalty points. The caller does not get 40. Other players score their hand totals. Positive-point ties still fail Show. Opponents’ individual cards are never revealed, including at round results.',
+    text: 'If the caller has 0 and others also have 0, all zero-point players receive 0 penalty points. The caller does not get 40. Other players score their hand totals. Positive-point ties still fail Least. Opponents’ individual cards are never revealed, including at round results.',
   },
   {
     title: 'Stay below 100',
@@ -36,7 +36,7 @@ const rules = [
   },
   {
     title: 'Finish within 60 seconds',
-    text: 'The same timer covers your discard and required replacement draw. Invalid moves do not restart it. Running out of time eliminates you immediately and clears any 7 penalty. Accepting a penalty or timing out clears the previous group’s pickup eligibility. Refreshing does not renew the deadline.',
+    text: 'The same timer covers your drop and required replacement draw. Invalid moves do not restart it. Running out of time eliminates you immediately and clears any 7 penalty. Accepting a penalty or timing out clears the previous group’s pickup eligibility. Refreshing does not renew the deadline.',
   },
 ]
 
@@ -76,7 +76,7 @@ export function RulesPage() {
       <div className="rules-note">
         <h2>When the draw pile runs out</h2>
         <p>
-          Older discards are reshuffled, preserving the latest group and any
+          Older drops are reshuffled, preserving the latest group and any
           group still available for pickup. If a required draw still cannot be
           completed, the round settles by hand totals: the lowest totals score
           0; everyone else scores their total. For an incomplete 7 penalty,

@@ -93,6 +93,16 @@ for (const width of [1440, 768, 390, 320]) {
       opponentCardLabels.every((label) => label === 'Face-down card'),
     ).toBe(true)
     await noOverflow(page)
+    const activeSeat = page.locator('.opponent-row .active-seat')
+    if (await activeSeat.count()) {
+      const bounds = await activeSeat.evaluate(seat => {
+        const card = seat.getBoundingClientRect()
+        const row = seat.parentElement!.getBoundingClientRect()
+        return { left: card.left - row.left, right: row.right - card.right }
+      })
+      expect(bounds.left).toBeGreaterThanOrEqual(-1)
+      expect(bounds.right).toBeGreaterThanOrEqual(-1)
+    }
     await page.screenshot({
       path: `/tmp/least-count-playable-${width}.png`,
       fullPage: true,
@@ -110,7 +120,7 @@ test('commits the discard first, preserves the prior pickup across refresh, then
   game.eligible = game.discards[0].map((c) => c.id)
   await load(page, game)
   await expect(
-    page.getByRole('button', { name: 'Draw from pile', exact: true }),
+    page.getByRole('button', { name: 'Draw New Card', exact: true }),
   ).toHaveCount(0)
   const kings = page
     .getByRole('group', { name: 'Your hand' })
@@ -118,7 +128,7 @@ test('commits the discard first, preserves the prior pickup across refresh, then
   await kings.nth(0).click()
   await kings.nth(1).click()
   await page
-    .getByRole('button', { name: 'Discard selected (2)', exact: true })
+    .getByRole('button', { name: 'Drop 2 Kings', exact: true })
     .click()
   const waiting = await saved(page)
   expect(waiting.phase).toBe('draw')
@@ -143,20 +153,16 @@ test('commits the discard first, preserves the prior pickup across refresh, then
   expect(done.current).toBe(1)
 })
 
-test('rejects mixed ranks without changing the turn or deadline', async ({
-  page,
-}) => {
+test('selecting a different rank replaces the selection without changing the turn or deadline', async ({ page }) => {
   const game = fixture()
   await load(page, game)
-  const cards = page
-    .getByRole('group', { name: 'Your hand' })
-    .getByRole('button')
+  const cards = page.getByRole('group', { name: 'Your hand' }).getByRole('button')
   await cards.nth(0).click()
   await cards.nth(1).click()
-  await page.getByRole('button', { name: 'Discard selected (2)' }).click()
-  await expect(page.getByRole('alert')).toHaveText(
-    'All selected cards must have the same rank.',
-  )
+  await expect(cards.nth(0)).toHaveAttribute('aria-pressed', 'false')
+  await expect(cards.nth(1)).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Drop 1 Card', exact: true })).toBeEnabled()
+  await expect(page.getByRole('alert')).toHaveCount(0)
   const next = await saved(page)
   expect(next.players[0].hand).toEqual(game.players[0].hand)
   expect(next.deadline).toBe(game.deadline)
@@ -174,11 +180,11 @@ test('Match and Drop skips the draw and lets the next simulated player act', asy
     .getByRole('button', { name: /^4 of/ })
   await cards.nth(0).click()
   await cards.nth(1).click()
-  await page.getByRole('button', { name: 'Match & Drop (2)' }).click()
+  await page.getByRole('button', { name: 'Drop 2 4s' }).click()
   expect((await saved(page)).players[0].hand).toHaveLength(1)
   await expect
     .poll(async () =>
-      (await saved(page)).log.some((line) => line.includes('Bot 1 discarded')),
+      (await saved(page)).log.some((line) => line.includes('Bot 1 dropped')),
     )
     .toBe(true)
 })
@@ -193,9 +199,9 @@ test('zero-point Show ties preserve scores at 99 and start another ordinary roun
     p.score = 99
   })
   await load(page, game)
-  await page.getByRole('button', { name: 'Call Show' }).click()
+  await page.getByRole('button', { name: 'Declare Least' }).click()
   await expect(
-    page.getByRole('heading', { name: 'Show! Lowest hand wins the round.' }),
+    page.getByRole('heading', { name: 'Least successful! Lowest hand wins the round.' }),
   ).toBeFocused()
   expect((await saved(page)).players.map((p) => p.score)).toEqual([99, 99])
   await expect(page.getByRole('table')).toBeVisible()
@@ -217,7 +223,7 @@ test('accepts a 7 penalty and clears open-pickup eligibility', async ({
   game.eligible = game.discards[0].map((c) => c.id)
   await load(page, game)
   await expect(page.getByRole('button', { name: /^K of/ })).toBeDisabled()
-  await page.getByRole('button', { name: 'Draw 4 penalty cards' }).click()
+  await page.getByRole('button', { name: 'Draw 4 Penalty Cards' }).click()
   const next = await saved(page)
   expect(next.players[0].hand).toHaveLength(6)
   expect(next.eligible).toEqual([])
@@ -234,7 +240,7 @@ test('plays a responding 7 and cancels a full cycle', async ({ page }) => {
   game.eligible = []
   await load(page, game)
   await page.getByRole('button', { name: /^7 of/ }).click()
-  await page.getByRole('button', { name: 'Play selected 7s (1)' }).click()
+  await page.getByRole('button', { name: 'Play 7' }).click()
   const next = await saved(page)
   expect(next.current).toBe(1)
   expect(next.phase).toBe('turn')
@@ -336,7 +342,7 @@ test('plays a complete local match through the real controls', async ({
       // Choose from the human's own cards and public information; interact via UI.
       const action = chooseBotAction(botView(game))
       if (action.type === 'show')
-        await page.getByRole('button', { name: 'Call Show' }).click()
+        await page.getByRole('button', { name: 'Declare Least' }).click()
       if (action.type === 'discard') {
         const buttons = page
           .getByRole('group', { name: 'Your hand' })
@@ -347,12 +353,12 @@ test('plays a complete local match through the real controls', async ({
             .click()
         await page
           .getByRole('button', {
-            name: /^(Discard selected|Match & Drop|Play selected 7s|Play 7|Discard & draw automatically)/,
+            name: /^(Drop|Play)/,
           })
           .click()
         if (
           await page
-            .getByRole('button', { name: 'Draw from pile', exact: true })
+            .getByRole('button', { name: 'Draw New Card', exact: true })
             .isVisible()
         ) {
           const draw = chooseBotAction({ ...botView(game), phase: 'draw' })
@@ -360,7 +366,7 @@ test('plays a complete local match through the real controls', async ({
             throw new Error('Expected a replacement choice.')
           if (draw.source === 'pile')
             await page
-              .getByRole('button', { name: 'Draw from pile', exact: true })
+              .getByRole('button', { name: 'Draw New Card', exact: true })
               .click()
           else {
             const index = game.discards
@@ -374,7 +380,7 @@ test('plays a complete local match through the real controls', async ({
       if (action.type === 'draw') {
         if (action.source === 'pile')
           await page
-            .getByRole('button', { name: 'Draw from pile', exact: true })
+            .getByRole('button', { name: 'Draw New Card', exact: true })
             .click()
         else {
           const index = game.discards
@@ -386,7 +392,7 @@ test('plays a complete local match through the real controls', async ({
       }
       if (action.type === 'accept-penalty')
         await page
-          .getByRole('button', { name: /^Draw \d+ (penalty cards|Cards)$/ })
+          .getByRole('button', { name: /^Draw \d+ Penalty Cards$/ })
           .click()
     }
   }
@@ -409,7 +415,7 @@ test('finishes discard animation before allowing the public pickup animation', a
   await kings.nth(0).click()
   await kings.nth(1).click()
   await page
-    .getByRole('button', { name: 'Discard selected (2)', exact: true })
+    .getByRole('button', { name: 'Drop 2 Kings', exact: true })
     .click()
   await expect(page.locator('.flight-outgoing')).toHaveCount(2)
   await expect(page.locator('.flight-incoming')).toHaveCount(0)
@@ -447,10 +453,10 @@ test('keeps a closed-pile card face down in flight and preserves the accepted mo
   const game = fixture()
   await load(page, game)
   await page.getByRole('button', { name: /^K of/ }).click()
-  await page.getByRole('button', { name: 'Discard selected (1)' }).click()
+  await page.getByRole('button', { name: 'Drop 1 Card' }).click()
   await page.clock.runFor(650)
   await page
-    .getByRole('button', { name: 'Draw from pile', exact: true })
+    .getByRole('button', { name: 'Draw New Card', exact: true })
     .click()
   await expect(page.locator('.flight-incoming [role="img"]')).toHaveAttribute(
     'aria-label',
@@ -491,7 +497,7 @@ test('keeps the deadline running while the draw source is being chosen', async (
   game.deadline = now + 60_000
   await load(page, game)
   await page.getByRole('button', { name: /^K of/ }).click()
-  await page.getByRole('button', { name: 'Discard selected (1)' }).click()
+  await page.getByRole('button', { name: 'Drop 1 Card' }).click()
   await page.clock.fastForward(60_000)
   await expect(
     page.getByRole('heading', { name: 'Bot 1 wins the match!' }),
@@ -523,7 +529,7 @@ test('keeps the previous group and all pickup choices usable on a narrow phone',
     .getByRole('button', { name: /^K of/ })
   await kings.nth(0).click()
   await kings.nth(1).click()
-  await page.getByRole('button', { name: 'Discard selected (2)' }).click()
+  await page.getByRole('button', { name: 'Drop 2 Kings' }).click()
   await expect(page.locator('.pickup-button')).toHaveCount(8)
   await noOverflow(page)
   expect((await saved(page)).players[0].hand).toHaveLength(1)
@@ -551,7 +557,7 @@ test('automatic replacement animates after the discard, never alongside it', asy
   await page.getByRole('button', { name: /^K of/ }).click()
   await page
     .getByRole('button', {
-      name: 'Discard & draw automatically (1)',
+      name: 'Drop 1 Card',
       exact: true,
     })
     .click()
@@ -606,6 +612,7 @@ for (const width of [320, 768, 1440]) {
         await buttons.nth(i).click()
         await expect(buttons.nth(i)).toHaveAttribute('aria-pressed', 'true')
       }
+      await buttons.first().click()
       await buttons.first().focus()
       await page.keyboard.press('Space')
       await expect(buttons.first()).toHaveAttribute('aria-pressed', 'false')
@@ -663,4 +670,95 @@ test('touch users can select and deselect adjacent overlapping cards', async ({ 
   } finally {
     await context.close()
   }
+})
+
+test('guided actions support matching groups, legal declaration choices, and relevant phases only', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const game = fixture(2)
+  game.players[0].hand = [card('Q'), card('Q'), card('A')]
+  await load(page, game)
+  const bar = page.getByRole('region', { name: 'Turn actions' })
+  await expect(bar.getByText('Select cards to drop', { exact: true })).toBeVisible()
+  await expect(bar.getByRole('button', { name: 'Drop Selected Cards' })).toBeDisabled()
+  await expect(bar.getByRole('button', { name: 'Declare Least' })).toHaveCount(0)
+  await expect(bar.getByRole('button', { name: 'Draw New Card' })).toHaveCount(0)
+  await page.locator('.hand-card').first().click()
+  await bar.getByRole('button', { name: 'Select All Matching' }).click()
+  await expect(page.locator('.hand-card[aria-pressed="true"]')).toHaveCount(2)
+  await bar.getByRole('button', { name: 'Drop 2 Queens' }).click()
+  await expect(bar.getByText('CHOOSE YOUR REPLACEMENT CARD', { exact: true })).toBeVisible()
+  await expect(bar.getByRole('button', { name: 'Declare Least' })).toHaveCount(0)
+  await expect(bar.locator('[data-plan-discard]')).toHaveCount(0)
+  await expect(bar.getByRole('button', { name: 'Draw New Card' })).toBeEnabled()
+  await expect(bar.locator('.pickup-button')).toContainText('Pick Up 4♣')
+  await bar.getByRole('button', { name: 'Pick up 4 of clubs' }).click()
+  await expect(bar.locator('button')).toHaveCount(0)
+  await expect(bar.getByRole('status').first()).toContainText('Waiting for Bot 1')
+  const eligible = fixture(2)
+  eligible.players[0].hand = [card('A'), card('2')]
+  await load(page, eligible)
+  await expect(bar.getByRole('button', { name: 'Declare Least' })).toBeEnabled()
+  await page.locator('.hand-card').first().click()
+  await expect(bar.getByRole('button', { name: 'Drop 1 Card' })).toBeEnabled()
+  await expect(bar.getByRole('button', { name: 'Declare Least' })).toBeEnabled()
+  await expect(page.locator('main')).not.toContainText(/\bdiscard(?:ed|s|ing)?\b|\bShow\b/i)
+})
+
+test('power response offers only sevens and the current penalty', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const game = fixture(2)
+  game.phase = 'penalty'
+  game.sevens = { initiator: 1, amount: 4, participants: [1] }
+  game.players[0].hand = [card('7'), card('7'), card('A')]
+  await load(page, game)
+  const bar = page.getByRole('region', { name: 'Turn actions' })
+  await expect(bar.getByText('POWER CARD 7', { exact: true })).toBeVisible()
+  await expect(bar.getByRole('button', { name: 'Declare Least' })).toHaveCount(0)
+  await expect(bar.getByRole('button', { name: 'Drop Selected Cards' })).toHaveCount(0)
+  await expect(bar.getByRole('button', { name: 'Draw 4 Penalty Cards' })).toBeEnabled()
+  await expect(page.locator('.hand-card').last()).toBeDisabled()
+  await page.locator('.hand-card').first().click()
+  await bar.getByRole('button', { name: 'Select All Matching' }).click()
+  await expect(bar.getByRole('button', { name: 'Play 2 Sevens' })).toBeEnabled()
+})
+
+test('timer warnings follow the same deadline and disappear for untimed games', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const now = Date.now()
+  await page.clock.install({ time: new Date(now) })
+  const game = fixture(2)
+  game.deadline = now + 16_000
+  await load(page, game)
+  await expect(page.getByRole('timer')).not.toHaveClass(/clock-warning|clock-urgent/)
+  await page.clock.fastForward(1500)
+  await expect(page.getByRole('timer')).toHaveClass(/clock-warning/)
+  await page.clock.fastForward(10_000)
+  await expect(page.getByRole('timer')).toHaveClass(/clock-urgent/)
+  expect((await saved(page)).deadline).toBe(game.deadline)
+  const untimed = fixture(2)
+  untimed.settings = { ...untimed.settings!, timedGame: false }
+  untimed.deadline = null
+  await load(page, untimed)
+  await expect(page.getByRole('timer')).toHaveCount(0)
+})
+
+
+test('active opponent and countdown stay in the seat strip after a phone resize', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 })
+  const now = Date.now()
+  await page.clock.install({ time: new Date(now) })
+  await page.clock.pauseAt(new Date(now + 1000))
+  const game = fixture(8)
+  game.current = 7
+  await load(page, game)
+  await page.setViewportSize({ width: 320, height: 1100 })
+  await expect.poll(() => page.locator('.active-seat').evaluate(seat => {
+    const box = seat.getBoundingClientRect()
+    const row = seat.parentElement!.getBoundingClientRect()
+    return box.left >= row.left - 1 && box.right <= row.right + 1
+  })).toBe(true)
+  await expect(page.locator('.active-seat').getByRole('timer')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Turn actions' })).toContainText('Waiting for Bot 7')
+  await expect(page.getByRole('region', { name: 'Turn actions' }).locator('button')).toHaveCount(0)
+  await noOverflow(page)
 })

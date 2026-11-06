@@ -1,3 +1,7 @@
+import { useActiveSeat } from '../hooks/useActiveSeat'
+import { TurnActions } from '../components/TurnActions'
+import { TurnTimer } from '../components/TurnTimer'
+import { latestActionHint, toggleHandCard } from '../lib/handSelection'
 import { PlayerHand } from '../components/PlayerHand'
 import { TurnAnimation } from '../components/TurnAnimation'
 import { useRoomCardMotion } from '../hooks/useRoomCardMotion'
@@ -20,6 +24,7 @@ export function RoomPage({
   const auth = useAuth()
   const local = useRoom(code)
   const { room, connection, error, busy, now, send, command } = local
+  useActiveSeat(room?.game?.currentPlayerId)
   const id = auth.user!.player.id
   const {
     motion: animation,
@@ -104,9 +109,6 @@ export function RoomPage({
     !animation
   const choosing = g?.phase === 'draw'
   const cards = g?.hand.filter((c) => selected.includes(c.id)) ?? []
-  const matching =
-    !!cards.length &&
-    cards.every((c) => c.rank === g?.latestDiscard.at(-1)?.rank)
   function discard() {
     if (!g) return
     setSelectionError('')
@@ -278,19 +280,6 @@ export function RoomPage({
               {g.players.find((p) => p.id === g.currentPlayerId)?.displayName}’s
               turn
             </strong>
-            {!final &&
-              (seconds === null ? (
-                <span className="preview-pill">UNTIMED</span>
-              ) : (
-                <div
-                  className={`turn-clock ${seconds <= 10 ? 'clock-urgent' : ''}`}
-                  role="timer"
-                  aria-label={`${seconds} seconds remaining`}
-                >
-                  <strong>{seconds}s</strong>
-                  <span>Server clock</span>
-                </div>
-              ))}
           </div>
           <div className="game-table live-table">
             <div
@@ -308,6 +297,7 @@ export function RoomPage({
                   >
                     <Avatar player={p} />
                     <strong>{p.displayName}</strong>
+                    {!final && g.currentPlayerId === p.id && <TurnTimer seconds={seconds} name={p.displayName} />}
                     <span>
                       {p.eliminated ? 'Eliminated' : `${p.cardCount} cards`} ·{' '}
                       {p.score} pts
@@ -348,7 +338,7 @@ export function RoomPage({
                 >
                   <PlayingCard card={g.latestDiscard.at(-1)} />
                 </div>
-                <span>Latest discard</span>
+                <span>Drop Pile</span>
               </div>
               <div className="sample-pile joker-indicator">
                 <PlayingCard card={g.indicator} />
@@ -359,6 +349,8 @@ export function RoomPage({
               player={auth.user!.player}
               total={handTotal(g.hand, g.indicator.rank)}
               score={own?.score ?? 0}
+              active={!final && g.currentPlayerId === id}
+              timer={!final && g.currentPlayerId === id ? <TurnTimer seconds={seconds} name={own?.displayName ?? "You"} /> : null}
               empty={
                 own?.eliminated
                   ? 'Your hand was removed from play.'
@@ -381,11 +373,7 @@ export function RoomPage({
                   aria-pressed={selected.includes(card.id)}
                   onClick={() => {
                     setSelectionError('')
-                    setSelected((ids) =>
-                      ids.includes(card.id)
-                        ? ids.filter((value) => value !== card.id)
-                        : [...ids, card.id],
-                    )
+                    setSelected((ids) => toggleHandCard(g.hand, ids, card))
                   }}
                 >
                   <PlayingCard card={card} />
@@ -393,105 +381,39 @@ export function RoomPage({
               ))}
             </PlayerHand>
           </div>
-          <div className="turn-panel">
-            <p className="turn-message" role="status">
-              {final
-                ? 'Review the round results below.'
-                : !yours
-                  ? 'Waiting for the current player.'
-                  : g.phase === 'penalty'
-                    ? `Respond with 7s or draw ${g.penalty} cards.`
-                    : choosing
-                      ? 'Your discard is committed. Choose an eligible previous card or the draw pile.'
-                      : g.hand.length
-                        ? 'Select and discard cards of one rank first. Choose a replacement afterward if required, or call Show before discarding when eligible.'
-                        : 'Your hand is empty: call Show on this normal turn.'}
-            </p>
-            {selectionError && (
-              <p className="game-alert" role="alert">
-                {selectionError}
-              </p>
-            )}
-            {yours && (
-              <div className="turn-actions">
-                {!choosing && (g.phase === 'turn' || g.phase === 'penalty') && (
-                  <button
-                    className="button button-primary"
-                    disabled={busy || !cards.length}
-                    onClick={discard}
-                  >
-                    {g.phase === 'penalty' || cards[0]?.rank === '7'
-                      ? g.openingPenalty
-                        ? 'Play 7'
-                        : 'Play selected 7s'
-                      : matching
-                        ? 'Match & Drop'
-                        : g.pickup.length
-                          ? 'Discard selected'
-                          : 'Discard & draw automatically'}
-                  </button>
-                )}
-                {g.phase === 'turn' && !choosing && (
-                  <button
-                    className="button button-secondary"
-                    disabled={busy || !g.canShow}
-                    onClick={() => send({ type: 'show' })}
-                  >
-                    Call Show
-                  </button>
-                )}
-                {ready && (
-                  <button
-                    className="button button-primary"
-                    disabled={busy}
-                    onClick={() => draw('pile')}
-                  >
-                    Draw from pile
-                  </button>
-                )}
-                {g.phase === 'penalty' && (
-                  <button
-                    className="button button-secondary"
-                    disabled={busy}
-                    onClick={() => send({ type: 'accept-penalty' })}
-                  >
-                    Draw {g.penalty}{' '}
-                    {g.openingPenalty ? 'Cards' : 'penalty cards'}
-                  </button>
-                )}
-              </div>
-            )}
-            {ready && (
-              <div className="pickup-panel">
-                <h3>Previous player’s eligible discard group</h3>
-                {g.pickup.length ? (
-                  <div className="pickup-cards">
-                    {g.pickup.map((card) => (
-                      <button
-                        className="pickup-button"
-                        key={card.id}
-                        data-pickup-card={card.id}
-                        disabled={busy}
-                        aria-label={`Pick up ${cardLabel(card)}`}
-                        onClick={() => draw('discard', card.id)}
-                      >
-                        <PlayingCard card={card} />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p>No group is eligible. Draw from the pile.</p>
-                )}
-              </div>
-            )}
-          </div>
+          <TurnActions
+            phase={g.phase}
+            yours={yours}
+            activeName={g.players.find(player => player.id === g.currentPlayerId)?.displayName ?? 'the active player'}
+            busy={busy}
+            moving={!!animation}
+            hand={g.hand}
+            selected={cards}
+            pickups={g.pickup}
+            canDeclare={g.canShow}
+            penalty={g.penalty}
+            feedback={latestActionHint(g.events)}
+            error={selectionError}
+            onDrop={discard}
+            onDraw={() => draw('pile')}
+            onPickup={(id) => draw('discard', id)}
+            onDeclare={() => { setSelected([]); send({ type: 'show' }) }}
+            onPenalty={() => { setSelected([]); send({ type: 'accept-penalty' }) }}
+            onSelectAll={() => setSelected(g.hand.filter(card => card.rank === cards[0]?.rank).map(card => card.id))}
+            onClear={() => setSelected([])}
+          />
           {g.result && (
             <section className="round-summary">
               <h2>
                 {g.phase === 'game-over'
                   ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`
-                  : 'Round complete'}
+                  : g.result.reason === 'show'
+                    ? g.result.successful ? 'Least successful!' : 'Least failed!'
+                    : 'Round complete'}
               </h2>
+              {g.result.reason === 'show' && (
+                <p>{g.result.successful ? 'The lowest hand wins; zero-point ties share the win.' : 'A 40-point penalty was applied to the unsuccessful declaration.'}</p>
+              )}
               <p>
                 Only totals are shared. Opponents’ individual cards remain
                 private.

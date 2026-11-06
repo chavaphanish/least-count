@@ -52,10 +52,10 @@ test('initiating 7 has no draw prompt and synchronizes a public power event', as
   await load(page, s)
   await page.getByRole('button', { name: /^7 of clubs/ }).click()
   await page
-    .getByRole('button', { name: 'Play selected 7s (1)', exact: true })
+    .getByRole('button', { name: 'Play 7', exact: true })
     .click()
   await expect(
-    page.getByRole('button', { name: 'Draw from pile', exact: true }),
+    page.getByRole('button', { name: 'Draw New Card', exact: true }),
   ).toHaveCount(0)
   const saved = await page.evaluate(
     (key) => JSON.parse(sessionStorage.getItem(key)!),
@@ -80,7 +80,7 @@ test('forced replacement draws with one click and keeps expanded history scroll 
   await page.getByRole('button', { name: /^K of hearts/ }).click()
   await page
     .getByRole('button', {
-      name: 'Discard & draw automatically (1)',
+      name: 'Drop 1 Card',
       exact: true,
     })
     .click()
@@ -107,6 +107,7 @@ for (const [width, count] of [
     const recent = page.getByRole('list', { name: 'Recent game activity' })
     await expect(recent.locator('li')).toHaveCount(count)
     await expect(recent.locator('.latest-event')).toHaveCount(1)
+    await expect(recent.locator('li').first()).toHaveClass('latest-event')
     const joker = page.getByRole('img', { name: 'Printed Joker', exact: true })
     await expect(joker).not.toContainText('PJ')
     await expect(joker.locator('svg')).toHaveCount(1)
@@ -115,7 +116,7 @@ for (const [width, count] of [
     await expect(
       page.getByRole('list', { name: 'Full game history' }).locator('li'),
     ).toHaveCount(20)
-    await page.getByRole('button', { name: 'Show Recent Activity' }).click()
+    await page.getByRole('button', { name: 'Recent Activity' }).click()
     await expect(recent.locator('li')).toHaveCount(count)
     expect(
       await page.evaluate(

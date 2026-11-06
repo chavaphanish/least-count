@@ -520,3 +520,27 @@ form .button { align-self: flex-start; }
 body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discard-stack { visibility: visible; }
 
 .pickup-button:not(:disabled) .playing-card { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* Guided actions share the same authoritative phase in local and online play. */
+.turn-panel { border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin: 18px 0 24px; background: #e9cd9106; }
+.action-stage { font-size: 10px; letter-spacing: .13em; color: var(--gold); margin: 0 0 7px; }
+.turn-panel .turn-message { margin: 0; }
+.action-hint { font-size: 11px; color: var(--muted); margin: 12px 0 0; line-height: 1.6; }
+.selection-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.selection-actions .text-button { min-height: 44px; }
+.eligible-pickup { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px; border: 1px solid #e9cd9180; background: #e9cd910c; }
+.eligible-pickup > span { color: var(--gold); font-size: 12px; }
+.eligible-pickup:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.active-hand-player .profile-avatar { outline: 2px solid var(--gold); outline-offset: 3px; }
+.hand-heading .turn-clock, .live-opponent .turn-clock { padding: 5px 8px; gap: 6px; border-radius: 7px; }
+.hand-heading .turn-clock span, .live-opponent .turn-clock span { font-size: 9px; }
+.hand-heading .turn-clock strong, .live-opponent .turn-clock strong { font-size: 14px; min-width: 25px; }
+.clock-warning { background: #c2912733; border-color: #e9bd61; }
+.clock-urgent { background: #9b342c66; border-color: #f0a58b; }
+.clock-urgent strong { color: #ffd3c4; }
+@media (max-width: 420px) {
+  .turn-panel { padding: 16px 12px; }
+  .turn-actions { gap: 8px; }
+  .turn-actions .button { min-height: 44px; flex: 1 1 auto; }
+  .hand-heading { gap: 12px; }
+}

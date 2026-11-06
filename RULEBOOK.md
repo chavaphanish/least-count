@@ -17,9 +17,9 @@
 
 Least Count is a multiplayer card game in which players compete to maintain the lowest possible total value of cards in their hands.
 
-Players take turns discarding cards and drawing new cards, strategically reducing their hand totals while monitoring the cards played by their opponents.
+Players take turns dropping cards and drawing new cards, strategically reducing their hand totals while monitoring the cards played by their opponents.
 
-A player who has a sufficiently low hand total may declare **Show**, ending the round and triggering a comparison of the remaining hand totals.
+A player who has a sufficiently low hand total may declare **Least**, ending the round and triggering a comparison of the remaining hand totals.
 
 The game introduces two types of Jokers and a special Power Card, the number 7, which can force opponents to draw additional cards.
 
@@ -32,10 +32,10 @@ The last remaining player wins the game.
 The primary objectives are to:
 
 1. Reduce the total point value of cards in your hand.
-2. Use matching-card discards to reduce the number of cards held.
+2. Use matching-card drops to reduce the number of cards held.
 3. Use Printed Jokers (PJ) and Round Jokers (RJ) to maintain low hand values.
 4. Strategically use the 7 Power Card against opponents.
-5. Declare Show when eligible and when your hand is likely to have the lowest total.
+5. Declare Least when eligible and when your hand is likely to have the lowest total.
 6. Avoid accumulating 100 or more penalty points.
 7. Complete every turn within 60 seconds.
 
@@ -92,13 +92,13 @@ Contains the remaining face-down cards.
 
 Players draw from this pile during normal turns or when required by a Power Card penalty.
 
-### 2.2.3 Discard Pile
+### 2.2.3 Drop Pile
 
-Contains cards discarded during gameplay.
+Contains cards dropped during gameplay.
 
-The most recent legal discard is displayed face up.
+The most recent legal drop is displayed face up.
 
-The game must preserve the most recent discard group when it is eligible for pickup by the next player.
+The game must preserve the most recent drop group when it is eligible for pickup by the next player.
 
 ### 2.2.4 Round Joker Indicator
 
@@ -161,9 +161,9 @@ The following rules apply:
 2. PJ always has a point value of zero.
 3. PJ cannot be selected as the RJ indicator.
 4. PJ does not automatically substitute for any other card rank.
-5. PJ is treated as its own rank for matching-card discards.
+5. PJ is treated as its own rank for matching-card drops.
 
-For a game using two decks, the two PJs may be discarded together as a matching group.
+For a game using two decks, the two PJs may be dropped together as a matching group.
 
 ## 3.3 Round Joker (RJ)
 
@@ -206,9 +206,9 @@ The following rules apply:
 
 Although RJ cards have a value of zero, they retain their original rank.
 
-For example, if 9 is the RJ, two cards of rank 9 can be discarded together.
+For example, if 9 is the RJ, two cards of rank 9 can be dropped together.
 
-However, a 9 and a Printed Joker cannot be discarded together because they do not have the same rank.
+However, a 9 and a Printed Joker cannot be dropped together because they do not have the same rank.
 
 ---
 
@@ -231,11 +231,11 @@ At the beginning of each round, the computer:
 7. Reshuffles the remaining playable cards.
 8. Deals seven cards to each active player.
 9. Places the remaining cards in the draw pile.
-10. Reveals one card to initialize the discard pile.
+10. Reveals one card to initialize the drop pile.
 11. Selects the starting player.
 12. Starts the round.
 
-The initial discard card does not trigger a Power Card effect, even if it is a 7.
+The initial drop card does not trigger a Power Card effect, even if it is a 7.
 
 ## 4.2 Starting Player
 
@@ -263,19 +263,19 @@ The deck configuration does not change in the middle of an active round.
 
 At the beginning of each normal turn, the player may:
 
-1. Declare Show, provided the hand total is five points or less.
+1. Declare Least, provided the hand total is five points or less.
 2. Continue with a normal card-playing turn.
 
 A normal turn consists of:
 
-1. Discarding one card or a legal matching group.
-2. Drawing one card, unless the matching-discard exception applies.
+1. Dropping one card or a legal matching group.
+2. Drawing one card, unless the matching-drop exception applies.
 
 A player must complete the required actions before the 60-second timer expires.
 
-## 5.2 Discarding Cards
+## 5.2 Dropping Cards
 
-A player may discard:
+A player may drop:
 
 - One card of any rank.
 - Two or more cards of the same rank.
@@ -284,7 +284,7 @@ Cards in a matching group may have different suits.
 
 With two decks, duplicate cards are also considered matching when their ranks are the same.
 
-### Legal Discard Examples
+### Legal Drop Examples
 
 - K♠
 - 5♥ + 5♣
@@ -292,7 +292,7 @@ With two decks, duplicate cards are also considered matching when their ranks ar
 - Two identical Q♣ cards from separate decks
 - Multiple 7s as a single Power Card action
 
-### Illegal Discard Examples
+### Illegal Drop Examples
 
 - 3♠ + 5♠
 - 4♣ + 5♣ + 6♣
@@ -300,11 +300,11 @@ With two decks, duplicate cards are also considered matching when their ranks ar
 - PJ + RJ
 - Any unrelated combination of cards
 
-Illegal discards are prohibited and must be blocked by the application.
+Illegal drops are prohibited and must be blocked by the application.
 
 ## 5.3 Drawing a Card
 
-After discarding, the player normally draws exactly one card.
+After dropping, the player normally draws exactly one card.
 
 The player may choose between:
 
@@ -314,32 +314,32 @@ Draw the top card from the face-down draw pile.
 
 **Option B: Open Pickup**
 
-Take one card from the immediately preceding player's latest eligible discard group.
+Take one card from the immediately preceding player's latest eligible drop group.
 
-An open pickup is available only when the immediately preceding player has made an eligible discard.
+An open pickup is available only when the immediately preceding player has made an eligible drop.
 
 The player may not:
 
-- Take multiple cards from the discard pile.
-- Select older discarded cards.
-- Retrieve a card they have just discarded.
+- Take multiple cards from the drop pile.
+- Select older dropped cards.
+- Retrieve a card they have just dropped.
 - Draw from another player's hand.
 
-## 5.4 Matching-Discard Exception
+## 5.4 Matching-Drop Exception
 
-If the player's discarded card or group matches the rank of the visible top discard before their action, they do not draw a replacement card.
+If the player's dropped card or group matches the rank of the visible top drop before their action, they do not draw a replacement card.
 
 This is called **Match and Drop**.
 
 **Example:**
 
-The top discard is 5♥.
+The top drop is 5♥.
 
 The current player holds 5♠ and 5♦.
 
-The player discards both cards.
+The player drops both cards.
 
-Since the rank matches the top discard, the player does not draw.
+Since the rank matches the top drop, the player does not draw.
 
 The player's hand is reduced by two cards.
 
@@ -357,9 +357,9 @@ The number of cards in a player's hand may change during the round.
 
 Examples:
 
-- Discard one and draw one: No change.
-- Discard three and draw one: Hand decreases by two.
-- Match and discard two: Hand decreases by two.
+- Drop one and draw one: No change.
+- Drop three and draw one: Hand decreases by two.
+- Match and drop two: Hand decreases by two.
 - Draw a four-card Power Card penalty: Hand increases by four.
 
 There is no requirement to maintain seven cards after the round begins.
@@ -372,7 +372,7 @@ There is no requirement to maintain seven cards after the round begins.
 
 The card 7 is a special Power Card.
 
-When a player discards one or more 7s, the next player must respond to a draw penalty instead of taking a normal turn.
+When a player drops one or more 7s, the next player must respond to a draw penalty instead of taking a normal turn.
 
 The penalty begins at two cards and increases by two cards whenever the next player responds by playing a 7.
 
@@ -388,7 +388,7 @@ Consider four players:
 
 **A → B → C → D → A**
 
-Player A discards a 7 during a normal turn.
+Player A drops a 7 during a normal turn.
 
 After completing any drawing action required by that normal turn, the Power Card effect begins.
 
@@ -457,9 +457,9 @@ For eight players, all eight must play a 7 in an uninterrupted sequence.
 
 ## 6.5 Multiple 7s in One Action
 
-A player may discard more than one 7 in a single action.
+A player may drop more than one 7 in a single action.
 
-However, the number of cards discarded does not multiply the Power Card effect.
+However, the number of cards dropped does not multiply the Power Card effect.
 
 Examples:
 
@@ -467,7 +467,7 @@ Examples:
 - Two 7s played together: Adds two penalty cards.
 - Three 7s played together: Adds two penalty cards.
 
-A multiple-7 discard counts as one Power Card action by one player.
+A multiple-7 drop counts as one Power Card action by one player.
 
 The Full-Cycle Exception requires participation by every active player, not a specific number of physical 7 cards.
 
@@ -480,8 +480,8 @@ While responding to an active penalty:
 3. A player holding a 7 is not required to play it.
 4. PJ cannot replace a 7.
 5. RJ cannot replace a 7.
-6. A normal discard is not permitted.
-7. Show cannot be declared.
+6. A normal drop is not permitted.
+7. Least cannot be declared.
 8. Drawing the penalty immediately ends the sequence.
 9. The player who draws the penalty loses their normal turn.
 10. The next active player then takes a normal turn.
@@ -505,19 +505,19 @@ If only one active player remains after the elimination, that player wins the ga
 
 ---
 
-# 7. Calling Show
+# 7. Calling Least
 
-## 7.1 Show Eligibility
+## 7.1 Least Eligibility
 
-A player may declare **Show** only when the total value of the cards in their hand is five points or less.
+A player may declare **Least** only when the total value of the cards in their hand is five points or less.
 
 The eligible range is:
 
 **0 ≤ Hand Total ≤ 5**
 
-Show is available only at the beginning of the player's normal turn, before discarding or drawing.
+Least is available only at the beginning of the player's normal turn, before dropping or drawing.
 
-A player cannot declare Show:
+A player cannot declare Least:
 
 - When their hand value exceeds five.
 - After already performing a normal-turn action.
@@ -525,78 +525,78 @@ A player cannot declare Show:
 - While responding to an active 7 penalty.
 - After their 60-second turn timer expires.
 
-The application automatically calculates the player's hand value and enables Show only when the conditions are satisfied.
+The application automatically calculates the player's hand value and enables Least only when the conditions are satisfied.
 
-## 7.2 Show Resolution
+## 7.2 Least Resolution
 
-When a player declares Show:
+When a player declares Least:
 
 1. The round ends immediately.
-2. No additional cards may be discarded or drawn.
+2. No additional cards may be dropped or drawn.
 3. The computer calculates the value of each player's remaining hand.
 4. The caller's total is compared with the totals of all other active players.
-5. The computer determines whether the Show is successful.
+5. The computer determines whether the Least is successful.
 6. Round penalty points are awarded.
 7. Cumulative scores are updated.
 8. Eliminations are processed.
 
 **Players' hands are never revealed to opponents during this process.**
 
-Only hand totals, Show results, and awarded penalty points are displayed.
+Only hand totals, Least results, and awarded penalty points are displayed.
 
-## 7.3 Successful Show
+## 7.3 Successful Least
 
-A Show is successful only if the caller has a strictly lower total than every other active player.
+A Least is successful only if the caller has a strictly lower total than every other active player.
 
 For example:
 
 | Player | Hand Total | Result |
 |---|---|---|
-| A, calls Show | 3 | Successful |
+| A, calls Least | 3 | Successful |
 | B | 7 | Higher |
 | C | 12 | Higher |
 | D | 5 | Higher |
 
 A has the unique lowest total.
 
-The Show succeeds.
+The Least succeeds.
 
-## 7.4 Unsuccessful Show
+## 7.4 Unsuccessful Least
 
-A Show is unsuccessful if at least one other active player has a total equal to or lower than the caller.
+A Least is unsuccessful if at least one other active player has a total equal to or lower than the caller.
 
 For example:
 
 | Player | Hand Total | Result |
 |---|---|---|
-| A, calls Show | 4 | Unsuccessful |
+| A, calls Least | 4 | Unsuccessful |
 | B | 2 | Lower than A |
 | C | 10 | Higher |
 | D | 8 | Higher |
 
-Player A's Show fails because Player B has fewer points.
+Player A's Least fails because Player B has fewer points.
 
-A tie also causes the Show to fail.
+A tie also causes the Least to fail.
 
-## 7.5 Show With an Empty Hand
+## 7.5 Least With an Empty Hand
 
-It is possible for a player to discard all their cards using the matching-discard rule.
+It is possible for a player to drop all their cards using the matching-drop rule.
 
 An empty hand has a value of zero.
 
-The player must wait until the beginning of their next normal turn to declare Show.
+The player must wait until the beginning of their next normal turn to declare Least.
 
 An empty hand does not automatically end the round.
 
-If another player calls Show before that player's next turn, the empty hand is still worth zero and is included in the hand-total comparison.
+If another player calls Least before that player's next turn, the empty hand is still worth zero and is included in the hand-total comparison.
 
-If multiple players have zero points, a Show may fail because of a tie.
+If multiple players have zero points, a Least may fail because of a tie.
 
 ---
 
 # 8. Round Scoring
 
-## 8.1 Successful Show
+## 8.1 Successful Least
 
 If the caller has the unique lowest hand total:
 
@@ -607,14 +607,14 @@ If the caller has the unique lowest hand total:
 
 | Player | Hand Total | Round Penalty |
 |---|---|---|
-| A, Show | 4 | 0 |
+| A, Least | 4 | 0 |
 | B | 8 | 8 |
 | C | 15 | 15 |
 | D | 6 | 6 |
 
 The points are added to each player's cumulative score.
 
-## 8.2 Unsuccessful Show
+## 8.2 Unsuccessful Least
 
 If the caller does not have the unique lowest hand total:
 
@@ -628,14 +628,14 @@ The 40-point penalty replaces the caller's hand value. It is not added on top of
 
 | Player | Hand Total | Round Penalty |
 |---|---|---|
-| A, Show | 5 | 40 |
+| A, Least | 5 | 40 |
 | B | 3 | 0 |
 | C | 12 | 12 |
 | D | 9 | 9 |
 
 ## 8.3 Tied Lowest Hands
 
-If two or more opponents share the lowest hand total during an unsuccessful Show, all those lowest-scoring opponents receive zero round penalty points.
+If two or more opponents share the lowest hand total during an unsuccessful Least, all those lowest-scoring opponents receive zero round penalty points.
 
 The caller still receives 40 points.
 
@@ -643,7 +643,7 @@ For example:
 
 | Player | Hand Total | Round Penalty |
 |---|---|---|
-| A, Show | 4 | 40 |
+| A, Least | 4 | 40 |
 | B | 4 | 0 |
 | C | 4 | 0 |
 | D | 9 | 9 |
@@ -664,10 +664,10 @@ The remaining time must be prominently displayed.
 
 A normal turn is considered complete when the player has:
 
-1. Made a legal discard.
+1. Made a legal drop.
 2. Completed any required card draw.
 
-A successful Show declaration completes the player's action immediately.
+A successful Least declaration completes the player's action immediately.
 
 A player responding to a 7 penalty completes the action by either playing a legal 7 or drawing the accumulated penalty.
 
@@ -773,32 +773,32 @@ Players cannot submit an illegal move and then reverse it after execution.
 
 All actions are validated before being accepted and applied to the game state.
 
-## 11.2 Invalid Discards
+## 11.2 Invalid Drops
 
 The following actions must be rejected:
 
-- Discarding cards with different ranks in one group.
-- Discarding cards not owned by the player.
-- Discarding cards during another player's turn.
-- Discarding normal cards while responding to a 7 penalty.
-- Performing multiple independent discard actions during a single normal turn.
-- Discarding after Show has been declared.
+- Dropping cards with different ranks in one group.
+- Dropping cards not owned by the player.
+- Dropping cards during another player's turn.
+- Dropping normal cards while responding to a 7 penalty.
+- Performing multiple independent drop actions during a single normal turn.
+- Dropping after Least has been declared.
 - Attempting a move after elimination.
 
 ## 11.3 Invalid Draws
 
 The application must prevent:
 
-- Drawing before the required discard.
+- Drawing before the required drop.
 - Drawing more cards than permitted.
-- Taking an old buried discard.
-- Drawing during a matching-discard turn.
+- Taking an old buried drop.
+- Drawing during a matching-drop turn.
 - Drawing after an action has already been completed.
 - Taking cards from another player's hand.
 
-## 11.4 Invalid Show Attempts
+## 11.4 Invalid Least Attempts
 
-The Show action must be disabled if:
+The Least action must be disabled if:
 
 - The player's hand total is greater than five.
 - It is not the player's normal turn.
@@ -829,14 +829,14 @@ Other players' hands must remain concealed throughout the entire game.
 
 The interface must not offer an option to reveal, share, or display a player's full hand to opponents.
 
-## 12.2 Show Privacy
+## 12.2 Least Privacy
 
-Declaring Show does not reveal the individual cards held by any player.
+Declaring Least does not reveal the individual cards held by any player.
 
 The computer privately evaluates the hands and displays only:
 
 - Each player's calculated hand total
-- Whether the Show succeeded or failed
+- Whether the Least succeeded or failed
 - Round penalty points
 - Updated cumulative scores
 - Elimination results
@@ -855,7 +855,7 @@ For online multiplayer, the game server must be responsible for maintaining the 
 
 Private cards belonging to one player must not be transmitted to another player's browser.
 
-The server validates actions and calculates hand totals, Show results, scoring, and eliminations.
+The server validates actions and calculates hand totals, Least results, scoring, and eliminations.
 
 Visual restrictions alone are insufficient to protect private hands.
 
@@ -865,13 +865,13 @@ Visual restrictions alone are insufficient to protect private hands.
 
 ## 13.1 Draw Pile Exhaustion
 
-If the draw pile becomes empty, the computer reshuffles older discarded cards to create a new draw pile.
+If the draw pile becomes empty, the computer reshuffles older dropped cards to create a new draw pile.
 
 The following cards remain excluded from reshuffling:
 
 - The current RJ indicator
 - Cards currently held by players
-- The latest discard group that is still eligible for pickup
+- The latest drop group that is still eligible for pickup
 
 If no recyclable cards remain and a required draw cannot be completed, the round ends through an automatic hand-total settlement.
 
@@ -883,7 +883,7 @@ Individual hands remain concealed.
 
 ## 13.2 Insufficient Cards for a 7 Penalty
 
-If the accumulated penalty requires more cards than are available, the application first replenishes the draw pile using eligible older discarded cards.
+If the accumulated penalty requires more cards than are available, the application first replenishes the draw pile using eligible older dropped cards.
 
 If the required penalty still cannot be completed, the remaining available cards are drawn and the round ends through the draw-pile exhaustion procedure.
 
@@ -905,13 +905,13 @@ If a player is eliminated while responding to a 7 penalty:
 
 The remaining players do not inherit the cancelled penalty.
 
-## 13.5 Initial Discard Is a 7
+## 13.5 Initial Drop Is a 7
 
-If the initial discard revealed by the computer is a 7, no Power Card penalty is triggered.
+If the initial drop revealed by the computer is a 7, no Power Card penalty is triggered.
 
-The 7 acts as the visible top discard rank until the first player makes a move.
+The 7 acts as the visible top drop rank until the first player makes a move.
 
-If the first player legally discards a 7, the normal 7 Power Card rule is triggered.
+If the first player legally drops a 7, the normal 7 Power Card rule is triggered.
 
 ## 13.6 Card Ownership and Duplicate Cards
 
@@ -919,7 +919,7 @@ When two decks are used, physically identical cards may occur.
 
 The application must assign a unique internal identity to each physical card.
 
-Cards with the same rank remain eligible for matching-rank discards, even when their suits and printed appearances are identical.
+Cards with the same rank remain eligible for matching-rank drops, even when their suits and printed appearances are identical.
 
 ---
 
@@ -927,7 +927,7 @@ Cards with the same rank remain eligible for matching-rank discards, even when t
 
 A round ends when:
 
-1. A valid Show is declared and evaluated.
+1. A valid Least is declared and evaluated.
 2. The draw pile cannot support a required draw after all eligible recycling is completed.
 3. Only one active player remains because of elimination.
 
@@ -958,27 +958,27 @@ Player A holds:
 
 K♠, 8♥, 6♣, 4♦, 3♣, 2♠, A♥.
 
-The current top discard is 9♦.
+The current top drop is 9♦.
 
-A discards K♠.
+A drops K♠.
 
-Since K♠ does not match the top discard rank, A draws one card.
+Since K♠ does not match the top drop rank, A draws one card.
 
 A's turn ends.
 
-## Example 2: Matching-Card Discard
+## Example 2: Matching-Card Drop
 
-The current top discard is 6♥.
+The current top drop is 6♥.
 
 Player B holds 6♣ and 6♦.
 
-B discards both cards.
+B drops both cards.
 
-Because the discarded rank matches the current top discard, no replacement card is drawn.
+Because the dropped rank matches the current top drop, no replacement card is drawn.
 
 B's hand decreases by two cards.
 
-## Example 3: Successful Show
+## Example 3: Successful Least
 
 The RJ rank is 9.
 
@@ -990,23 +990,23 @@ The total is:
 
 0 + 1 + 3 = 4.
 
-A calls Show at the beginning of their turn.
+A calls Least at the beginning of their turn.
 
 The opponents have totals of 6, 11, and 15.
 
 A has the unique lowest total.
 
-The Show succeeds.
+The Least succeeds.
 
 A receives zero round penalty points.
 
-## Example 4: Unsuccessful Show
+## Example 4: Unsuccessful Least
 
-Player A has a hand total of 5 and calls Show.
+Player A has a hand total of 5 and calls Least.
 
 Player B has a hand total of 3.
 
-Since B has a lower total, A's Show fails.
+Since B has a lower total, A's Least fails.
 
 A receives 40 penalty points.
 
@@ -1099,13 +1099,13 @@ The following settings define the standard Least Count game.
 | Stacking increment | 2 cards per 7 action |
 | Multiple 7s per action | Allowed |
 | Full-cycle cancellation | Enabled |
-| Show eligibility threshold | 5 or fewer points |
-| Successful Show | Caller scores 0 |
-| Failed Show penalty | 40 points |
+| Least eligibility threshold | 5 or fewer points |
+| Successful Least | Caller scores 0 |
+| Failed Least penalty | 40 points |
 | Score-elimination threshold | 100 points |
 | Turn duration | 60 seconds |
 | Timeout consequence | Immediate elimination |
-| Illegal discards | Blocked |
+| Illegal drops | Blocked |
 | Revealing private hands | Prohibited |
 | Turn direction | Clockwise |
 | Card dealing | Automatic |
@@ -1124,13 +1124,13 @@ The elimination score threshold will be configurable in a future game settings m
 
 3. **Check the RJ.** The computer selects a random rank, excluding 7. Every remaining card of that rank is worth zero.
 
-4. **Play your turn.** Discard one card or a group of matching cards, then draw one replacement card unless the matching-discard exception applies.
+4. **Play your turn.** Drop one card or a group of matching cards, then draw one replacement card unless the matching-drop exception applies.
 
 5. **Use 7s strategically.** Playing a 7 forces the next player to draw two cards or respond with another 7. Consecutive 7s increase the penalty. A complete cycle cancels the penalty.
 
-6. **Call Show.** When your hand total is five points or less, you may declare Show at the beginning of your normal turn.
+6. **Declare Least.** When your hand total is five points or less, you may declare Least at the beginning of your normal turn.
 
-7. **Score the round.** A successful Show gives the caller zero points. A failed Show gives the caller 40 penalty points.
+7. **Score the round.** A successful Least gives the caller zero points. A failed Least gives the caller 40 penalty points.
 
 8. **Watch the timer.** Complete each turn within 60 seconds or be eliminated.
 
