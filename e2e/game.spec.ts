@@ -732,8 +732,10 @@ test('timer warnings follow the same deadline and disappear for untimed games', 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const now = Date.now()
   await page.clock.install({ time: new Date(now) })
+  // Keep navigation time from consuming the one-second warning-boundary margin.
+  await page.clock.pauseAt(new Date(now + 1000))
   const game = fixture(2)
-  game.deadline = now + 16_000
+  game.deadline = now + 17_000
   await load(page, game)
   await expect(page.getByRole('timer')).not.toHaveClass(/clock-warning|clock-urgent/)
   await page.clock.fastForward(1500)

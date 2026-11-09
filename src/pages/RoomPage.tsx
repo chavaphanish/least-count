@@ -131,7 +131,7 @@ export function RoomPage({
   const final = !!g && ['round-over', 'game-over'].includes(g.phase)
   return (
     <section
-      className={`room-page ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       <div className="room-heading">
         <div>
@@ -151,6 +151,18 @@ export function RoomPage({
               : 'Reconnecting…'}
         </div>
       </div>
+      {g && (
+        <details className="mobile-room-options">
+          <summary>Room options</summary>
+          <div>
+            <p>Room {code} · cutoff {room.settings.eliminationThreshold} · {room.settings.timedGame ? '60s turns' : 'Untimed'}</p>
+            <button className="text-button" onClick={() => copy(code)}>Copy Code</button>
+            <button className="text-button" onClick={share}>Share Invitation</button>
+            <button className="text-button" disabled={busy} onClick={async () => { onExit(); await command('leave') }}>Leave Room</button>
+            <a className="text-link" href="#/rules">How to Play →</a>
+          </div>
+        </details>
+      )}
       {error && (
         <p className="game-alert" role="alert">
           {error}{' '}

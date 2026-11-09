@@ -1,6 +1,7 @@
 import { CareerProfile, GameHistoryReport } from './career/CareerProfile'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Layout } from './components/Layout'
+import { MobileOrientation } from './components/MobileOrientation'
 import { GamePage } from './pages/GamePage'
 import { RulesPage } from './pages/RulesPage'
 import { AccessPage } from './pages/AccessPage'
@@ -133,5 +134,5 @@ export function App() {
       )
     }
   } else content = <DashboardPage />
-  return <Layout page={current.page}>{content}</Layout>
+  return <MobileOrientation><Layout page={current.page}>{content}</Layout></MobileOrientation>
 }
