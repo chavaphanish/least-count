@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { PwaStatus } from '../pwa/PwaStatus'
 
 export function Layout({ children, page }: { children: ReactNode; page: string }) {
   return (
@@ -15,6 +16,7 @@ export function Layout({ children, page }: { children: ReactNode; page: string }
         </nav>
       </header>
       <main id="main" tabIndex={-1}>{children}</main>
+      <PwaStatus atTable={page === 'game' || page === 'room'} />
       <footer className="site-footer"><span>Good company. A fresh deck. <span className="footer-italic">A little friendly rivalry.</span></span><span className="footer-suits" aria-hidden="true">♠ <i>♥</i> ♣ <i>♦</i></span><span>Least Count <span className="footer-dot">/</span> Your card table</span></footer>
     </div>
   )

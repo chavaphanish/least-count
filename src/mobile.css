@@ -10,6 +10,8 @@
 .rotation-screen .rotation-detail { font-size: 12px; color: var(--muted); }
 .rotation-icon { width: 100px; height: 100px; color: var(--gold); }
 .mobile-room-options { display: none; }
+.pwa-status { position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); z-index: 900; padding: 10px 16px; border: 1px solid var(--gold); border-radius: 10px; background: #103e32; color: var(--cream); display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 12px; box-shadow: 0 4px 20px #0008; }
+.pwa-status button { flex-shrink: 0; min-height: 44px; }
 body:has([data-portrait]) { overflow: hidden; }
 [data-mobile-device] .app-shell {
   --mobile-safe-top: env(safe-area-inset-top, 0px);
