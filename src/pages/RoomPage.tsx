@@ -1,3 +1,5 @@
+import { MobileGameBar } from '../components/MobileGameBar'
+import { OpponentSeat } from '../components/OpponentSeat'
 import { CareerRewards } from '../career/CareerRewards'
 import { useActiveSeat } from '../hooks/useActiveSeat'
 import { TurnActions } from '../components/TurnActions'
@@ -151,18 +153,14 @@ export function RoomPage({
               : 'Reconnecting…'}
         </div>
       </div>
-      {g && (
-        <details className="mobile-room-options">
-          <summary>Room options</summary>
-          <div>
-            <p>Room {code} · cutoff {room.settings.eliminationThreshold} · {room.settings.timedGame ? '60s turns' : 'Untimed'}</p>
-            <button className="text-button" onClick={() => copy(code)}>Copy Code</button>
-            <button className="text-button" onClick={share}>Share Invitation</button>
-            <button className="text-button" disabled={busy} onClick={async () => { onExit(); await command('leave') }}>Leave Room</button>
-            <a className="text-link" href="#/rules">How to Play →</a>
-          </div>
-        </details>
-      )}
+      {g && <MobileGameBar round={g.round} activeName={g.players.find(p=>p.id===g.currentPlayerId)?.displayName??'Player'} seconds={final?null:seconds} joker={g.indicator} penalty={g.penalty} players={g.players.map(p=>({id:p.id,name:p.displayName,score:p.score,eliminated:p.eliminated}))}>
+        <p>Room {code} · cutoff {room.settings.eliminationThreshold} · {connection==='live'?'Connected':connection==='error'?'Connection needs attention':'Reconnecting…'}</p>
+        <button className="text-button" onClick={()=>copy(code)}>Copy Code</button>
+        <button className="text-button" onClick={share}>Share Invitation</button>
+        <button className="text-button" disabled={busy} onClick={async()=>{onExit();await command('leave')}}>Leave Room</button>
+        <a className="text-link" href="#/rules">How to Play →</a>
+      </MobileGameBar>}
+
       {error && (
         <p className="game-alert" role="alert">
           {error}{' '}
@@ -305,31 +303,8 @@ export function RoomPage({
               {g.players
                 .filter((p) => p.id !== id)
                 .map((p) => (
-                  <div
-                    className={`live-opponent ${p.id === g.currentPlayerId && !final ? 'active-seat' : ''}`}
-                    key={p.id}
-                  >
-                    <Avatar player={p} />
-                    <strong>{p.displayName}</strong>
-                    {!final && g.currentPlayerId === p.id && <TurnTimer seconds={seconds} name={p.displayName} />}
-                    <span>
-                      {p.eliminated ? 'Eliminated' : `${p.cardCount} cards`} ·{' '}
-                      {p.score} pts
-                    </span>
-                    <small>
-                      {p.accountType === 'guest' ? 'Guest' : 'Registered'}
-                    </small>
-                    {!p.eliminated && (
-                      <div className="opponent-cards" aria-hidden="true">
-                        {Array.from(
-                          { length: Math.min(3, p.cardCount) },
-                          (_, i) => (
-                            <PlayingCard faceDown key={i} />
-                          ),
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <OpponentSeat key={p.id} player={p} count={p.cardCount} score={p.score} active={p.id===g.currentPlayerId && !final} eliminated={p.eliminated} status={p.accountType==='guest'?'Guest':'Registered'} timer={!final && p.id===g.currentPlayerId ? <TurnTimer seconds={seconds} name={p.displayName}/> : null}/>
+
                 ))}
             </div>
             <div className="live-piles">
@@ -416,9 +391,9 @@ export function RoomPage({
             onSelectAll={() => setSelected(g.hand.filter(card => card.rank === cards[0]?.rank).map(card => card.id))}
             onClear={() => setSelected([])}
           />
-          {g.result && g.career?.eligible && <CareerRewards key={g.round} game={g.career.gameId} round={g.round} />}
           {g.result && (
             <section className="round-summary">
+              {g.career?.eligible && <CareerRewards key={g.round} game={g.career.gameId} round={g.round} />}
               <h2>
                 {g.phase === 'game-over'
                   ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`

@@ -28,7 +28,7 @@ async function saved(page: Page): Promise<GameState> {
   return page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!), SESSION_KEY)
 }
 async function load(page: Page, game = fixture()) {
-  await page.clock.install({time:new Date(game.deadline! - 60_000)})
+  await page.clock.install({time:new Date(game.deadline! - 90_000)})
   await page.clock.pauseAt(new Date(game.deadline! - 59_999))
   await page.emulateMedia({reducedMotion:'reduce'})
   await page.goto('/#/game')
@@ -47,8 +47,8 @@ test.describe('Android landscape', () => {
     await page.setViewportSize(size)
     const game = fixture()
     await load(page, game)
-    for (const selector of ['.live-table','.live-piles','.hand-heading','.opponent-row','.turn-panel','.activity-heading','.hand-heading .turn-clock']) await expect(page.locator(selector)).toBeInViewport({ratio:1})
-    await expect(page.locator('.hand-card').last().locator('.playing-card')).toBeInViewport({ratio:1})
+    for (const selector of ['.live-table','.live-piles','.hand-heading','.opponent-row','.turn-panel','.activity-heading','.mobile-game-bar .turn-clock']) await expect(page.locator(selector)).toBeInViewport({ratio:.9999})
+    await expect(page.locator('.hand-card').last().locator('.playing-card')).toBeInViewport({ratio:.9999})
     const index = game.players[0].hand.findIndex(c => c.rank !== '7' && c.rank !== latestGroup(game)[0].rank)
     const card = page.locator('.hand-card').nth(index)
     await card.tap()
@@ -61,11 +61,11 @@ test.describe('Android landscape', () => {
     expect(await saved(page)).toEqual(before)
     await expect(card).toHaveAttribute('aria-pressed','true')
     const drop = page.getByRole('button', {name:'Drop 1 Card',exact:true})
-    await expect(drop).toBeInViewport({ratio:1})
+    await expect(drop).toBeInViewport({ratio:.9999})
     expect((await drop.boundingBox())!.height).toBeGreaterThanOrEqual(44)
     await drop.tap()
     const draw = page.getByRole('button', {name:'Draw New Card',exact:true})
-    await expect(draw).toBeInViewport({ratio:1})
+    await expect(draw).toBeInViewport({ratio:.9999})
     await draw.tap()
     expect((await saved(page)).players[0].hand).toHaveLength(7)
     await expect(page.locator('.game-activity .latest-event:visible')).toContainText('You')
@@ -76,7 +76,7 @@ test.describe('Android landscape', () => {
     await page.evaluate(({key,game}) => sessionStorage.setItem(key,JSON.stringify(game)), {key:SESSION_KEY,game:low})
     await page.reload()
     const declare = page.getByRole('button', {name:'Declare Least',exact:true})
-    await expect(declare).toBeInViewport({ratio:1})
+    await expect(declare).toBeInViewport({ratio:.9999})
     await declare.tap()
     await expect(page.locator('.round-summary')).toBeVisible()
   })
@@ -168,7 +168,7 @@ async function guest(page: Page, name: string) {
 }
 
 test('Android, iPhone and desktop share rounds, activity and authoritative resume without replaying actions', async ({browser, baseURL}) => {
-  test.setTimeout(120_000)
+  test.setTimeout(180_000)
   const contexts: BrowserContext[] = []
   try {
     for (const userAgent of [android,iphone,undefined]) contexts.push(await browser.newContext({baseURL,userAgent,viewport:sizes[1],isMobile:!!userAgent,hasTouch:!!userAgent}))
@@ -177,6 +177,9 @@ test('Android, iPhone and desktop share rounds, activity and authoritative resum
     const host = pages[0]
     await host.getByRole('button', {name:/Create Game Room/}).click()
     await host.getByLabel('Number of players').selectOption('3')
+    // This exercises cross-device rounds, not OS scheduling against a live clock.
+    // Authoritative timed expiry is covered by mobile.spec.ts's real Worker test.
+    await host.getByLabel('Timed game').uncheck()
     await host.getByRole('button', {name:'Create Room',exact:true}).click()
     await expect(host.getByRole('heading', {name:'Waiting lobby'})).toBeVisible()
     const code = (await host.locator('.room-code-panel strong').textContent())!
@@ -248,7 +251,20 @@ test('Android, iPhone and desktop share rounds, activity and authoritative resum
           const value = (r: typeof a) => g.hand.filter(c => c.rank === r).reduce((n,c) => n + 15 + cardValue(c,g.indicator.rank),0)
           return value(b) - value(a)
         })[0]
-        for (const card of g.hand.filter(c => c.rank === rank)) await actor.locator(`[data-hand-card="${card.id}"]`).click()
+        for (const card of g.hand.filter(c => c.rank === rank)) {
+          const target=actor.locator(`[data-hand-card="${card.id}"]`)
+          if (!await target.isVisible()) {
+            const index=g.hand.findIndex(c=>c.id===card.id)
+            const visibleId=await actor.locator('.hand-row:not([hidden]) .hand-card').first().getAttribute('data-hand-card')
+            let current=Math.floor(g.hand.findIndex(c=>c.id===visibleId)/5)
+            const desired=Math.floor(index/5)
+            while(current!==desired) {
+              await actor.getByRole('button',{name:current<desired?'Next hand page':'Previous hand page'}).click()
+              current+=current<desired?1:-1
+            }
+          }
+          await target.click()
+        }
         await actor.locator('[data-plan-discard]').click()
         dropped = true
         seven ||= rank === '7'

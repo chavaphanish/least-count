@@ -31,8 +31,10 @@ function fixture() {
   return s
 }
 async function load(page: Page, game: GameState) {
-  await page.clock.install()
-  await page.clock.pauseAt(new Date(Date.now() + 100))
+  const frozen = Date.now()
+  // Pause at round start without racing transport latency in the test harness.
+  await page.clock.install({ time: new Date(frozen - 30_000) })
+  await page.clock.pauseAt(new Date(frozen))
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/game')
   await page.evaluate(
