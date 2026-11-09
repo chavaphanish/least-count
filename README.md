@@ -161,6 +161,47 @@ npm run mobile:open:android  # Open the generated project in Android Studio
 
 **Step 1 boundary:** this bundles the existing app, with no live-reload `server.url`, new plugins, UI changes, auth changes, or backend changes. Relative `/api` and WebSocket requests currently rely on the web Worker at the same origin; the bundled native origins do not supply that backend. Native authenticated/online play therefore needs the next integration step (API transport, allowed origins, session/callback behavior) before it can be claimed to work. That work is intentionally deferred. The framework-independent game and web UI remain shared. Generated launcher/splash assets are development defaults; mobile branding, signing, native builds, and store preparation follow later.
 
+### Landscape mobile and iPhone Home Screen testing
+
+Phones and tablets use landscape. `public/manifest.webmanifest` requests `orientation: landscape`, `display: standalone`, root scope/start URL, and includes 192px/512px PNG icons derived from the existing spade favicon. `index.html` includes the 180px Apple touch icon, standalone metadata, and `viewport-fit=cover`. The existing HTTPS Worker serves the app; no additional hosting service is required.
+
+iOS Safari/Home Screen apps may ignore the manifest orientation preference. We do not request JavaScript orientation locks or rotate the game with CSS. A mobile-only **Rotate Your Phone** screen uses the viewport orientation media query and blocks pointer/keyboard interaction with `inert`. The underlying React tree stays mounted: hands, selections, sessions, WebSockets, and deadlines remain intact. **Live turns continue while the message is displayed.** Both landscape directions are supported. Desktop windows remain usable in portrait proportions, including narrow windows. Detection covers Android, iOS, and iPadOS's desktop user agent.
+
+Short mobile landscape screens use the same table, card artwork, and overlapping hand with a compact layout: table/hand on the left, actions/recent activity on the right. Extra penalty-hand rows, opponents beyond the visible seats, full history, and match scores remain available in their own scroll areas. Safe-area insets reserve room for cutouts/home indicators on either side. Inputs use 16px text to avoid iPhone focus zoom; pinch zoom is still available. On exceptionally short viewports (for example Safari controls or the keyboard taking most of the display), scrolling may be necessary.
+
+**Install on iPhone:**
+
+1. Open the test URL supplied with the PR in **Safari**. Production is [least-count.chavaphanish.workers.dev](https://least-count.chavaphanish.workers.dev/); unmerged changes require the branch's published Cloudflare preview. A successful version upload alone does not activate that version on the production address.
+2. Tap **Share → Add to Home Screen**, keep the name **Least Count**, and tap **Add**. If offered, leave **Open as Web App** enabled.
+3. Launch the new Home Screen icon and rotate the iPhone horizontally. Turn off iOS Portrait Orientation Lock if rotation does not change the viewport. The rotation screen disappears when the viewport becomes landscape; no reload is needed.
+4. Sign in using your verified email or use a guest session. The Home Screen installation may have separate storage/session state from Safari, so sign in again if prompted. Same-origin API/WebSocket routes and existing authentication are unchanged. Preview email verification/recovery links require the preview URL in the existing Supabase redirect allowlist; production links retain the existing production configuration.
+
+**Update an installation:** close the Home Screen app from the app switcher and reopen it with connectivity. If necessary, open the same URL in Safari and reload. This app installs **no service worker/offline cache**: Cloudflare's `public/_headers` makes entry/deep-link HTML, manifest, and icons revalidate, while Vite's fingerprinted assets are immutable. An already-open page keeps its current code until reloaded. If an old Home Screen icon/manifest persists, remove that icon, reload the intended URL in Safari, and add it again. Clearing Safari website data is a last resort: it can sign you out and remove saved practice progress. Finish live games before refreshing/reinstalling. Online games require a connection; iOS may suspend network activity when the app is backgrounded or the phone locks. The overlay itself does not background or pause the game.
+
+**Manual iPhone checklist (physical-device testing still required):**
+
+- Launch from the Home Screen, check the name/icon/standalone view, and confirm portrait shows the rotation message.
+- Rotate left and right; inspect cutouts/home indicator, readable ranks/suits, names/card counts, timer, Draw/Drop Piles, Round Joker, action buttons, and Game Activity.
+- Select a card, rotate to portrait and back, and confirm the selection and round remain. Drop/draw once and check there are no duplicate actions.
+- Try a large penalty hand, swipe its additional rows, and check that every card can be selected. Check additional opponents and full activity history.
+- Sign in with a verified email, reconnect after relaunch, and play a two-device room. While holding the active player's phone vertically, let a timed turn expire; verify the server applies the normal timeout and both devices agree.
+- After a deployment, reopen/reload and confirm the new version appears. Check keyboard focus and Safari browser controls as well as the Home Screen view.
+
+**Native orientation:** `ios/App/App/Info.plist` supports only Landscape Left/Right on **iPhone**. iPad retains all four supported native orientations to satisfy iPad multitasking requirements; the same portrait guard enforces the game presentation in portrait/split windows. Android's main Activity uses `sensorLandscape` for both landscape rotations. Android large-screen/multitasking modes may ignore orientation requests; the presentation guard remains the fallback. No orientation plugin is needed. Run `npm run mobile:sync` after web changes. Native compilation/signing remains unverified on Linux; the next native test step requires a Mac/Xcode, a chosen bundle ID and signing team, followed by native API/session integration from the Step 1 boundary above before claiming authenticated multiplayer works in a bundled app.
+
+**Automated mobile checks:**
+
+```sh
+npm run typecheck
+npm test
+npm run build
+PLAYWRIGHT_PREVIEW=1 npx playwright test e2e/mobile.spec.ts
+PLAYWRIGHT_PREVIEW=1 npm run test:e2e
+npm run mobile:sync
+```
+
+The mobile suite emulates iPhone touch viewports at 667 × 375, 844 × 390, 852 × 393, and 932 × 430; checks portrait/landscape transitions, state/selection/deadline preservation, cards/controls/log visibility, large hands, simulated safe insets, desktop/iPad detection, install assets/deep links, and a real Worker/WebSocket timeout behind the rotation screen. These are browser automation checks, not evidence of real Safari/Home Screen or native device execution. Existing verified-email tests use a mocked provider; actual email delivery and physical iPhone sessions remain manual checks.
+
 ## Architecture and files
 
 ```text

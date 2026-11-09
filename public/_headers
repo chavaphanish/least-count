@@ -1,0 +1,8 @@
+# Revalidate the entry point and install metadata, including SPA fallback paths.
+# Vite fingerprints JS/CSS assets; no service worker caches HTML, API data or sessions.
+/*
+  Cache-Control: no-cache
+
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
