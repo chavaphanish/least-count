@@ -83,7 +83,6 @@ test.describe('fixed landscape table',()=>{
     await fits(page)
     if(count===4 && size.width===667) await page.screenshot({path:'docs/mobile-layout/iphone-small-4.png'})
     if(count===4 && size.width===932) await page.screenshot({path:'docs/mobile-layout/iphone-large-4.png'})
-    if(count===8 && size.width===915) await page.screenshot({path:'docs/mobile-layout/android-8.png'})
     const large=fixture(count,20)
     await page.evaluate(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game:large})
     await page.reload()
@@ -235,6 +234,8 @@ test('Android uses the same fixed layout and secondary overlays',async({browser,
   const context=await browser.newContext({baseURL,userAgent:android,isMobile:true,hasTouch:true,viewport:sizes[4]})
   try {
     const page=await context.newPage();await load(page,fixture(8));await fits(page)
+    await page.locator('.hand-card').first().tap()
+    await page.screenshot({path:'docs/mobile-layout/android-8.png'})
     await page.getByRole('button',{name:'Game Activity',exact:true}).tap()
     await expect(page.getByRole('dialog',{name:'Game Activity'})).toBeVisible()
     await page.keyboard.press('Escape')
