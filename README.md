@@ -140,6 +140,27 @@ On Linux, use `npx playwright install --with-deps chromium` if system libraries 
 
 Tests cover the existing game rules and local UI, session initialization, provider verification with mocked Supabase, profile ownership, avatar file validation, room settings/membership, private projections, host transfer, atomic starts, server deadlines, and real guest multi-browser rooms. Actual verification/reset email delivery, and real Supabase Storage/RLS checks remain deployment checks in [the setup guide](docs/supabase-setup.md).
 
+## Mobile Development
+
+Capacitor **8.6.0** packages the existing Vite `dist/` build for iOS and Android. Use Node 22.12+ (22.x) or Node 24 as above. Native sources are committed in `ios/` and `android/`; copied web assets, native build output, local SDK paths, and signing files are ignored.
+
+```sh
+npm ci
+npm run mobile:sync          # Build web assets, then synchronize both platforms
+npm run mobile:sync:ios      # Or build/synchronize only iOS
+npm run mobile:sync:android  # Or build/synchronize only Android
+npm run mobile:open:ios      # Open the generated Xcode project on macOS
+npm run mobile:open:android  # Open the generated project in Android Studio
+```
+
+`npm run mobile:build` builds the web assets without synchronizing. Run synchronization after web changes or installing/updating Capacitor plugins. The existing `npm run build` and Cloudflare deployment remain independent of native tooling.
+
+**Development identity:** `capacitor.config.ts` sets the name **Least Count** and reads `CAPACITOR_APP_ID`, defaulting to the temporary **`com.example.leastcount`** identifier. This is not the production/store bundle ID. An override must also match the native projects: Android's `applicationId`/`namespace` in `android/app/build.gradle`, the MainActivity Java package/path and package/scheme strings, and the iOS target's Bundle Identifier in Xcode. Capacitor synchronization copies web/config/plugin files; it does **not** rename those native identifiers. Choose and align the production identifiers in a later release-preparation step; do not use the placeholder for store submission. No signing credentials are included.
+
+**Native tools:** iOS compilation requires macOS and a Capacitor-8-compatible Xcode with the iOS SDK. The iOS project uses Swift Package Manager, so CocoaPods is not required. Android compilation requires Android Studio, JDK 21, and Android SDK 36 (the generated project targets API 36, minimum API 24). Open the projects above to resolve native dependencies, select a simulator/device, and build. Linux in this task has JDK 21 but no Xcode/iOS SDK or configured Android SDK: native projects can be generated and synchronized here, but native compilation/device execution is not validated.
+
+**Step 1 boundary:** this bundles the existing app, with no live-reload `server.url`, new plugins, UI changes, auth changes, or backend changes. Relative `/api` and WebSocket requests currently rely on the web Worker at the same origin; the bundled native origins do not supply that backend. Native authenticated/online play therefore needs the next integration step (API transport, allowed origins, session/callback behavior) before it can be claimed to work. That work is intentionally deferred. The framework-independent game and web UI remain shared. Generated launcher/splash assets are development defaults; mobile branding, signing, native builds, and store preparation follow later.
+
 ## Architecture and files
 
 ```text
@@ -166,7 +187,7 @@ A single directory object reserves collision-checked six-character codes and tra
 
 The shared engine accepts validated room settings when the host starts. It retains the default cutoff/timer for old local saves. Untimed turns have a null deadline; scoring uses the configured cutoff. Other rule behavior and the original rulebook are preserved.
 
-Avatar uploads accept JPG/PNG/WebP up to 2 MB, validate signatures on both sides, and use server-generated paths in the owner's folder. The browser also decodes images and limits dimensions to 4096 × 4096. Storage policies enforce ownership. Profile images are public; email is not. Replacing/removing an avatar cleans up its old object. There is no match-history database or mobile packaging.
+Avatar uploads accept JPG/PNG/WebP up to 2 MB, validate signatures on both sides, and use server-generated paths in the owner's folder. The browser also decodes images and limits dimensions to 4096 × 4096. Storage policies enforce ownership. Profile images are public; email is not. Replacing/removing an avatar cleans up its old object. Career/history storage is described in [player careers](docs/player-careers.md); native packaging is described in Mobile Development above.
 
 ## Cloudflare deployment
 

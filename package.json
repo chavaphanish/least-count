@@ -11,9 +11,18 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "dev:server": "wrangler dev --log-level warn --ip 127.0.0.1 --port 8787 --var APP_ORIGIN:http://127.0.0.1:5173,http://127.0.0.1:4173",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "mobile:build": "npm run build",
+    "mobile:sync": "npm run mobile:build && cap sync",
+    "mobile:sync:ios": "npm run mobile:build && cap sync ios",
+    "mobile:sync:android": "npm run mobile:build && cap sync android",
+    "mobile:open:ios": "cap open ios",
+    "mobile:open:android": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
     "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/libre-caslon-display": "^5.3.0",
     "@supabase/supabase-js": "^2.119.0",
@@ -21,6 +30,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@cloudflare/workers-types": "^5.20261104.1",
     "@electric-sql/pglite": "^0.5.15",
     "@playwright/test": "^1.64.1",
