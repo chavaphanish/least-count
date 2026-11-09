@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
+import { ServiceError } from '../auth/services'
 import type {
   ClientGameAction,
   RoomView,
@@ -20,12 +21,53 @@ export function useRoom(code: string) {
   const ackTimer = useRef<number | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
+    // A suspended socket can still look OPEN after app switching or a network
+    // change. Rejoin for an authoritative snapshot; never replay pending moves.
+    let timer: number | undefined
+    const resume = () => {
+      if (document.hidden || !navigator.onLine) return
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setRetry(value => value + 1), 200)
+    }
+    const visible = () => { if (!document.hidden) resume() }
+    const restored = (event: PageTransitionEvent) => { if (event.persisted) resume() }
+    const offline = () => {
+      setConnection('reconnecting')
+      setError('Internet connection required. Reconnecting when available.')
+      socket.current?.close()
+    }
+    document.addEventListener('visibilitychange', visible)
+    window.addEventListener('online', resume)
+    window.addEventListener('offline', offline)
+    window.addEventListener('pageshow', restored)
+    return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', visible)
+      window.removeEventListener('online', resume)
+      window.removeEventListener('offline', offline)
+      window.removeEventListener('pageshow', restored)
+    }
+  }, [])
+  useEffect(() => {
     let stopped = false
     let reconnect: number | undefined
     let heartbeat: number | undefined
     let attempt = 0
+    const scheduleReconnect = () => {
+      if (stopped) return
+      window.clearTimeout(reconnect)
+      reconnect = window.setTimeout(() => {
+        attempt++
+        void connect()
+      }, Math.min(1000 * 2 ** attempt, 10_000))
+    }
     async function connect() {
       if (stopped) return
+      if (!navigator.onLine) {
+        setConnection('reconnecting')
+        setError('Internet connection required. Reconnecting when available.')
+        return
+      }
       setConnection(attempt ? 'reconnecting' : 'connecting')
       try {
         const snapshot = await auth.services.api<RoomView>(
@@ -106,23 +148,19 @@ export function useRoom(code: string) {
           setError(
             'Connection interrupted. Your seat is reserved while reconnecting.',
           )
-          reconnect = window.setTimeout(
-            () => {
-              attempt++
-              void connect()
-            },
-            Math.min(1000 * 2 ** attempt, 10_000),
-          )
+          scheduleReconnect()
         }
         ws.onerror = () => ws.close()
       } catch (error) {
         if (stopped) return
-        setConnection('error')
+        const temporary = !(error instanceof ServiceError) || error.status === 0 || error.status >= 500
+        setConnection(temporary ? 'reconnecting' : 'error')
         setError(
           error instanceof Error
             ? error.message
             : 'The room could not be reached.',
         )
+        if (temporary) scheduleReconnect()
       }
     }
     void connect()
@@ -140,7 +178,7 @@ export function useRoom(code: string) {
   }, [code, auth.user?.player.id, auth.services, retry])
   const send = useCallback((action: ClientGameAction) => {
     const ws = socket.current
-    if (!ws || ws.readyState !== WebSocket.OPEN || pending.current) return false
+    if (!navigator.onLine || !ws || ws.readyState !== WebSocket.OPEN || pending.current) return false
     const requestId = crypto.randomUUID()
     pending.current = requestId
     setBusy(true)

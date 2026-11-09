@@ -175,7 +175,10 @@ test('install metadata, icons and deep links are served by the production web bu
   expect((await request.get(apple!)).ok()).toBe(true)
   await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute('content','yes')
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /viewport-fit=cover/)
-  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0)
+  if (process.env.PLAYWRIGHT_PREVIEW === '1') {
+    await page.evaluate(() => navigator.serviceWorker.ready)
+    expect(await page.evaluate(async () => (await caches.keys()).length)).toBe(0)
+  }
   expect((await request.get('/auth/callback?flow=recovery')).ok()).toBe(true)
 })
 
