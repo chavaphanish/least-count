@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { cardRect } from '../components/TurnAnimation'
+import { cardRect, handCardRect } from '../components/TurnAnimation'
 import type {
   CardDeparture,
   CardRect,
@@ -73,7 +73,7 @@ export function useRoomCardMotion(
           ? g.hand
               .filter((c) => action.cardIds?.includes(c.id))
               .flatMap((card) => {
-                const from = cardRect(cardElement('data-hand-card', card.id))
+                const from = handCardRect(cardElement('data-hand-card', card.id))
                 return from ? [{ card, from }] : []
               })
           : []
@@ -94,7 +94,7 @@ export function useRoomCardMotion(
         source === 'pile'
           ? cardRect(document.querySelector('[data-draw-source] .playing-card'))
           : source === 'discard' && action.cardId
-            ? cardRect(cardElement('data-pickup-card', action.cardId))
+            ? (cardRect(cardElement('data-pickup-card', action.cardId)) ?? cardRect(document.querySelector('[data-discard-target] .playing-card')))
             : null
       pending.current = {
         revision: room!.revision,

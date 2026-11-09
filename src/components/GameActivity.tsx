@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import type { GameEvent } from '../game/events'
 import { formatGameEvent } from '../game/events'
+import { useMobileLandscape } from './MobileOrientation'
+import { TableOverlay } from './TableOverlay'
 
 /** The server owns history; toggling views only changes presentation. No scroll effects. */
 export function GameActivity({ events }: { events: readonly GameEvent[] }) {
   const [expanded, setExpanded] = useState(false)
   const latest = events.at(-1)
+  const mobile = useMobileLandscape()
   const render = (entries: readonly GameEvent[]) =>
     entries.map((event) => (
       <li
@@ -21,6 +24,13 @@ export function GameActivity({ events }: { events: readonly GameEvent[] }) {
         <span>{formatGameEvent(event)}</span>
       </li>
     ))
+  if (mobile) return <section className="game-activity compact-game-activity" aria-label="Game Activity">
+    <p className="latest-event latest-action" title={latest ? formatGameEvent(latest) : undefined} data-event-id={latest?.id} aria-live="polite">{latest ? formatGameEvent(latest) : 'Your table is ready. Activity appears here.'}</p>
+    <div className="activity-heading"><TableOverlay label="Game Activity" trigger="Activity ↗">
+      <button type="button" className="text-button" aria-expanded={expanded} onClick={()=>setExpanded(value=>!value)}>{expanded?'Recent Activity':'View Full History'}</button>
+      <ol className={expanded?'full-history':'recent-history'} aria-label={expanded?'Full game history':'Recent game activity'}>{render(expanded?events:events.slice(-5).reverse())}</ol>
+    </TableOverlay></div>
+  </section>
   return (
     <section
       className={`game-activity ${expanded ? 'history-expanded' : ''}`}

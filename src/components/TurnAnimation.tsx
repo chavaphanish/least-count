@@ -31,6 +31,11 @@ export function cardRect(element: Element | null): CardRect | null {
     : null
 }
 
+/** Off-page selections depart from the visible hand without revealing extra cards. */
+export function handCardRect(element: Element | null): CardRect | null {
+  return cardRect(element) ?? cardRect(document.querySelector('.hand-row:not([hidden]) .playing-card'))
+}
+
 /** Decorative only: the validated state is committed before these flights start. */
 export function TurnAnimation({
   motion,

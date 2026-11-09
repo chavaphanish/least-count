@@ -29,7 +29,7 @@ async function saved(page: Page): Promise<GameState> {
   )
 }
 async function load(page: Page, s: GameState) {
-  await page.clock.install({ time: new Date(s.deadline! - 60_000) })
+  await page.clock.install({ time: new Date(s.deadline! - 90_000) })
   await page.clock.pauseAt(new Date(s.deadline! - 59_999))
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/game')

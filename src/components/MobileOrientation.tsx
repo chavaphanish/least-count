@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+
+const LandscapeContext = createContext(false)
+export const useMobileLandscape = () => useContext(LandscapeContext)
 
 function mobileDevice() {
   // Includes iPadOS's desktop user agent, without blocking touch-screen PCs.
@@ -44,7 +47,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
   return (
     <div className="mobile-shell" data-mobile-device={mobile || undefined} data-portrait={blocked || undefined}>
       <div className="orientation-content" inert={blocked} aria-hidden={blocked || undefined}>
-        {children}
+        <LandscapeContext.Provider value={mobile && !portrait}>{children}</LandscapeContext.Provider>
       </div>
       {blocked && (
         <div className="rotation-screen" role="dialog" aria-modal="true" aria-labelledby="rotation-title" aria-describedby="rotation-description" tabIndex={-1} ref={message}>

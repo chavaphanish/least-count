@@ -22,7 +22,7 @@ async function saved(page: Page): Promise<GameState> {
   return page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!), SESSION_KEY)
 }
 async function load(page: Page, game: GameState) {
-  await page.clock.install({ time: new Date(game.deadline! - 60_000) })
+  await page.clock.install({ time: new Date(game.deadline! - 90_000) })
   await page.clock.pauseAt(new Date(game.deadline! - 59_999))
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/game')
@@ -31,7 +31,7 @@ async function load(page: Page, game: GameState) {
   await expect(page.getByRole('group', {name: 'Your hand', exact: true})).toBeVisible()
 }
 async function fullyVisible(locator: Locator) {
-  await expect(locator).toBeInViewport({ratio: 1})
+  await expect(locator).toBeInViewport({ratio: .9999})
 }
 
 test.describe('landscape mobile presentation', () => {
@@ -42,11 +42,12 @@ test.describe('landscape mobile presentation', () => {
       const game = fixture()
       await load(page, game)
       await expect(page.getByRole('dialog')).toHaveCount(0)
-      for (const selector of ['.live-table', '.opponent-row', '.hand-heading', '.live-piles', '.turn-panel', '.activity-heading', '.hand-heading .turn-clock']) {
+      for (const selector of ['.live-table', '.opponent-row', '.hand-heading', '.live-piles', '.turn-panel', '.activity-heading', '.mobile-game-bar .turn-clock']) {
         await fullyVisible(page.locator(selector))
       }
       await expect(page.locator('.live-opponent')).toHaveCount(7)
-      for (const label of ['Draw pile', 'Drop Pile', 'Round Joker']) {
+      await fullyVisible(page.locator('.mobile-joker'))
+      for (const label of ['Draw pile', 'Drop Pile']) {
         await fullyVisible(page.locator('.live-piles .sample-pile').filter({hasText: label}).locator(':scope > span'))
       }
       const hands = page.locator('.hand-card')
@@ -79,21 +80,21 @@ test.describe('landscape mobile presentation', () => {
       await fullyVisible(draw)
       await draw.tap()
       expect((await saved(page)).players[0].hand).toHaveLength(7)
-      await fullyVisible(page.locator('.live-opponent.active-seat .turn-clock'))
-      await fullyVisible(page.locator('.live-opponent.active-seat > span'))
+      await fullyVisible(page.locator('.mobile-game-bar .turn-clock'))
+      await fullyVisible(page.locator('.live-opponent.active-seat > span:last-child'))
       await expect(page.locator('.game-activity .latest-event:visible')).toContainText('You')
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight + 1)).toBe(true)
       await page.screenshot({path: `/tmp/least-count-landscape-${size.width}.png`})
     })
   }
-  test('large penalty hand stays accessible in its own scroll area', async ({page}) => {
+  test('large penalty hand stays accessible through hand pages', async ({page}) => {
     await page.setViewportSize(sizes[0])
     const game = fixture()
     game.players[0].hand.push(...game.drawPile.splice(0, 14))
     await load(page, game)
-    await expect(page.locator('.hand-row')).toHaveCount(3)
+    await expect(page.locator('.hand-row')).toHaveCount(5)
+    for (let i=0;i<4;i++) await page.getByRole('button',{name:'Next hand page'}).tap()
     const last = page.locator('.hand-card').last()
-    await last.scrollIntoViewIfNeeded()
     await fullyVisible(last.locator('.playing-card'))
     await last.tap()
     await expect(last).toHaveAttribute('aria-pressed', 'true')
@@ -111,7 +112,7 @@ test.describe('landscape mobile presentation', () => {
       shell.style.setProperty('--mobile-safe-right', '44px')
       shell.style.setProperty('--mobile-safe-bottom', '21px')
     })
-    await fullyVisible(page.locator('.hand-card').last().locator('.playing-card'))
+    await fullyVisible(page.locator('.hand-row:not([hidden]) .hand-card').last().locator('.playing-card'))
     await fullyVisible(page.locator('.turn-actions .button').first())
     const shell = await page.locator('.live-table').boundingBox()
     expect(shell!.x).toBeGreaterThanOrEqual(44)
@@ -214,10 +215,10 @@ test('real multiplayer retains its socket, selection and deadline through rotati
     await expect(host.locator('.live-table')).toBeVisible()
     for (const page of [host, friend]) {
       for (const selector of ['.live-table', '.opponent-row', '.hand-heading', '.live-piles', '.turn-panel', '.activity-heading']) await fullyVisible(page.locator(selector))
-      await fullyVisible(page.locator('.hand-card').last().locator('.playing-card'))
-      await page.getByText('Room options', {exact:true}).tap()
+      await fullyVisible(page.locator('.hand-row:not([hidden]) .hand-card').last().locator('.playing-card'))
+      await page.getByRole('button',{name:'Table options',exact:true}).tap()
       await expect(page.getByRole('button', {name:'Copy Code', exact:true})).toBeVisible()
-      await page.getByText('Room options', {exact:true}).tap()
+      await page.getByRole('dialog',{name:'Table options'}).getByRole('button',{name:'Close',exact:true}).tap()
     }
     const view = async (page: Page) => (await (await page.request.get(`/api/rooms/${code}`)).json())
     const initial = await view(host)

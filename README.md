@@ -167,7 +167,7 @@ Phones and tablets use landscape. `public/manifest.webmanifest` requests `orient
 
 iOS Safari/Home Screen apps may ignore the manifest orientation preference. We do not request JavaScript orientation locks or rotate the game with CSS. A mobile-only **Rotate Your Phone** screen uses the viewport orientation media query and blocks pointer/keyboard interaction with `inert`. The underlying React tree stays mounted: hands, selections, sessions, WebSockets, and deadlines remain intact. **Live turns continue while the message is displayed.** Both landscape directions are supported. Desktop windows remain usable in portrait proportions, including narrow windows. Detection covers Android, iOS, and iPadOS's desktop user agent.
 
-Short mobile landscape screens use the same table, card artwork, and overlapping hand with a compact layout: table/hand on the left, actions/recent activity on the right. Extra penalty-hand rows, opponents beyond the visible seats, full history, and match scores remain available in their own scroll areas. Safe-area insets reserve room for cutouts/home indicators on either side. Inputs use 16px text to avoid iPhone focus zoom; pinch zoom is still available. On exceptionally short viewports (for example Safari controls or the keyboard taking most of the display), scrolling may be necessary.
+Mobile landscape gameplay uses a dedicated fixed viewport with the same felt table and card artwork. The hand and action bar share the bottom, Draw/Drop Piles occupy the center, and compact opponents and game information stay above them. Secondary information opens in overlays. See the fixed-screen architecture below. Inputs use 16px text to avoid iPhone focus zoom; pinch zoom remains available outside the gameplay presentation.
 
 **Install on iPhone:**
 
@@ -183,7 +183,7 @@ Short mobile landscape screens use the same table, card artwork, and overlapping
 - Launch from the Home Screen, check the name/icon/standalone view, and confirm portrait shows the rotation message.
 - Rotate left and right; inspect cutouts/home indicator, readable ranks/suits, names/card counts, timer, Draw/Drop Piles, Round Joker, action buttons, and Game Activity.
 - Select a card, rotate to portrait and back, and confirm the selection and round remain. Drop/draw once and check there are no duplicate actions.
-- Try a large penalty hand, swipe its additional rows, and check that every card can be selected. Check additional opponents and full activity history.
+- Try a large penalty hand, use its page arrows, and check that every card can be selected. Check every compact opponent and the full activity overlay.
 - Sign in with a verified email, reconnect after relaunch, and play a two-device room. While holding the active player's phone vertically, let a timed turn expire; verify the server applies the normal timeout and both devices agree.
 - After a deployment, reopen/reload and confirm the new version appears. Check keyboard focus and Safari browser controls as well as the Home Screen view.
 
@@ -201,6 +201,22 @@ npm run mobile:sync
 ```
 
 The mobile suite emulates iPhone touch viewports at 667 × 375, 844 × 390, 852 × 393, and 932 × 430; checks portrait/landscape transitions, state/selection/deadline preservation, cards/controls/log visibility, large hands, simulated safe insets, desktop/iPad detection, install assets/deep links, and a real Worker/WebSocket timeout behind the rotation screen. These are browser automation checks, not evidence of real Safari/Home Screen or native device execution. Existing verified-email tests use a mocked provider; actual email delivery and physical iPhone sessions remain manual checks.
+
+### Fixed-screen mobile gameplay architecture
+
+`MobileOrientation` supplies a presentation context shared by local and online screens. Only an active mobile landscape table gets the fixed `100dvh`/`100dvw` shell (with viewport-unit fallbacks); authentication, profiles, rules and other screens retain normal scrolling. CSS recalculates the grid and overlap on viewport changes and reserves `env(safe-area-inset-*)` on every side. Gameplay document scrolling and rubber-band overscroll are disabled **after** the layout allocates real space for all essential controls. Internal scrolling is confined to secondary dialogs and round results.
+
+- **Essential:** a narrow `MobileGameBar` shows round, active player, timer, Round Joker and 7 penalty. The felt center prioritizes Draw/Drop Piles. The bottom reserves space for the readable hand and 44px primary actions simultaneously.
+- **Supporting:** `OpponentSeat` adapts all one-to-seven opponents into a single compact row, with initials/photo, short name, card count, eliminated state and active-turn highlight. No opponent scrolling is needed. Tap an indicator for permitted public details; hidden cards stay private.
+- **Secondary:** `TableOverlay` uses native modal dialogs with focus containment, Close/Escape/backdrop dismissal and safe-area bounds. Table options contain room controls/help/match scores. Activity shows one latest-action line plus an Activity button; its dialog shows the latest **five** events newest first, and full history chronologically. Opening/closing dialogs never pauses or mutates a match.
+
+`PlayerHand` keeps ordinary one-to-seven-card hands on a single strip without paging. Larger hands use five-card pages, bounded overlap and the same 64–80px card widths rather than indefinitely shrinking cards. Arrow controls reach every card; selection lives in the existing parent game screen and survives paging, overlays and rotation. A received animated card reveals its page before flight measurement. Off-page selected cards depart from the visible hand anchor. Selected cards rise above neighbors with a slight horizontal offset to retain readable adjacent corners. Desktop hands keep their existing seven-card rows.
+
+The shared `TurnActions` preserves phase validation, eligibility and callbacks. Mobile hides redundant long hints; replacement choices retain an immediately available pickup plus a dialog for additional eligible cards. Existing validated Drop/Draw/pickup/Match and Drop/7 flights use live DOM measurements and a clipped fixed animation layer; new-card arrivals cover deal/penalty/round additions. A resize finishes decorative flights without replaying an action. Reduced-motion preferences are respected. No game-engine, scoring, authentication, backend or rulebook changes are involved.
+
+Run `npm run build` then `PLAYWRIGHT_PREVIEW=1 npx playwright test e2e/fixed-table.spec.ts`, or the full browser suite above. The fixed-table matrix covers **667 × 375, 800 × 360, 844 × 390, 852 × 393, 915 × 412, 932 × 430 and 960 × 432** with **2/4/6/8 players**, seven- and twenty-card hands; additional cases exercise 1/10/15/21/31 cards, overlays, all action phases, safe insets, rotation, deadline continuation and animated overflow. Tests check element bounds/readable sizes and reachability in addition to a non-scrolling document; hiding overflow alone is insufficient. Real-device Home Screen behavior, accessibility zoom and OS/browser UI still require manual checks, especially on viewports shorter than the tested sizes.
+
+Browser-emulation screenshots for review: [small iPhone/four players](docs/mobile-layout/iphone-small-4.png), [large iPhone/four players](docs/mobile-layout/iphone-large-4.png), [Android/eight players](docs/mobile-layout/android-8.png), [21-card hand](docs/mobile-layout/large-hand-21.png), [Power 7](docs/mobile-layout/power-seven.png), [replacement](docs/mobile-layout/replacement.png), [Declare Least](docs/mobile-layout/declare-least.png), and [activity overlay](docs/mobile-layout/activity.png). These are automated browser captures, not physical-device photographs.
 
 ### Android PWA Installation and Testing
 

@@ -1,3 +1,5 @@
+import { MobileGameBar } from '../components/MobileGameBar'
+import { OpponentSeat } from '../components/OpponentSeat'
 import { useActiveSeat } from '../hooks/useActiveSeat'
 import { TurnActions } from '../components/TurnActions'
 import { TurnTimer } from '../components/TurnTimer'
@@ -19,7 +21,7 @@ import {
 } from '../game/engine'
 import type { Action, GameState } from '../game/engine'
 import type { GameCard } from '../game/deck'
-import { TurnAnimation, cardRect } from '../components/TurnAnimation'
+import { TurnAnimation, cardRect, handCardRect } from '../components/TurnAnimation'
 import type { CardDeparture, TurnMotion } from '../components/TurnAnimation'
 import type { useLocalGame } from '../hooks/useLocalGame'
 
@@ -172,7 +174,7 @@ export function GamePage({
         ? human.hand
             .filter((card) => action.cardIds.includes(card.id))
             .flatMap((card) => {
-              const from = cardRect(elementFor('data-hand-card', card.id))
+              const from = handCardRect(elementFor('data-hand-card', card.id))
               return from ? [{ card, from }] : []
             })
         : []
@@ -190,7 +192,8 @@ export function GamePage({
         : (action.type === 'draw' || action.type === 'play-turn') &&
             action.cardId
           ? (cardRect(elementFor('data-discard-card', action.cardId)) ??
-            cardRect(elementFor('data-pickup-card', action.cardId)))
+            cardRect(elementFor('data-pickup-card', action.cardId)) ??
+            cardRect(document.querySelector('[data-discard-target] .playing-card')))
           : null
     const next = send(action)
     if (!next) return
@@ -248,6 +251,12 @@ export function GamePage({
       aria-labelledby="game-title"
     >
       {header}
+      <MobileGameBar round={game.round} activeName={current.name} seconds={playing && game.deadline!==null?seconds:null} joker={game.indicator} penalty={game.phase==='penalty'?(game.sevens?.amount??0):0} players={game.players}>
+        <p>Local practice · cutoff 100</p>
+        <button className="text-button" onClick={newGame} disabled={!!animation}>New game</button>
+        <a className="text-link" href="#/">Back to the lounge</a>
+        <a className="text-link" href="#/rules">How to Play →</a>
+      </MobileGameBar>
       {!canSave && (
         <p className="game-alert" role="status">
           Browser storage is unavailable. Refreshing will lose this match.
@@ -280,38 +289,14 @@ export function GamePage({
           aria-label="Simulated opponents; scroll horizontally to see all seats"
         >
           {game.players.slice(1).map((player, index) => (
-            <div
-              className={`live-opponent ${game.current === index + 1 && playing ? 'active-seat' : ''} ${player.eliminated ? 'eliminated-seat' : ''}`}
+            <OpponentSeat
               key={player.id}
-            >
-              <div className="avatar" aria-hidden="true">
-                {player.name[0]}
-              </div>
-              <strong>{player.name}</strong>
-              {playing && game.current === index + 1 && <TurnTimer seconds={game.deadline === null ? null : seconds} name={player.name} />}
-              <span>
-                {player.eliminated
-                  ? `Out · ${player.eliminationReason}`
-                  : `${player.hand.length} cards · ${player.score} pts`}
-              </span>
-              <small>
-                {game.current === index + 1 && playing
-                  ? 'Taking a turn'
-                  : player.eliminated
-                    ? `Final score: ${player.score}`
-                    : 'Simulated opponent'}
-              </small>
-              {!player.eliminated && (
-                <div className="opponent-cards" aria-hidden="true">
-                  {Array.from(
-                    { length: Math.min(3, player.hand.length) },
-                    (_, i) => (
-                      <PlayingCard faceDown key={i} />
-                    ),
-                  )}
-                </div>
-              )}
-            </div>
+              player={{displayName:player.name,avatarUrl:null}}
+              count={player.hand.length} score={player.score}
+              active={game.current===index+1 && playing} eliminated={player.eliminated}
+              status={player.eliminated ? `Out · ${player.eliminationReason}` : 'Simulated opponent'}
+              timer={game.current===index+1 && playing ? <TurnTimer seconds={game.deadline===null?null:seconds} name={player.name}/> : null}
+            />
           ))}
         </div>
         <div className="live-piles">
