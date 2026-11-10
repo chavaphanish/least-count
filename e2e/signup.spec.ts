@@ -276,7 +276,7 @@ test('signup remains usable at keyboard height with field values retained', asyn
   await keyboard(page, false)
   await bounds(page)
 })
-test('legacy profile completion is optional for login and private names save through owner endpoint', async ({
+test('legacy profile completion is optional for login and public names save through owner endpoint', async ({
   page,
 }) => {
   const fixture = await mock(page)
@@ -327,7 +327,7 @@ test('legacy profile completion is optional for login and private names save thr
   ).toBeEnabled()
   await page.getByRole('button', { name: 'Save identity' }).click()
   await expect(
-    page.getByText('Your identity is saved. Personal names stay private.'),
+    page.getByText('Your public name and username are saved.'),
   ).toBeVisible()
   await bounds(page)
   await keyboard(page, false)

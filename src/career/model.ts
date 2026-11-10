@@ -1,3 +1,4 @@
+import type { PlayerIdentityData } from '../shared/playerIdentity'
 export const LEVEL_BASE = 50
 export function xpRequiredForLevel(level: number, base = LEVEL_BASE) {
   return base * (level - 1) * level
@@ -11,7 +12,7 @@ export function xpProgress(xp: number, base = LEVEL_BASE) {
   return { level, xp, start, next, earned: xp - start, needed: next - start }
 }
 export type Metrics = Record<string, number>
-export type CareerPlayer = {
+export type CareerPlayer = PlayerIdentityData & {
   id: string
   username: string
   displayName: string
@@ -62,6 +63,9 @@ export type GameReport = {
     scores: {
       id: string
       name: string
+      username?: string
+      firstName?: string
+      lastName?: string
       total: number
       penalty: number
       score: number
@@ -70,6 +74,9 @@ export type GameReport = {
   players: {
     id: string
     name: string
+    username?: string
+    firstName?: string
+    lastName?: string
     score: number
     rank: number | null
     outcome: string

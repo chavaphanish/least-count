@@ -250,3 +250,17 @@ describe('avatar input validation', () => {
     ).toThrow()
   })
 })
+
+it('projects only public name fields and uses both names and handles in game events without changing game state', () => {
+  const r = full()
+  Object.assign(r.members[0], { accountType:'registered', username:'cardmaster99',firstName:'John',lastName:'Smith', email:'hidden@example.test',access_token:'secret' })
+  const waiting = view(r,r.hostId,0)
+  expect(waiting.members[0]).toMatchObject({username:'cardmaster99',firstName:'John',lastName:'Smith'})
+  expect(JSON.stringify(waiting)).not.toMatch(/hidden@example|secret|access_token|"email"/)
+  start(r,r.hostId,0,()=>0.5)
+  const before = JSON.stringify(r.game)
+  const snapshot = view(r,r.hostId,0)
+  expect(snapshot.game!.players[0]).toMatchObject({firstName:'John',username:'cardmaster99'})
+  expect(r.game!.players[0].name).toBe('John Smith (@cardmaster99)')
+  expect(JSON.stringify(r.game)).toBe(before)
+})

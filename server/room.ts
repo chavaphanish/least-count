@@ -1,3 +1,4 @@
+import { playerIdentity, withPlayerNames } from '../src/shared/playerIdentity'
 import { beginCareer, observeCareer } from './career'
 import type { CareerState } from './career'
 import { gameEvents } from '../src/game/events'
@@ -42,6 +43,7 @@ export const secureRandom = () =>
 export const publicPlayer = (p: PublicPlayer): PublicPlayer => ({
   id: p.id,
   displayName: p.displayName,
+  ...(p.accountType === 'registered' ? { username: p.username, firstName: p.firstName, lastName: p.lastName } : {}),
   avatarUrl: p.avatarUrl,
   accountType: p.accountType,
 })
@@ -181,7 +183,7 @@ export function start(
       'All configured seats must be filled by connected players.',
     )
   r.game = createGame(
-    r.members.map((m) => m.displayName),
+    r.members.map((m) => playerIdentity(m).label),
     now,
     random,
     {
@@ -290,9 +292,9 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
           penalty: g.sevens?.amount ?? 0,
           openingPenalty: g.sevens?.opening === true,
           canShow: canShow(g, id),
-          result: g.result,
+          result: withPlayerNames(g.result, r.members),
           log: g.log,
-          events: gameEvents(g),
+          events: withPlayerNames(gameEvents(g), r.members),
         }
       : null,
   }

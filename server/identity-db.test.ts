@@ -298,3 +298,33 @@ it('safely resolves case-insensitive conflicts in existing legacy display names'
   for(const row of rows)expect(row.username).toMatch(/^[a-z0-9]{8,24}$/)
  } finally {await collision.close()}
 })
+
+describe('public identity migration', () => {
+  const migrate = () => db.exec(readFileSync(new URL('../supabase/migrations/202611100002_public_player_names.sql', import.meta.url), 'utf8').replace(/^begin;$/m, '').replace(/^commit;$/m, ''))
+  it('preserves accounts, all profiles and career/social history exactly', async () => {
+    const old = await snapshot()
+    const profiles = await db.query('select * from public.profiles order by id')
+    await migrate()
+    expect(await snapshot()).toEqual(old)
+    expect(await db.query('select * from public.profiles order by id')).toEqual(profiles)
+  })
+  it('allows public names and usernames but excludes email and auth fields, pending users and anonymous users', async () => {
+    await signup(fresh,'pendinguser99')
+    await migrate()
+    await role(null)
+    const result = await db.query('select * from public.public_player_identities($1::uuid[])', [[first,second,fresh]])
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows).toContainEqual({id:second,username:expect.any(String),first_name:'Élodie',last_name:'O’Neill'})
+    expect(Object.keys(result.rows[0]).sort()).toEqual(['first_name','id','last_name','username'])
+    await expect(db.query('select email from auth.users')).rejects.toThrow(/permission denied/)
+  })
+  it('keeps legacy empty names safe and profile writes owner-only', async () => {
+    await migrate()
+    await role(second)
+    const result = await db.query('select * from public.public_player_identities($1::uuid[])', [[first]])
+    expect(result.rows[0]).toMatchObject({first_name:'',last_name:''})
+    await db.query("select public.update_player_identity('updateduser99','Updated','Name')")
+    await db.exec('reset role')
+    expect((await db.query('select first_name from public.profiles where id=$1',[first])).rows[0]).toEqual({first_name:''})
+  })
+})

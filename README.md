@@ -286,3 +286,5 @@ Set runtime variables using Cloudflare configuration for both deployment and pre
 3. Playtest registered/guest mixed rooms and reconnection on real mobile networks. Record new rule decisions before changing gameplay.
 
 Substantial changes use pull requests; this feature must not merge automatically. Small trivial updates may go directly to `main` when authorized.
+
+Registered player identities display first and last name together with @username; legacy accounts without names use their username until completed in My Profile. Email and authentication data remain private. Apply the additive [public identity migration](supabase/migrations/202611100002_public_player_names.sql) after the signup migration; it changes no stored accounts or career records.

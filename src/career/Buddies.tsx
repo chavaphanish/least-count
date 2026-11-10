@@ -1,3 +1,4 @@
+import { PlayerIdentity as Identity } from '../components/PlayerIdentity'
 import { ScreenPages, PagedItems } from '../components/ScreenPages'
 import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
@@ -151,7 +152,7 @@ export function Buddies() {
                   {list.data?.blocked.map((p) => (
                     <li key={p.id}>
                       <span>
-                        {p.displayName} · @{p.username}
+                        <Identity player={p} compact />
                       </span>
                       <BuddyAction
                         id={p.id}

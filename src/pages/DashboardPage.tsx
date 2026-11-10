@@ -5,6 +5,8 @@ import { CompactForm } from '../components/CompactForm'
 import { Leaderboard } from '../career/Leaderboard'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
+import { playerIdentity } from '../shared/playerIdentity'
+import { PlayerIdentity } from '../components/PlayerIdentity'
 import { Avatar } from '../components/Avatar'
 import {
   DEFAULT_ROOM_SETTINGS,
@@ -67,14 +69,14 @@ export function DashboardPage() {
       <div className="dashboard-heading">
         <div>
           <p className="eyebrow">YOUR NEXT CARD NIGHT STARTS HERE</p>
-          <h1>
-            Welcome, <em>{player.displayName}.</em>
+          <h1 aria-label={`Welcome, ${playerIdentity(player).label}.`}>
+            Welcome, <em><PlayerIdentity player={player} compact /></em>.
           </h1>
         </div>
         <div className="player-chip">
           <Avatar player={player} />
           <span>
-            <strong className="player-chip-name">{player.displayName}</strong>
+            <strong className="player-chip-name"><PlayerIdentity player={player} compact /></strong>
             <small>
               {player.accountType === 'guest'
                 ? 'Guest player'
@@ -124,7 +126,7 @@ export function DashboardPage() {
             <div className="account-menu">
               <h2>Settings</h2>
               <p>
-                {player.displayName} ·{' '}
+                <PlayerIdentity player={player} compact /> ·{' '}
                 {player.accountType === 'guest'
                   ? 'Guest player'
                   : 'Verified account'}

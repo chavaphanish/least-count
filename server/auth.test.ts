@@ -82,7 +82,7 @@ describe('provider-backed identity and profile authorization', () => {
     expect(auth!.identity.accountType).toBe('registered')
     expect('email' in auth!.identity).toBe(false)
   })
-  it('publishes the username while keeping personal fields out of room identities', async () => {
+  it('publishes names and username while excluding private session fields', async () => {
     Object.assign(row, {
       username: 'cardmaster99',
       first_name: 'José',
@@ -98,9 +98,8 @@ describe('provider-backed identity and profile authorization', () => {
       lastName: 'O’Neill',
       needsCompletion: true,
     })
-    expect(JSON.stringify(auth!.identity)).not.toMatch(
-      /José|O’Neill|firstName|lastName|profile/,
-    )
+    expect(auth!.identity).toMatchObject({ username: 'cardmaster99', firstName: 'José', lastName: 'O’Neill' })
+    expect(JSON.stringify(auth!.identity)).not.toMatch(/private@example|profile|needsCompletion|access_token/)
   })
   it('rejects unverified email before loading a profile', async () => {
     const calls = mockProvider(false)

@@ -1,3 +1,4 @@
+import { playerIdentity } from '../src/shared/playerIdentity'
 import { xpProgress } from '../src/career/model'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, publicConfig } from './auth'
@@ -71,6 +72,29 @@ export async function careerApi(request: Request, env: Env) {
         ? 'Player careers need the latest database migration. Please retry after setup.'
         : 'This player or action is unavailable. Refresh and retry.',
     )
+  const ids = new Set<string>()
+  function collect(value: unknown) {
+    if (Array.isArray(value)) return value.forEach(collect)
+    if (!value || typeof value !== 'object') return
+    const object = value as Record<string, unknown>
+    if (typeof object.id === 'string') {
+      const id = object.id.replace(/^user:/, '')
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) ids.add(id)
+    }
+    Object.values(object).forEach(collect)
+  }
+  collect(result.data)
+  const identities = new Map<string, { username: string; firstName: string; lastName: string }>()
+  const requested = [...ids]
+  for (let i = 0; i < requested.length; i += 100) {
+    const response = await client.rpc('public_player_identities', { player_ids: requested.slice(i, i + 100) })
+    // A missing migration keeps the existing username presentation usable during rollout.
+    if (response.error) {
+      if (response.error.code === 'PGRST202' || response.error.code === '42883') break
+      throw new ApiError(503, 'Player identities could not be loaded. Please retry.')
+    }
+    for (const row of response.data ?? []) identities.set(row.id, { username: row.username, firstName: row.first_name, lastName: row.last_name })
+  }
   // Only storage paths from the public projection become image URLs. Never return secrets.
   function images(value: unknown): unknown {
     if (Array.isArray(value)) return value.map(images)
@@ -81,8 +105,13 @@ export async function careerApi(request: Request, env: Env) {
         .filter(([key]) => key !== 'avatarPath')
         .map(([key, v]) => [key, images(v)]),
     )
-    if (typeof object.username === 'string')
-      next.displayName = `@${object.username}`
+    const identity = typeof object.id === 'string' ? identities.get(object.id.replace(/^user:/, '')) : undefined
+    if (identity) Object.assign(next, identity)
+    if (typeof next.username === 'string') {
+      const publicName = playerIdentity({ displayName: typeof object.displayName === 'string' ? object.displayName : '', ...identity, username: next.username })
+      next.displayName = publicName.primary
+      if ('name' in object) next.name = publicName.label
+    }
     if (typeof object.xp === 'number')
       next.progress = xpProgress(
         object.xp,

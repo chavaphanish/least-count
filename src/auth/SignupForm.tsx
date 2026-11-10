@@ -157,7 +157,7 @@ export function SignupForm({
             values: identity,
             onChange: (field, value) =>
               setIdentity((v) => ({ ...v, [field]: value })),
-            message: availability.message,
+            message: `${availability.message} Your name and @username are public.`,
           })}
         {step === 1 && (
           <>
