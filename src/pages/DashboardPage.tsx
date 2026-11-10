@@ -149,23 +149,26 @@ export function DashboardPage() {
           </div>
           {mobile && (
             <div className="mobile-main-menu">
-              <a className="button button-secondary" href="#/profile">
-                Player Profile
+              <a
+                className="button button-primary lounge-nav-button"
+                href="#/profile"
+              >
+                My Profile
               </a>
               <button
-                className="button button-secondary"
+                className="button button-primary lounge-nav-button"
                 onClick={() => go('ranking')}
               >
                 Leaderboards
               </button>
               <button
-                className="button button-secondary"
+                className="button button-primary lounge-nav-button"
                 onClick={() => go('buddies')}
               >
                 Buddies
               </button>
               <button
-                className="button button-secondary"
+                className="button button-primary lounge-nav-button"
                 onClick={() => go('settings')}
               >
                 Settings
@@ -177,8 +180,11 @@ export function DashboardPage() {
               How to Play
             </a>
             {!mobile && player.accountType === 'registered' && (
-              <a className="button button-secondary" href="#/profile">
-                Profile Settings
+              <a
+                className="button button-primary lounge-nav-button"
+                href="#/profile"
+              >
+                My Profile
               </a>
             )}
             <a className="text-link" href="#/game">
