@@ -1,3 +1,4 @@
+import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { displayName } from '../shared/multiplayer'
@@ -121,7 +122,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             local practice are available now.
           </p>
         )}
-        <form onSubmit={submit}>
+        <CompactForm shortSteps onSubmit={submit}>
           {(mode === 'guest' || mode === 'signup') && (
             <label>
               Display name
@@ -187,7 +188,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
                     ? 'Send reset link'
                     : 'Sign in'}
           </button>
-        </form>
+        </CompactForm>
         {mode === 'signin' && (
           <button
             className="text-button"

@@ -1,65 +1,114 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { Capacitor } from '@capacitor/core'
 
-const LandscapeContext = createContext(false)
-export const useMobileLandscape = () => useContext(LandscapeContext)
-
+type Viewport = {
+  mobile: boolean
+  width: number
+  height: number
+  keyboard: boolean
+}
+const ViewportContext = createContext<Viewport>({
+  mobile: false,
+  width: 0,
+  height: 0,
+  keyboard: false,
+})
+export const useAppViewport = () => useContext(ViewportContext)
+// Existing presentation consumers share this context in either physical orientation.
+export const useMobileLandscape = () => useAppViewport().mobile
 function mobileDevice() {
-  // Includes iPadOS's desktop user agent, without blocking touch-screen PCs.
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  return (
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  )
 }
-
-function portraitDisplay() {
-  // The viewport also covers portrait iPad split views. Where available, the
-  // physical orientation prevents a keyboard resize from revealing a portrait game.
-  return matchMedia('(orientation: portrait)').matches || screen.orientation?.type.startsWith('portrait') === true
+function dimensions() {
+  return {
+    width: Math.round(window.visualViewport?.width ?? innerWidth),
+    height: Math.round(window.visualViewport?.height ?? innerHeight),
+  }
 }
-
-/** Presentation only: children stay mounted and all game/session clocks keep running. */
 export function MobileOrientation({ children }: { children: ReactNode }) {
   const [mobile] = useState(mobileDevice)
-  const [portrait, setPortrait] = useState(portraitDisplay)
-  const message = useRef<HTMLDivElement>(null)
-  const blocked = mobile && portrait
+  const [viewport, setViewport] = useState<Viewport>(() => ({
+    mobile,
+    ...dimensions(),
+    keyboard: false,
+  }))
+  const baseline = useRef(dimensions())
+  const requested = useRef(false)
+  const keyboardVisible = useRef(false)
   useEffect(() => {
-    const query = matchMedia('(orientation: portrait)')
-    const orientation = screen.orientation
-    const update = () => setPortrait(portraitDisplay())
-    query.addEventListener('change', update)
-    orientation?.addEventListener?.('change', update)
-    window.addEventListener('orientationchange', update)
+    const update = () => {
+      const size = dimensions()
+      const input =
+        document.activeElement?.matches('input:not([type=file]),textarea') ??
+        false
+      if (Math.abs(baseline.current.width - size.width) > 80)
+        baseline.current = size
+      else
+        baseline.current = {
+          width: size.width,
+          height: Math.max(size.height, baseline.current.height),
+        }
+      const keyboard =
+        baseline.current.height - size.height > 70 &&
+        (input ||
+          !!document.querySelector('form:focus-within') ||
+          keyboardVisible.current)
+      keyboardVisible.current = keyboard
+      setViewport({ mobile, ...size, keyboard })
+      if (mobile) window.scrollTo(0, 0)
+    }
+    window.visualViewport?.addEventListener('resize', update)
+    window.visualViewport?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+    document.addEventListener('focusin', update)
+    document.addEventListener('focusout', update)
     update()
     return () => {
-      query.removeEventListener('change', update)
-      orientation?.removeEventListener?.('change', update)
-      window.removeEventListener('orientationchange', update)
+      window.visualViewport?.removeEventListener('resize', update)
+      window.visualViewport?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      document.removeEventListener('focusin', update)
+      document.removeEventListener('focusout', update)
     }
-  }, [])
+  }, [mobile])
   useEffect(() => {
-    if (!blocked) return
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    message.current?.focus({ preventScroll: true })
-    return () => {
-      if (previous?.isConnected) previous.focus({ preventScroll: true })
+    const installed =
+      matchMedia('(display-mode: standalone)').matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (mode: string) => Promise<void>
     }
-  }, [blocked])
+    if (
+      !mobile ||
+      !installed ||
+      Capacitor.isNativePlatform() ||
+      requested.current ||
+      !orientation?.lock
+    )
+      return
+    requested.current = true
+    // One supported request, no resize loop, fullscreen coercion or orientation warning.
+    void orientation.lock('landscape').catch(() => {})
+  }, [mobile])
   return (
-    <div className="mobile-shell" data-mobile-device={mobile || undefined} data-portrait={blocked || undefined}>
-      <div className="orientation-content" inert={blocked} aria-hidden={blocked || undefined}>
-        <LandscapeContext.Provider value={mobile && !portrait}>{children}</LandscapeContext.Provider>
+    <ViewportContext.Provider value={viewport}>
+      <div
+        className="mobile-shell"
+        data-mobile-device={mobile || undefined}
+        data-keyboard={(mobile && viewport.keyboard) || undefined}
+        style={
+          {
+            '--app-width': `${viewport.width}px`,
+            '--app-height': `${viewport.height}px`,
+          } as CSSProperties
+        }
+      >
+        <div className="orientation-content">{children}</div>
       </div>
-      {blocked && (
-        <div className="rotation-screen" role="dialog" aria-modal="true" aria-labelledby="rotation-title" aria-describedby="rotation-description" tabIndex={-1} ref={message}>
-          <svg className="rotation-icon" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-            <rect x="32" y="20" width="36" height="60" rx="6" />
-            <path d="M44 72h12M15 40a36 36 0 0 1 58-22m0 0V6m0 12H61M85 60a36 36 0 0 1-58 22m0 0v12m0-12h12" />
-          </svg>
-          <h1 id="rotation-title">Rotate Your Phone</h1>
-          <p id="rotation-description">Least Count is designed to be played in landscape mode.</p>
-          <p className="rotation-detail">Turn your phone sideways to return to your table. Live turns and timers continue.</p>
-        </div>
-      )}
-    </div>
+    </ViewportContext.Provider>
   )
 }

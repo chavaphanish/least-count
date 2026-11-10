@@ -21,7 +21,11 @@ import {
 } from '../game/engine'
 import type { Action, GameState } from '../game/engine'
 import type { GameCard } from '../game/deck'
-import { TurnAnimation, cardRect, handCardRect } from '../components/TurnAnimation'
+import {
+  TurnAnimation,
+  cardRect,
+  handCardRect,
+} from '../components/TurnAnimation'
 import type { CardDeparture, TurnMotion } from '../components/TurnAnimation'
 import type { useLocalGame } from '../hooks/useLocalGame'
 
@@ -110,8 +114,8 @@ export function GamePage({
           <p className="eyebrow">A FRESH DECK. A NEW BEGINNING.</p>
           <h2>Pull up a chair.</h2>
           <p>
-            Seven cards each. Keep your count low. Declare Least at five or less,
-            and stay below 100 points.
+            Seven cards each. Keep your count low. Declare Least at five or
+            less, and stay below 100 points.
           </p>
           <label htmlFor="player-count">Players at the table</label>
           <select
@@ -193,7 +197,9 @@ export function GamePage({
             action.cardId
           ? (cardRect(elementFor('data-discard-card', action.cardId)) ??
             cardRect(elementFor('data-pickup-card', action.cardId)) ??
-            cardRect(document.querySelector('[data-discard-target] .playing-card')))
+            cardRect(
+              document.querySelector('[data-discard-target] .playing-card'),
+            ))
           : null
     const next = send(action)
     if (!next) return
@@ -247,15 +253,33 @@ export function GamePage({
 
   return (
     <section
-      className={`game-page active-game ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      data-hand-count={human.hand.length}
+      className={`game-page active-game ${human.hand.length > 14 ? 'expanded-hand' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
       aria-labelledby="game-title"
     >
       {header}
-      <MobileGameBar round={game.round} activeName={current.name} seconds={playing && game.deadline!==null?seconds:null} joker={game.indicator} penalty={game.phase==='penalty'?(game.sevens?.amount??0):0} players={game.players}>
+      <MobileGameBar
+        round={game.round}
+        activeName={current.name}
+        seconds={playing && game.deadline !== null ? seconds : null}
+        joker={game.indicator}
+        penalty={game.phase === 'penalty' ? (game.sevens?.amount ?? 0) : 0}
+        players={game.players}
+      >
         <p>Local practice · cutoff 100</p>
-        <button className="text-button" onClick={newGame} disabled={!!animation}>New game</button>
-        <a className="text-link" href="#/">Back to the lounge</a>
-        <a className="text-link" href="#/rules">How to Play →</a>
+        <button
+          className="text-button"
+          onClick={newGame}
+          disabled={!!animation}
+        >
+          New game
+        </button>
+        <a className="text-link" href="#/">
+          Back to the lounge
+        </a>
+        <a className="text-link" href="#/rules">
+          How to Play →
+        </a>
       </MobileGameBar>
       {!canSave && (
         <p className="game-alert" role="status">
@@ -291,11 +315,24 @@ export function GamePage({
           {game.players.slice(1).map((player, index) => (
             <OpponentSeat
               key={player.id}
-              player={{displayName:player.name,avatarUrl:null}}
-              count={player.hand.length} score={player.score}
-              active={game.current===index+1 && playing} eliminated={player.eliminated}
-              status={player.eliminated ? `Out · ${player.eliminationReason}` : 'Simulated opponent'}
-              timer={game.current===index+1 && playing ? <TurnTimer seconds={game.deadline===null?null:seconds} name={player.name}/> : null}
+              player={{ displayName: player.name, avatarUrl: null }}
+              count={player.hand.length}
+              score={player.score}
+              active={game.current === index + 1 && playing}
+              eliminated={player.eliminated}
+              status={
+                player.eliminated
+                  ? `Out · ${player.eliminationReason}`
+                  : 'Simulated opponent'
+              }
+              timer={
+                game.current === index + 1 && playing ? (
+                  <TurnTimer
+                    seconds={game.deadline === null ? null : seconds}
+                    name={player.name}
+                  />
+                ) : null
+              }
             />
           ))}
         </div>
@@ -352,11 +389,20 @@ export function GamePage({
           </div>
         </div>
         <PlayerHand
-          player={auth.user?.player ?? { displayName: human.name, avatarUrl: null }}
+          player={
+            auth.user?.player ?? { displayName: human.name, avatarUrl: null }
+          }
           total={handTotal(human.hand, game.indicator.rank)}
           score={human.score}
           active={playing && game.current === 0}
-          timer={playing && game.current === 0 ? <TurnTimer seconds={game.deadline === null ? null : seconds} name={human.name} /> : null}
+          timer={
+            playing && game.current === 0 ? (
+              <TurnTimer
+                seconds={game.deadline === null ? null : seconds}
+                name={human.name}
+              />
+            ) : null
+          }
           empty={
             human.eliminated
               ? 'Your cards have been removed from play.'
@@ -398,9 +444,21 @@ export function GamePage({
         onDrop={discardSelected}
         onDraw={() => chooseDraw('pile')}
         onPickup={(id) => chooseDraw('discard', id)}
-        onDeclare={() => { setSelected([]); send({ type: 'show', playerId: human.id }) }}
-        onPenalty={() => { setSelected([]); send({ type: 'accept-penalty', playerId: human.id }) }}
-        onSelectAll={() => setSelected(human.hand.filter(card => card.rank === selectedCards[0]?.rank).map(card => card.id))}
+        onDeclare={() => {
+          setSelected([])
+          send({ type: 'show', playerId: human.id })
+        }}
+        onPenalty={() => {
+          setSelected([])
+          send({ type: 'accept-penalty', playerId: human.id })
+        }}
+        onSelectAll={() =>
+          setSelected(
+            human.hand
+              .filter((card) => card.rank === selectedCards[0]?.rank)
+              .map((card) => card.id),
+          )
+        }
         onClear={() => setSelected([])}
       />
       {animation && (

@@ -1,3 +1,6 @@
+import { ScreenPages } from '../components/ScreenPages'
+import { useMobileLandscape } from '../components/MobileOrientation'
+import { CompactForm } from '../components/CompactForm'
 import { CareerProfile } from '../career/CareerProfile'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
@@ -8,6 +11,8 @@ import {
   displayName,
 } from '../shared/multiplayer'
 export function ProfilePage() {
+  const mobile = useMobileLandscape()
+  const [section, setSection] = useState(0)
   const auth = useAuth()
   const user = auth.user!
   const [name, setName] = useState(user.player.displayName)
@@ -151,94 +156,121 @@ export function ProfilePage() {
       <h1>
         Player <em>profile.</em>
       </h1>
-      <CareerProfile />
-      <div id="profile-editor" className="career-section profile-editor">
-        <h2>Edit Profile</h2>
-        <Avatar
-          player={{
-            ...user.player,
-            avatarUrl: preview ?? user.player.avatarUrl,
-          }}
-        />
-        <p className="field-hint">
-          {processing
-            ? 'Preparing your preview…'
-            : pending
-              ? 'Unsaved changes'
-              : 'All changes saved'}
-        </p>
-        <form onSubmit={save}>
-          <label>
-            Display name
-            <input
-              id="profile-name"
-              required
-              minLength={2}
-              maxLength={24}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <label>
-            Profile picture
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={busy || processing}
-              onChange={(e) => void choose(e.target.files?.[0])}
-            />
-          </label>
-          <p className="field-hint">
-            JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped and
-            optimized to 512 × 512. Profile pictures are visible to other
-            players.
-          </p>
-          <div className="auth-actions">
-            <button
-              className="button button-primary"
-              disabled={busy || processing || !pending}
-            >
-              {busy
-                ? 'Uploading / saving…'
-                : processing
-                  ? 'Preparing photo…'
-                  : error && pending
-                    ? 'Retry save'
-                    : 'Save profile'}
-            </button>
-            {user.player.avatarUrl && (
-              <button
-                type="button"
-                className="button button-secondary"
-                disabled={busy}
-                onClick={remove}
+      <ScreenPages
+        label="Profile views"
+        value={section}
+        onChange={setSection}
+        pages={[
+          {
+            label: 'Career',
+            content: (
+              <CareerProfile
+                onEdit={mobile ? () => setSection(1) : undefined}
+              />
+            ),
+          },
+          {
+            label: 'Settings',
+            content: (
+              <div
+                id="profile-editor"
+                className="career-section profile-editor"
               >
-                Remove picture
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-      <dl className="account-details">
-        <dt>Email (private)</dt>
-        <dd>{user.email}</dd>
-        <dt>Account created</dt>
-        <dd>{new Date(user.createdAt).toLocaleDateString()}</dd>
-        <dt>Last activity</dt>
-        <dd>{new Date(user.lastActiveAt).toLocaleString()}</dd>
-        <dt>Player ID</dt>
-        <dd>{user.player.id}</dd>
-      </dl>
-      {error && (
-        <p className="game-alert" role="alert">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p className="form-notice" role="status">
-          {notice}
-        </p>
-      )}
+                <h2>Edit Profile</h2>
+                <Avatar
+                  player={{
+                    ...user.player,
+                    avatarUrl: preview ?? user.player.avatarUrl,
+                  }}
+                />
+                <p className="field-hint">
+                  {processing
+                    ? 'Preparing your preview…'
+                    : pending
+                      ? 'Unsaved changes'
+                      : 'All changes saved'}
+                </p>
+                <CompactForm onSubmit={save}>
+                  <label>
+                    Display name
+                    <input
+                      id="profile-name"
+                      required
+                      minLength={2}
+                      maxLength={24}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Profile picture
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={busy || processing}
+                      onChange={(e) => void choose(e.target.files?.[0])}
+                    />
+                  </label>
+                  <p className="field-hint">
+                    JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped
+                    and optimized to 512 × 512. Profile pictures are visible to
+                    other players.
+                  </p>
+                  <div className="auth-actions">
+                    <button
+                      className="button button-primary"
+                      disabled={busy || processing || !pending}
+                    >
+                      {busy
+                        ? 'Uploading / saving…'
+                        : processing
+                          ? 'Preparing photo…'
+                          : error && pending
+                            ? 'Retry save'
+                            : 'Save profile'}
+                    </button>
+                    {user.player.avatarUrl && (
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        disabled={busy}
+                        onClick={remove}
+                      >
+                        Remove picture
+                      </button>
+                    )}
+                  </div>
+                </CompactForm>
+                {error && (
+                  <p className="game-alert" role="alert">
+                    {error}
+                  </p>
+                )}
+                {notice && (
+                  <p className="form-notice" role="status">
+                    {notice}
+                  </p>
+                )}
+              </div>
+            ),
+          },
+          {
+            label: 'Account',
+            content: (
+              <dl className="account-details">
+                <dt>Email (private)</dt>
+                <dd>{user.email}</dd>
+                <dt>Account created</dt>
+                <dd>{new Date(user.createdAt).toLocaleDateString()}</dd>
+                <dt>Last activity</dt>
+                <dd>{new Date(user.lastActiveAt).toLocaleString()}</dd>
+                <dt>Player ID</dt>
+                <dd>{user.player.id}</dd>
+              </dl>
+            ),
+          },
+        ]}
+      />
     </section>
   )
 }

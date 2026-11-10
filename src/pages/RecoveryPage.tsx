@@ -1,3 +1,4 @@
+import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 export function RecoveryPage() {
@@ -28,7 +29,7 @@ export function RecoveryPage() {
     <section className="profile-panel">
       <h1>Choose a new password.</h1>
       <p>Use the reset link from your email to access this form.</p>
-      <form onSubmit={submit}>
+      <CompactForm onSubmit={submit}>
         <label>
           New password
           <input
@@ -44,7 +45,7 @@ export function RecoveryPage() {
         <button className="button button-primary" disabled={busy || !auth.user}>
           {busy ? 'Saving…' : 'Save new password'}
         </button>
-      </form>
+      </CompactForm>
       {error && (
         <p role="alert" className="game-alert">
           {error}

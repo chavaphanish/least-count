@@ -1,3 +1,5 @@
+import { ScreenPages, PagedItems } from '../components/ScreenPages'
+import { useMobileLandscape } from '../components/MobileOrientation'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { Avatar } from '../components/Avatar'
@@ -19,7 +21,14 @@ function metric(stats: Metrics, key: string) {
     return '—'
   return key.endsWith('Ms') ? duration(n ?? 0) : (n ?? 0).toLocaleString()
 }
-export function CareerProfile({ username }: { username?: string }) {
+export function CareerProfile({
+  username,
+  onEdit,
+}: {
+  username?: string
+  onEdit?: () => void
+}) {
+  const mobile = useMobileLandscape()
   const auth = useAuth()
   const [tab, setTab] = useState('Overview')
   const [offset, setOffset] = useState(0)
@@ -53,8 +62,38 @@ export function CareerProfile({ username }: { username?: string }) {
   const tabs = data.own
     ? ['Overview', 'Statistics', 'Game History', 'Buddies']
     : ['Overview']
+  const overviewDetails = (
+    <>
+      <p className="field-hint">
+        Verified career games only. Earlier matches are not backfilled. Mixed
+        guest rooms and local practice remain casual.
+      </p>
+      <div className="career-summary">
+        {Object.entries({
+          'Average Move Time': stats.completedTurns
+            ? duration((stats.decisionMs ?? 0) / stats.completedTurns)
+            : '—',
+          'Total Playing Time': duration(stats.playingMs ?? 0),
+          'Least Success Rate': percentage(
+            stats.successfulDeclarations ?? 0,
+            stats.declarations ?? 0,
+          ),
+          'Current Win Streak': stats.currentWinStreak ?? 0,
+        }).map(([label, value]) => (
+          <div key={label}>
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )
   return (
-    <section className="career-profile" aria-label="Player career">
+    <section
+      className="career-profile"
+      data-career-tab={tab}
+      aria-label="Player career"
+    >
       <header className="career-profile-header">
         <Avatar player={p} />
         <div>
@@ -73,6 +112,11 @@ export function CareerProfile({ username }: { username?: string }) {
             className="button button-secondary compact-button"
             href={username ? '#/profile' : '#profile-editor'}
             onClick={(e) => {
+              if (mobile && onEdit) {
+                e.preventDefault()
+                onEdit()
+                return
+              }
               if (username) return
               e.preventDefault()
               document
@@ -115,137 +159,154 @@ export function CareerProfile({ username }: { username?: string }) {
           </button>
         ))}
       </div>
-      {tab === 'Overview' && (
-        <>
-          <div className="career-summary">
-            {Object.entries({
-              'Games Played': p.gamesPlayed,
-              'Games Won': p.gamesWon,
-              'Win Rate': percentage(p.gamesWon, p.gamesPlayed),
-              ...(data.own ? { 'Rounds Played': stats.roundsPlayed ?? 0 } : {}),
-            }).map(([label, value]) => (
-              <div key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
+      <div className="career-tab-content">
+        {tab === 'Overview' && (
+          <ScreenPages
+            label="Overview sections"
+            pages={[
+              {
+                label: 'Summary',
+                content: (
+                  <>
+                    <div className="career-summary">
+                      {Object.entries({
+                        'Games Played': p.gamesPlayed,
+                        'Games Won': p.gamesWon,
+                        'Win Rate': percentage(p.gamesWon, p.gamesPlayed),
+                        ...(data.own
+                          ? { 'Rounds Played': stats.roundsPlayed ?? 0 }
+                          : {}),
+                      }).map(([label, value]) => (
+                        <div key={label}>
+                          <strong>{value}</strong>
+                          <span>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {!data.own && (
+                      <p className="field-hint">
+                        Detailed statistics, game history, and frequent
+                        opponents are private to the player.
+                      </p>
+                    )}
+                  </>
+                ),
+              },
+              ...(data.own
+                ? [
+                    { label: 'Career details', content: overviewDetails },
+                    {
+                      label: 'Recent Games',
+                      content: (
+                        <History games={(data.games ?? []).slice(0, 5)} />
+                      ),
+                    },
+                    {
+                      label: 'Opponents',
+                      content: <Opponents data={data} refresh={refresh} />,
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        )}
+        {tab === 'Statistics' && data.own && (
+          <>
+            <div className="career-summary">
+              <div>
+                <strong>
+                  {average(stats.finalizedRounds ?? 0, p.gamesPlayed)}
+                </strong>
+                <span>Rounds per finalized game</span>
               </div>
-            ))}
-          </div>
-          {data.own && (
-            <>
-              <p className="field-hint">
-                Verified career games only. Earlier matches are not backfilled.
-                Mixed guest rooms and local practice remain casual.
-              </p>
-              <div className="career-summary">
-                {Object.entries({
-                  'Average Move Time': stats.completedTurns
-                    ? duration((stats.decisionMs ?? 0) / stats.completedTurns)
-                    : '—',
-                  'Total Playing Time': duration(stats.playingMs ?? 0),
-                  'Least Success Rate': percentage(
-                    stats.successfulDeclarations ?? 0,
-                    stats.declarations ?? 0,
-                  ),
-                  'Current Win Streak': stats.currentWinStreak ?? 0,
-                }).map(([label, value]) => (
-                  <div key={label}>
-                    <strong>{value}</strong>
-                    <span>{label}</span>
-                  </div>
-                ))}
+              <div>
+                <strong>
+                  {average(stats.declaredTotal ?? 0, stats.declarations ?? 0)}
+                </strong>
+                <span>Average declared hand</span>
               </div>
-              <h3>Recent Games</h3>
-              <History games={(data.games ?? []).slice(0, 5)} />
-              <h3>Most Played Against</h3>
-              <Opponents data={data} refresh={refresh} />
-            </>
-          )}
-          {!data.own && (
-            <p className="field-hint">
-              Detailed statistics, game history, and frequent opponents are
-              private to the player.
-            </p>
-          )}
-        </>
-      )}
-      {tab === 'Statistics' && data.own && (
-        <>
-          <div className="career-summary">
-            <div>
-              <strong>
-                {average(stats.finalizedRounds ?? 0, p.gamesPlayed)}
-              </strong>
-              <span>Rounds per finalized game</span>
+              <div>
+                <strong>
+                  {average(
+                    stats.roundPenalties ?? 0,
+                    stats.roundsCompleted ?? 0,
+                  )}
+                </strong>
+                <span>Average completed-round penalty</span>
+              </div>
             </div>
-            <div>
-              <strong>
-                {average(stats.declaredTotal ?? 0, stats.declarations ?? 0)}
-              </strong>
-              <span>Average declared hand</span>
-            </div>
-            <div>
-              <strong>
-                {average(stats.roundPenalties ?? 0, stats.roundsCompleted ?? 0)}
-              </strong>
-              <span>Average completed-round penalty</span>
-            </div>
-          </div>
-          {Object.entries(METRIC_GROUPS).map(([group, metrics]) => (
-            <section className="career-section" key={group}>
-              <h3>{group}</h3>
-              <dl className="metric-list">
-                {Object.entries(metrics).map(([key, label]) => (
-                  <div key={key}>
-                    <dt
-                      title={
-                        key.endsWith('Ms')
-                          ? 'Server-recorded durations; animation time cannot be separated from elapsed turn time.'
-                          : 'Accepted server game events only. See career definitions in the README.'
-                      }
+            <ScreenPages
+              label="Statistic groups"
+              pages={Object.entries(METRIC_GROUPS).map(([group, metrics]) => ({
+                label: group,
+                content: (
+                  <section className="career-section" key={group}>
+                    <h3>{group}</h3>
+                    <PagedItems
+                      as="dl"
+                      className="metric-list"
+                      label="metrics"
+                      size={4}
                     >
-                      {label}
-                    </dt>
-                    <dd>{metric(stats, key)}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ))}
-        </>
-      )}
-      {tab === 'Game History' && data.own && (
-        <>
-          <p className="field-hint">
-            Started games stay active until finalized or abandoned.
-            Score/timeout elimination is recorded as a loss once the match
-            finishes.
-          </p>
-          <History games={data.games ?? []} />
-          <div className="career-pagination">
-            <button
-              className="text-button"
-              disabled={!offset || loading}
-              onClick={() => setOffset((n) => n - 20)}
-            >
-              Previous games
-            </button>
-            <button
-              className="text-button"
-              disabled={(data.games?.length ?? 0) < 20 || loading}
-              onClick={() => setOffset((n) => n + 20)}
-            >
-              Next games
-            </button>
-          </div>
-        </>
-      )}
-      {tab === 'Buddies' && data.own && (
-        <>
-          <Buddies />
-          <h3>Most Played Against</h3>
-          <Opponents data={data} refresh={refresh} />
-        </>
-      )}
+                      {Object.entries(metrics).map(([key, label]) => (
+                        <div key={key}>
+                          <dt
+                            title={
+                              key.endsWith('Ms')
+                                ? 'Server-recorded durations; animation time cannot be separated from elapsed turn time.'
+                                : 'Accepted server game events only. See career definitions in the README.'
+                            }
+                          >
+                            {label}
+                          </dt>
+                          <dd>{metric(stats, key)}</dd>
+                        </div>
+                      ))}
+                    </PagedItems>
+                  </section>
+                ),
+              }))}
+            />
+          </>
+        )}
+        {tab === 'Game History' && data.own && (
+          <>
+            <p className="field-hint">
+              Started games stay active until finalized or abandoned.
+              Score/timeout elimination is recorded as a loss once the match
+              finishes.
+            </p>
+            <History games={data.games ?? []} />
+            <div className="career-pagination">
+              <button
+                className="text-button"
+                disabled={!offset || loading}
+                onClick={() => setOffset((n) => n - 20)}
+              >
+                Previous games
+              </button>
+              <button
+                className="text-button"
+                disabled={(data.games?.length ?? 0) < 20 || loading}
+                onClick={() => setOffset((n) => n + 20)}
+              >
+                Next games
+              </button>
+            </div>
+          </>
+        )}
+        {tab === 'Buddies' && data.own && (
+          <>
+            <Buddies />
+            {!mobile && (
+              <>
+                <h3>Most Played Against</h3>
+                <Opponents data={data} refresh={refresh} />
+              </>
+            )}
+          </>
+        )}
+      </div>
     </section>
   )
 }
@@ -263,7 +324,7 @@ function Opponents({
           Finish career games to discover your frequent opponents.
         </p>
       )}
-      <ul className="social-list">
+      <PagedItems as="ul" className="social-list" label="opponents" size={2}>
         {data.opponents?.map((p) => (
           <li key={p.id}>
             <PlayerIdentity player={p} />
@@ -283,7 +344,7 @@ function Opponents({
             </div>
           </li>
         ))}
-      </ul>
+      </PagedItems>
     </>
   )
 }
@@ -293,7 +354,7 @@ function History({ games }: { games: GameReport[] }) {
   return (
     <>
       {!games.length && <p className="field-hint">No recorded games yet.</p>}
-      <ul className="history-list">
+      <PagedItems as="ul" className="history-list" label="history" size={2}>
         {games.map((game) => {
           const own = game.players.find((p) => p.id === uid)
           return (
@@ -320,7 +381,7 @@ function History({ games }: { games: GameReport[] }) {
             </li>
           )
         })}
-      </ul>
+      </PagedItems>
     </>
   )
 }
@@ -331,7 +392,7 @@ export function GameHistoryReport({ id }: { id: string }) {
   )
   const mine = data?.players.find((p) => p.id === auth.user!.player.id)
   return (
-    <section className="career-section">
+    <section className="career-section game-report">
       <a href="#/profile" className="text-link">
         ← Player profile
       </a>
@@ -346,53 +407,69 @@ export function GameHistoryReport({ id }: { id: string }) {
           )}
         </p>
       ) : (
-        <>
-          <p>
-            {data.status} · {data.players.length} players · {data.rounds.length}{' '}
-            rounds · {data.xp ?? 0} XP earned
-          </p>
-          <p>
-            {mine?.stats.completedTurns ?? 0} completed turns · Average move{' '}
-            {mine?.stats.completedTurns
-              ? duration(
-                  (mine.stats.decisionMs ?? 0) / mine.stats.completedTurns,
-                )
-              : '—'}
-          </p>
-          <ul>
-            {data.players.map((p) => (
-              <li key={p.id}>
-                {p.name} · {p.outcome} · score {p.score} · place {p.rank ?? '—'}
-                {p.elimination === 'score'
-                  ? ' · score eliminated'
-                  : p.elimination === 'timeout'
-                    ? ' · timeout eliminated'
-                    : ''}
-              </li>
-            ))}
-          </ul>
-          {data.rounds.map((round) => (
-            <section className="career-section" key={round.round}>
-              <h2>Round {round.round}</h2>
-              <p>
-                {round.reason === 'show'
-                  ? `Least ${round.successful ? 'successful' : 'failed'}`
-                  : round.reason}
-              </p>
-              <ul>
-                {round.scores.map((score) => (
-                  <li key={score.id}>
-                    {score.name}: hand {score.total}, +{score.penalty} penalty,{' '}
-                    {score.score} cumulative
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-          <p className="field-hint">
-            Historical private hands are never stored in these reports.
-          </p>
-        </>
+        <ScreenPages
+          label="Report sections"
+          pages={[
+            {
+              label: 'Summary',
+              content: (
+                <>
+                  <p>
+                    {data.status} · {data.players.length} players ·{' '}
+                    {data.rounds.length} rounds · {data.xp ?? 0} XP earned
+                  </p>
+                  <p>
+                    {mine?.stats.completedTurns ?? 0} completed turns · Average
+                    move{' '}
+                    {mine?.stats.completedTurns
+                      ? duration(
+                          (mine.stats.decisionMs ?? 0) /
+                            mine.stats.completedTurns,
+                        )
+                      : '—'}
+                  </p>
+                  <p className="field-hint">
+                    Historical private hands are never stored in these reports.
+                  </p>
+                  <PagedItems as="ul" label="players" size={3}>
+                    {data.players.map((p) => (
+                      <li key={p.id}>
+                        {p.name} · {p.outcome} · score {p.score} · place{' '}
+                        {p.rank ?? '—'}
+                        {p.elimination === 'score'
+                          ? ' · score eliminated'
+                          : p.elimination === 'timeout'
+                            ? ' · timeout eliminated'
+                            : ''}
+                      </li>
+                    ))}
+                  </PagedItems>
+                </>
+              ),
+            },
+            ...data.rounds.map((round) => ({
+              label: `Round ${round.round}`,
+              content: (
+                <section className="career-section" key={round.round}>
+                  <h2>Round {round.round}</h2>
+                  <p>
+                    {round.reason === 'show'
+                      ? `Least ${round.successful ? 'successful' : 'failed'}`
+                      : round.reason}
+                  </p>
+                  <PagedItems as="ul" label="scores" size={3}>
+                    {round.scores.map((score) => (
+                      <li key={score.id}>
+                        {score.name}: hand {score.total}, +{score.penalty}{' '}
+                        penalty, {score.score} cumulative
+                      </li>
+                    ))}
+                  </PagedItems>
+                </section>
+              ),
+            })),
+          ]}
+        />
       )}
     </section>
   )
