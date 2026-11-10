@@ -1,18 +1,7 @@
 /* Keep desktop behavior intact. Device detection also handles iPadOS desktop UA. */
-.rotation-screen {
-  position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 20px; text-align: center;
-  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
-  background: radial-gradient(ellipse at center, #21634c, #0c2e26 75%); outline: none;
-}
-.rotation-screen h1 { font-family: 'Libre Caslon Display', Georgia, serif; font-weight: 400; font-size: 38px; }
-.rotation-screen p { max-width: 310px; line-height: 1.7; }
-.rotation-screen .rotation-detail { font-size: 12px; color: var(--muted); }
-.rotation-icon { width: 100px; height: 100px; color: var(--gold); }
 .mobile-room-options { display: none; }
 .pwa-status { position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); z-index: 900; padding: 10px 16px; border: 1px solid var(--gold); border-radius: 10px; background: #103e32; color: var(--cream); display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 12px; box-shadow: 0 4px 20px #0008; }
 .pwa-status button { flex-shrink: 0; min-height: 44px; }
-body:has([data-portrait]) { overflow: hidden; }
 [data-mobile-device] .app-shell {
   --mobile-safe-top: env(safe-area-inset-top, 0px);
   --mobile-safe-right: env(safe-area-inset-right, 0px);
@@ -49,7 +38,7 @@ body:has([data-portrait]) { overflow: hidden; }
 .hand-page, .hand-page-count { display: none; }
 .mobile-game-bar { display: none; }
 
-@media (orientation: landscape) {
+@media (min-width: 0px) {
   html:has([data-mobile-device] .active-game), body:has([data-mobile-device] .active-game) { width: 100%; height: 100%; overflow: clip; overscroll-behavior: none; }
   [data-mobile-device] .app-shell:has(.active-game) {
     position: fixed; inset: 0; width: 100vw; width: 100dvw; height: 100vh; height: 100dvh; max-width: none; margin: 0;

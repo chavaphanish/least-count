@@ -1,3 +1,5 @@
+import { ScreenPages, PagedItems } from '../components/ScreenPages'
+import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useCareer } from './useCareer'
 import { PlayerIdentity } from './PlayerIdentity'
@@ -21,7 +23,7 @@ export function Buddies() {
   return (
     <section className="career-section" aria-label="Buddies">
       <h2>Your circle</h2>
-      <form
+      <CompactForm
         className="player-search"
         onSubmit={(event) => {
           event.preventDefault()
@@ -40,7 +42,7 @@ export function Buddies() {
           />
         </label>
         <button className="button button-secondary">Search players</button>
-      </form>
+      </CompactForm>
       {(list.error || found.error) && (
         <p role="status">
           {list.error || found.error}{' '}
@@ -49,83 +51,118 @@ export function Buddies() {
           </button>
         </p>
       )}
-      {found.data && (
-        <>
-          <h3>Search results</h3>
-          {!found.data.length && <p>No matching registered players.</p>}
-          <ul className="social-list">
-            {found.data.map((p) => (
-              <li key={p.id}>
-                <PlayerIdentity player={p} />
-                <BuddyAction
-                  id={p.id}
-                  relationship={p.relationship}
-                  onChange={refresh}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {(['incoming', 'outgoing', 'accepted'] as const).map((status) => (
-        <div key={status}>
-          <h3>
-            {status === 'incoming'
-              ? 'Incoming requests'
-              : status === 'outgoing'
-                ? 'Sent requests'
-                : 'Accepted buddies'}
-          </h3>
-          <ul className="social-list">
-            {list.data?.players
-              .filter((p) => p.relationship === status)
-              .map((p) => (
-                <li key={p.id}>
-                  <PlayerIdentity player={p} />
-                  <div>
-                    <small>
-                      {p.xp} XP · Global #{p.rank ?? '—'}
-                    </small>
-                    <BuddyAction
-                      id={p.id}
-                      relationship={p.relationship}
-                      onChange={refresh}
-                      blocking
-                    />
-                  </div>
-                </li>
-              ))}
-          </ul>
-          {!list.data?.players.some((p) => p.relationship === status) && (
-            <p className="field-hint">
-              {status === 'incoming'
-                ? 'No incoming requests.'
-                : status === 'outgoing'
-                  ? 'No sent requests.'
-                  : 'Add buddies to start your circle.'}
-            </p>
-          )}
-        </div>
-      ))}
-      {!!list.data?.blocked.length && (
-        <>
-          <h3>Blocked players</h3>
-          <ul className="social-list">
-            {list.data.blocked.map((p) => (
-              <li key={p.id}>
-                <span>
-                  {p.displayName} · @{p.username}
-                </span>
-                <BuddyAction
-                  id={p.id}
-                  relationship="blocked"
-                  onChange={refresh}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <ScreenPages
+        label="Buddy sections"
+        pages={[
+          ...(found.data
+            ? [
+                {
+                  label: 'Search results',
+                  content: (
+                    <>
+                      <h3>Search results</h3>
+                      {!found.data?.length && (
+                        <p>No matching registered players.</p>
+                      )}
+                      <PagedItems
+                        as="ul"
+                        className="social-list"
+                        label="buddies"
+                        size={1}
+                      >
+                        {found.data?.map((p) => (
+                          <li key={p.id}>
+                            <PlayerIdentity player={p} />
+                            <BuddyAction
+                              id={p.id}
+                              relationship={p.relationship}
+                              onChange={refresh}
+                            />
+                          </li>
+                        ))}
+                      </PagedItems>
+                    </>
+                  ),
+                },
+              ]
+            : []),
+          ...(['incoming', 'outgoing', 'accepted'] as const).map((status) => ({
+            label: status,
+            content: (
+              <div key={status}>
+                <h3>
+                  {status === 'incoming'
+                    ? 'Incoming requests'
+                    : status === 'outgoing'
+                      ? 'Sent requests'
+                      : 'Accepted buddies'}
+                </h3>
+                <PagedItems
+                  as="ul"
+                  className="social-list"
+                  label="buddies"
+                  size={1}
+                >
+                  {list.data?.players
+                    .filter((p) => p.relationship === status)
+                    .map((p) => (
+                      <li key={p.id}>
+                        <PlayerIdentity player={p} />
+                        <div>
+                          <small>
+                            {p.xp} XP · Global #{p.rank ?? '—'}
+                          </small>
+                          <BuddyAction
+                            id={p.id}
+                            relationship={p.relationship}
+                            onChange={refresh}
+                            blocking
+                          />
+                        </div>
+                      </li>
+                    ))}
+                </PagedItems>
+                {!list.data?.players.some((p) => p.relationship === status) && (
+                  <p className="field-hint">
+                    {status === 'incoming'
+                      ? 'No incoming requests.'
+                      : status === 'outgoing'
+                        ? 'No sent requests.'
+                        : 'Add buddies to start your circle.'}
+                  </p>
+                )}
+              </div>
+            ),
+          })),
+          {
+            label: 'Blocked',
+            content: (
+              <>
+                <h3>Blocked players</h3>
+                <PagedItems
+                  as="ul"
+                  className="social-list"
+                  label="buddies"
+                  size={1}
+                >
+                  {list.data?.blocked.map((p) => (
+                    <li key={p.id}>
+                      <span>
+                        {p.displayName} · @{p.username}
+                      </span>
+                      <BuddyAction
+                        id={p.id}
+                        relationship="blocked"
+                        onChange={refresh}
+                      />
+                    </li>
+                  ))}
+                </PagedItems>
+              </>
+            ),
+          },
+        ]}
+      />
     </section>
   )
 }

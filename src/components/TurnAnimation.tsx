@@ -31,9 +31,34 @@ export function cardRect(element: Element | null): CardRect | null {
     : null
 }
 
-/** Off-page selections depart from the visible hand without revealing extra cards. */
+/** Resolve a card position, falling back to the measured hand during layout transitions. */
 export function handCardRect(element: Element | null): CardRect | null {
-  return cardRect(element) ?? cardRect(document.querySelector('.hand-row:not([hidden]) .playing-card'))
+  return (
+    cardRect(element) ??
+    cardRect(document.querySelector('[data-hand-target] .playing-card'))
+  )
+}
+
+/** Target the final slot, rather than an in-progress card-position transition. */
+function handDestinationRect(element: Element | null): CardRect | null {
+  const region = element?.closest('.adaptive-hand')
+  if (region && element instanceof HTMLElement) {
+    const left = parseFloat(element.style.left),
+      top = parseFloat(element.style.top)
+    const width = parseFloat(element.style.getPropertyValue('--card-width'))
+    const height = parseFloat(
+      element.style.getPropertyValue('--adaptive-height'),
+    )
+    const anchor = cardRect(region)
+    if (
+      anchor &&
+      [left, top, width, height].every(Number.isFinite) &&
+      width > 0 &&
+      height > 0
+    )
+      return { left: anchor.left + left, top: anchor.top + top, width, height }
+  }
+  return cardRect(element?.querySelector('.playing-card') ?? null)
 }
 
 /** Decorative only: the validated state is committed before these flights start. */
@@ -71,14 +96,14 @@ export function TurnAnimation({
           direction: 'outgoing',
         }),
       )
+    let destination: Element | null = null
     if (motion.incoming) {
-      const destination = Array.from(
-        document.querySelectorAll('[data-hand-card]'),
-      ).find(
-        (element) =>
-          element.getAttribute('data-hand-card') === motion.incoming!.card.id,
-      )
-      const to = cardRect(destination?.querySelector('.playing-card') ?? null)
+      destination =
+        Array.from(document.querySelectorAll('[data-hand-card]')).find(
+          (element) =>
+            element.getAttribute('data-hand-card') === motion.incoming!.card.id,
+        ) ?? null
+      const to = handDestinationRect(destination)
       if (to)
         next.push({
           ...motion.incoming,
@@ -92,6 +117,23 @@ export function TurnAnimation({
       return
     }
     setFlights(next)
+    // The hand's ResizeObserver may update its slots after this parent layout effect.
+    const targetObserver = destination?.closest('.adaptive-hand')
+      ? new MutationObserver(() => {
+          const to = handDestinationRect(destination)
+          if (to)
+            setFlights((flights) =>
+              flights.map((flight) =>
+                flight.direction === 'incoming' ? { ...flight, to } : flight,
+              ),
+            )
+        })
+      : null
+    if (destination)
+      targetObserver?.observe(destination, {
+        attributes: true,
+        attributeFilter: ['style'],
+      })
     const paired =
       next.some((f) => f.direction === 'outgoing') &&
       next.some((f) => f.direction === 'incoming')
@@ -107,6 +149,7 @@ export function TurnAnimation({
     window.addEventListener('resize', onComplete)
     reduced.addEventListener('change', onComplete)
     return () => {
+      targetObserver?.disconnect()
       window.clearTimeout(timer)
       window.clearTimeout(nextStage)
       window.removeEventListener('resize', onComplete)

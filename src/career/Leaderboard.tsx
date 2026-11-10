@@ -1,3 +1,4 @@
+import { useAppViewport } from '../components/MobileOrientation'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
@@ -5,12 +6,19 @@ import { PlayerIdentity } from './PlayerIdentity'
 import { xpProgress } from './model'
 import type { Ranking } from './model'
 export function Leaderboard() {
+  const { mobile, height } = useAppViewport()
+  const pageSize = height < 400 ? 2 : 3
+  const [localPage, setLocalPage] = useState(0)
   const auth = useAuth()
   const [scope, setScope] = useState('global')
   const [offset, setOffset] = useState(0)
   const { data, error, loading, refresh } = useCareer<Ranking>(
     `/career?op=leaderboard&scope=${scope}&offset=${offset}`,
     true,
+  )
+  const currentPage = Math.min(
+    localPage,
+    Math.max(0, Math.ceil((data?.players.length ?? 0) / pageSize) - 1),
   )
   const registered = auth.user?.player.accountType === 'registered'
   return (
@@ -30,6 +38,7 @@ export function Leaderboard() {
             onClick={() => {
               setScope(value)
               setOffset(0)
+              setLocalPage(0)
             }}
           >
             {value === 'global' ? 'Global Ranking' : 'Buddies Ranking'}
@@ -72,7 +81,13 @@ export function Leaderboard() {
                 <p>No registered players in this ranking yet.</p>
               )}
               <ol className="ranking-list" start={offset + 1}>
-                {data.players.map((p) => (
+                {(mobile
+                  ? data.players.slice(
+                      currentPage * pageSize,
+                      (currentPage + 1) * pageSize,
+                    )
+                  : data.players
+                ).map((p) => (
                   <li
                     key={p.id}
                     className={
@@ -97,15 +112,36 @@ export function Leaderboard() {
               <div className="career-pagination">
                 <button
                   className="text-button"
-                  disabled={offset === 0 || loading}
-                  onClick={() => setOffset((n) => n - 10)}
+                  disabled={(offset === 0 && currentPage === 0) || loading}
+                  onClick={() => {
+                    if (mobile && currentPage > 0) setLocalPage(currentPage - 1)
+                    else {
+                      setOffset((n) => n - 10)
+                      setLocalPage(mobile ? Math.floor(9 / pageSize) : 0)
+                    }
+                  }}
                 >
                   Previous players
                 </button>
                 <button
                   className="text-button"
-                  disabled={!data.more || loading}
-                  onClick={() => setOffset((n) => n + 10)}
+                  disabled={
+                    (!data.more &&
+                      (!mobile ||
+                        (currentPage + 1) * pageSize >= data.players.length)) ||
+                    loading
+                  }
+                  onClick={() => {
+                    if (
+                      mobile &&
+                      (currentPage + 1) * pageSize < data.players.length
+                    )
+                      setLocalPage(currentPage + 1)
+                    else {
+                      setOffset((n) => n + 10)
+                      setLocalPage(0)
+                    }
+                  }}
                 >
                   Next players
                 </button>

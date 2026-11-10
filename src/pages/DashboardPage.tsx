@@ -1,3 +1,6 @@
+import { Buddies } from '../career/Buddies'
+import { useMobileLandscape } from '../components/MobileOrientation'
+import { CompactForm } from '../components/CompactForm'
 import { Leaderboard } from '../career/Leaderboard'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
@@ -9,9 +12,12 @@ import {
 } from '../shared/multiplayer'
 import type { RoomSettings } from '../shared/multiplayer'
 export function DashboardPage() {
+  const mobile = useMobileLandscape()
   const auth = useAuth()
   const player = auth.user!.player
-  const [mode, setMode] = useState<'home' | 'create' | 'join'>('home')
+  const [mode, setMode] = useState<
+    'home' | 'create' | 'join' | 'ranking' | 'buddies' | 'settings'
+  >('home')
   const [settings, setSettings] = useState<RoomSettings>({
     ...DEFAULT_ROOM_SETTINGS,
   })
@@ -56,7 +62,7 @@ export function DashboardPage() {
     }
   }
   return (
-    <section className="dashboard-page">
+    <section className="dashboard-page" data-mode={mode}>
       <div className="dashboard-heading">
         <div>
           <p className="eyebrow">YOUR NEXT CARD NIGHT STARTS HERE</p>
@@ -84,7 +90,46 @@ export function DashboardPage() {
           </a>
         </div>
       )}
-      {mode === 'home' ? (
+      {mobile && ['ranking', 'buddies', 'settings'].includes(mode) ? (
+        <div className="dashboard-focused">
+          <button className="text-button" onClick={() => go('home')}>
+            ← Back to dashboard
+          </button>
+          {mode === 'ranking' ? (
+            <Leaderboard />
+          ) : mode === 'buddies' ? (
+            player.accountType === 'registered' ? (
+              <Buddies />
+            ) : (
+              <p>
+                Verified accounts can manage buddies.{' '}
+                <a href="#/profile">Account options</a>
+              </p>
+            )
+          ) : (
+            <div className="account-menu">
+              <h2>Settings</h2>
+              <p>
+                {player.displayName} ·{' '}
+                {player.accountType === 'guest'
+                  ? 'Guest player'
+                  : 'Verified account'}
+              </p>
+              <a className="button button-secondary" href="#/profile">
+                Profile Settings
+              </a>
+              <a className="button button-secondary" href="#/rules">
+                How to Play
+              </a>
+              <button className="text-button" disabled={busy} onClick={logout}>
+                {player.accountType === 'guest'
+                  ? 'Leave Guest Session'
+                  : 'Sign Out'}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : mode === 'home' ? (
         <>
           <div className="dashboard-actions">
             <button className="dashboard-action" onClick={() => go('create')}>
@@ -100,6 +145,31 @@ export function DashboardPage() {
               <strong>Join your friends →</strong>
             </button>
           </div>
+          {mobile && (
+            <div className="mobile-main-menu">
+              <a className="button button-secondary" href="#/profile">
+                Player Profile
+              </a>
+              <button
+                className="button button-secondary"
+                onClick={() => go('ranking')}
+              >
+                Leaderboards
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={() => go('buddies')}
+              >
+                Buddies
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={() => go('settings')}
+              >
+                Settings
+              </button>
+            </div>
+          )}
           <div className="dashboard-links">
             <a className="button button-secondary" href="#/rules">
               How to Play
@@ -124,7 +194,7 @@ export function DashboardPage() {
               ? 'Your room, your card night.'
               : 'Find your table.'}
           </h2>
-          <form onSubmit={submit}>
+          <CompactForm onSubmit={submit}>
             {mode === 'create' ? (
               <>
                 <label>
@@ -207,7 +277,7 @@ export function DashboardPage() {
                   ? 'Create Room'
                   : 'Join Room'}
             </button>
-          </form>
+          </CompactForm>
         </div>
       )}
       {error && (
@@ -218,7 +288,7 @@ export function DashboardPage() {
       <button className="text-button" disabled={busy} onClick={logout}>
         {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
       </button>
-      {mode === 'home' && <Leaderboard />}
+      {!mobile && mode === 'home' && <Leaderboard />}
     </section>
   )
 }

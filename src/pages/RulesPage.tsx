@@ -1,3 +1,5 @@
+import { useMobileLandscape } from '../components/MobileOrientation'
+import { ScreenPages } from '../components/ScreenPages'
 import rulebookUrl from '../../docs/RULEBOOK.md?url'
 import decisionsUrl from '../../docs/rule-clarifications.md?url'
 
@@ -41,6 +43,7 @@ const rules = [
 ]
 
 export function RulesPage() {
+  const mobile = useMobileLandscape()
   return (
     <section className="rules-page" aria-labelledby="rules-title">
       <a className="text-link back-link" href="#/">
@@ -62,38 +65,81 @@ export function RulesPage() {
           </p>
         </div>
       </div>
-      <div className="rules-grid">
-        {rules.map((rule, index) => (
-          <article className="rule-tile" key={rule.title}>
-            <span className="rule-number">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-            <h2>{rule.title}</h2>
-            <p>{rule.text}</p>
-          </article>
-        ))}
-      </div>
-      <div className="rules-note">
-        <h2>When the draw pile runs out</h2>
-        <p>
-          Older drops are reshuffled, preserving the latest group and any
-          group still available for pickup. If a required draw still cannot be
-          completed, the round settles by hand totals: the lowest totals score
-          0; everyone else scores their total. For an incomplete 7 penalty,
-          available cards are drawn before settlement.
-        </p>
-      </div>
-      <div className="rules-downloads">
-        <a className="text-link" href={rulebookUrl} download="RULEBOOK.md">
-          Download working rulebook ↓
-        </a>
-        <a
-          className="text-link"
-          href={decisionsUrl}
-          download="rule-clarifications.md"
-        >
-          Download confirmed decisions ↓
-        </a>
+      <div className="rules-pages">
+        <ScreenPages
+          label="Rule sections"
+          pages={[
+            ...(mobile
+              ? [
+                  {
+                    label: 'About these rules',
+                    content: (
+                      <div className="rules-note">
+                        <h2>Working rules, with confirmed clarifications</h2>
+                        <p>
+                          Online rooms and local practice use the current
+                          rulebook and confirmed decisions. Online hands,
+                          actions, and timers are enforced by the server. Local
+                          practice uses simulated opponents on your device.
+                          Online hosts can change the cutoff or choose untimed
+                          play.
+                        </p>
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
+            ...rules.map((rule, index) => ({
+              label: rule.title,
+              content: (
+                <article className="rule-tile">
+                  <span className="rule-number">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h2>{rule.title}</h2>
+                  <p>{rule.text}</p>
+                </article>
+              ),
+            })),
+            {
+              label: 'Draw pile',
+              content: (
+                <div className="rules-note">
+                  <h2>When the draw pile runs out</h2>
+                  <p>
+                    Older drops are reshuffled, preserving the latest group and
+                    any group still available for pickup. If a required draw
+                    still cannot be completed, the round settles by hand totals:
+                    the lowest totals score 0; everyone else scores their total.
+                    For an incomplete 7 penalty, available cards are drawn
+                    before settlement.
+                  </p>
+                </div>
+              ),
+            },
+            {
+              label: 'Rulebook downloads',
+              content: (
+                <div className="rules-downloads">
+                  <a
+                    className="text-link"
+                    href={rulebookUrl}
+                    download="RULEBOOK.md"
+                  >
+                    Download working rulebook ↓
+                  </a>
+                  <a
+                    className="text-link"
+                    href={decisionsUrl}
+                    download="rule-clarifications.md"
+                  >
+                    Download confirmed decisions ↓
+                  </a>
+                </div>
+              ),
+            },
+          ]}
+        />
       </div>
       <a className="button button-primary" href="#/game">
         Play local practice <span aria-hidden="true">→</span>

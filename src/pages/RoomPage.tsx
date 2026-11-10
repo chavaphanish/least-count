@@ -133,7 +133,9 @@ export function RoomPage({
   const final = !!g && ['round-over', 'game-over'].includes(g.phase)
   return (
     <section
-      className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      data-room-state={g ? 'playing' : 'lobby'}
+      data-hand-count={g?.hand.length}
+      className={`room-page ${g && g.hand.length > 14 ? 'expanded-hand' : ''} ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       <div className="room-heading">
         <div>
@@ -153,13 +155,52 @@ export function RoomPage({
               : 'Reconnecting…'}
         </div>
       </div>
-      {g && <MobileGameBar round={g.round} activeName={g.players.find(p=>p.id===g.currentPlayerId)?.displayName??'Player'} seconds={final?null:seconds} joker={g.indicator} penalty={g.penalty} players={g.players.map(p=>({id:p.id,name:p.displayName,score:p.score,eliminated:p.eliminated}))}>
-        <p>Room {code} · cutoff {room.settings.eliminationThreshold} · {connection==='live'?'Connected':connection==='error'?'Connection needs attention':'Reconnecting…'}</p>
-        <button className="text-button" onClick={()=>copy(code)}>Copy Code</button>
-        <button className="text-button" onClick={share}>Share Invitation</button>
-        <button className="text-button" disabled={busy} onClick={async()=>{onExit();await command('leave')}}>Leave Room</button>
-        <a className="text-link" href="#/rules">How to Play →</a>
-      </MobileGameBar>}
+      {g && (
+        <MobileGameBar
+          round={g.round}
+          activeName={
+            g.players.find((p) => p.id === g.currentPlayerId)?.displayName ??
+            'Player'
+          }
+          seconds={final ? null : seconds}
+          joker={g.indicator}
+          penalty={g.penalty}
+          players={g.players.map((p) => ({
+            id: p.id,
+            name: p.displayName,
+            score: p.score,
+            eliminated: p.eliminated,
+          }))}
+        >
+          <p>
+            Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
+            {connection === 'live'
+              ? 'Connected'
+              : connection === 'error'
+                ? 'Connection needs attention'
+                : 'Reconnecting…'}
+          </p>
+          <button className="text-button" onClick={() => copy(code)}>
+            Copy Code
+          </button>
+          <button className="text-button" onClick={share}>
+            Share Invitation
+          </button>
+          <button
+            className="text-button"
+            disabled={busy}
+            onClick={async () => {
+              onExit()
+              await command('leave')
+            }}
+          >
+            Leave Room
+          </button>
+          <a className="text-link" href="#/rules">
+            How to Play →
+          </a>
+        </MobileGameBar>
+      )}
 
       {error && (
         <p className="game-alert" role="alert">
@@ -286,7 +327,11 @@ export function RoomPage({
         </>
       ) : (
         <>
-          <p className="field-hint">{g.career?.eligible ? 'Career game · verified players · server-confirmed XP' : 'Casual game · no permanent XP or career statistics'}</p>
+          <p className="field-hint">
+            {g.career?.eligible
+              ? 'Career game · verified players · server-confirmed XP'
+              : 'Casual game · no permanent XP or career statistics'}
+          </p>
           <div className="match-toolbar">
             <strong>
               {g.players.find((p) => p.id === g.currentPlayerId)?.displayName}’s
@@ -303,8 +348,20 @@ export function RoomPage({
               {g.players
                 .filter((p) => p.id !== id)
                 .map((p) => (
-                  <OpponentSeat key={p.id} player={p} count={p.cardCount} score={p.score} active={p.id===g.currentPlayerId && !final} eliminated={p.eliminated} status={p.accountType==='guest'?'Guest':'Registered'} timer={!final && p.id===g.currentPlayerId ? <TurnTimer seconds={seconds} name={p.displayName}/> : null}/>
-
+                  <OpponentSeat
+                    key={p.id}
+                    player={p}
+                    count={p.cardCount}
+                    score={p.score}
+                    active={p.id === g.currentPlayerId && !final}
+                    eliminated={p.eliminated}
+                    status={p.accountType === 'guest' ? 'Guest' : 'Registered'}
+                    timer={
+                      !final && p.id === g.currentPlayerId ? (
+                        <TurnTimer seconds={seconds} name={p.displayName} />
+                      ) : null
+                    }
+                  />
                 ))}
             </div>
             <div className="live-piles">
@@ -339,7 +396,14 @@ export function RoomPage({
               total={handTotal(g.hand, g.indicator.rank)}
               score={own?.score ?? 0}
               active={!final && g.currentPlayerId === id}
-              timer={!final && g.currentPlayerId === id ? <TurnTimer seconds={seconds} name={own?.displayName ?? "You"} /> : null}
+              timer={
+                !final && g.currentPlayerId === id ? (
+                  <TurnTimer
+                    seconds={seconds}
+                    name={own?.displayName ?? 'You'}
+                  />
+                ) : null
+              }
               empty={
                 own?.eliminated
                   ? 'Your hand was removed from play.'
@@ -373,7 +437,10 @@ export function RoomPage({
           <TurnActions
             phase={g.phase}
             yours={yours}
-            activeName={g.players.find(player => player.id === g.currentPlayerId)?.displayName ?? 'the active player'}
+            activeName={
+              g.players.find((player) => player.id === g.currentPlayerId)
+                ?.displayName ?? 'the active player'
+            }
             busy={busy}
             moving={!!animation}
             hand={g.hand}
@@ -386,23 +453,47 @@ export function RoomPage({
             onDrop={discard}
             onDraw={() => draw('pile')}
             onPickup={(id) => draw('discard', id)}
-            onDeclare={() => { setSelected([]); send({ type: 'show' }) }}
-            onPenalty={() => { setSelected([]); send({ type: 'accept-penalty' }) }}
-            onSelectAll={() => setSelected(g.hand.filter(card => card.rank === cards[0]?.rank).map(card => card.id))}
+            onDeclare={() => {
+              setSelected([])
+              send({ type: 'show' })
+            }}
+            onPenalty={() => {
+              setSelected([])
+              send({ type: 'accept-penalty' })
+            }}
+            onSelectAll={() =>
+              setSelected(
+                g.hand
+                  .filter((card) => card.rank === cards[0]?.rank)
+                  .map((card) => card.id),
+              )
+            }
             onClear={() => setSelected([])}
           />
           {g.result && (
             <section className="round-summary">
-              {g.career?.eligible && <CareerRewards key={g.round} game={g.career.gameId} round={g.round} />}
+              {g.career?.eligible && (
+                <CareerRewards
+                  key={g.round}
+                  game={g.career.gameId}
+                  round={g.round}
+                />
+              )}
               <h2>
                 {g.phase === 'game-over'
                   ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`
                   : g.result.reason === 'show'
-                    ? g.result.successful ? 'Least successful!' : 'Least failed!'
+                    ? g.result.successful
+                      ? 'Least successful!'
+                      : 'Least failed!'
                     : 'Round complete'}
               </h2>
               {g.result.reason === 'show' && (
-                <p>{g.result.successful ? 'The lowest hand wins; zero-point ties share the win.' : 'A 40-point penalty was applied to the unsuccessful declaration.'}</p>
+                <p>
+                  {g.result.successful
+                    ? 'The lowest hand wins; zero-point ties share the win.'
+                    : 'A 40-point penalty was applied to the unsuccessful declaration.'}
+                </p>
               )}
               <p>
                 Only totals are shared. Opponents’ individual cards remain
