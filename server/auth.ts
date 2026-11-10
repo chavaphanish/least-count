@@ -1,3 +1,4 @@
+import { usernameError } from '../src/shared/identity'
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Env, Identity } from './types'
@@ -137,10 +138,23 @@ export async function authenticate(
     const user: SessionUser = {
       player: {
         id: `user:${auth.id}`,
-        displayName: row.display_name,
+        displayName:
+          typeof row.username === 'string' && !usernameError(row.username)
+            ? `@${row.username}`
+            : row.display_name,
         avatarUrl,
         accountType: 'registered',
       },
+      ...(typeof row.needs_profile_completion === 'boolean'
+        ? {
+            profile: {
+              username: row.username,
+              firstName: row.first_name ?? '',
+              lastName: row.last_name ?? '',
+              needsCompletion: row.needs_profile_completion,
+            },
+          }
+        : {}),
       email: auth.email ?? null,
       createdAt: auth.created_at,
       lastActiveAt: row.last_active_at,

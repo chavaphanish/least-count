@@ -127,7 +127,10 @@ export function CareerProfile({
               document
                 .getElementById('profile-editor')
                 ?.scrollIntoView({ block: 'center' })
-              document.getElementById('profile-name')?.focus()
+              ;(
+                document.getElementById('identity-username') ??
+                document.getElementById('profile-name')
+              )?.focus()
             }}
           >
             Edit Profile

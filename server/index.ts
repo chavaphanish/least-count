@@ -1,3 +1,4 @@
+import { checkUsername, saveIdentity } from './identity'
 import { careerOriginAllowed } from './career'
 import { careerApi } from './career-api'
 import type { Env } from './types'
@@ -85,10 +86,22 @@ export default {
           },
         })
       }
-      if (url.pathname === '/api/career' && ['GET','POST'].includes(request.method)) {
+      if (
+        url.pathname === '/api/career' &&
+        ['GET', 'POST'].includes(request.method)
+      ) {
         // Await here so asynchronous failures use the JSON error handler below.
         return await careerApi(request, env)
       }
+      if (url.pathname === '/api/username' && request.method === 'GET')
+        return json(await checkUsername(request, env))
+      if (
+        url.pathname === '/api/profile/identity' &&
+        request.method === 'PATCH'
+      )
+        return json({
+          user: await saveIdentity(request, env, await body(request)),
+        })
       if (url.pathname === '/api/profile' && request.method === 'PATCH')
         return json({
           user: await updateProfile(request, env, await body(request)),
@@ -146,7 +159,10 @@ export default {
       }
       const response = await stub.fetch(`https://room/${operation}`, {
         method: 'POST',
-        body: JSON.stringify({ identity: auth.identity, careerAllowed: careerOriginAllowed(url.origin, env) }),
+        body: JSON.stringify({
+          identity: auth.identity,
+          careerAllowed: careerOriginAllowed(url.origin, env),
+        }),
       })
       if (operation === 'join' && !response.ok)
         await directory(env, '/untrack', {

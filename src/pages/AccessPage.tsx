@@ -1,3 +1,4 @@
+import { SignupForm } from '../auth/SignupForm'
 import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
@@ -34,21 +35,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           setNotice(
             'If an account exists for that email, a reset link has been requested. Check your inbox. Email delivery depends on the configured provider.',
           )
-        } else if (mode === 'signup') {
-          const { data, error } = await provider.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { display_name: displayName(name) },
-              emailRedirectTo: `${location.origin}/auth/callback`,
-            },
-          })
-          if (error) throw error
-          if (data.session) await auth.refresh()
-          else
-            setNotice(
-              'Check your email for the verification link before signing in. If you already have an account, use Sign In or reset your password.',
-            )
         } else {
           const { error } = await provider.auth.signInWithPassword({
             email,
@@ -65,7 +51,11 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
     }
   }
   return (
-    <section className="access-page" data-access-mode={mode} aria-labelledby="access-title">
+    <section
+      className="access-page"
+      data-access-mode={mode}
+      aria-labelledby="access-title"
+    >
       <div className="access-story">
         <p className="eyebrow">GOOD FRIENDS. GREAT CARDS.</p>
         <h1 id="access-title">
@@ -92,6 +82,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           {(['signin', 'signup', 'guest'] as const).map((value) => (
             <button
               key={value}
+              disabled={busy}
               className={mode === value ? 'active-tab' : ''}
               onClick={() => {
                 setMode(value)
@@ -122,73 +113,84 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             local practice are available now.
           </p>
         )}
-        <CompactForm shortSteps onSubmit={submit}>
-          {(mode === 'guest' || mode === 'signup') && (
-            <label>
-              Display name
-              <input
-                required
-                minLength={2}
-                maxLength={24}
-                autoComplete="nickname"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-          )}
-          {mode !== 'guest' && (
-            <label>
-              Email address
-              <input
-                required
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
-          )}
-          {(mode === 'signin' || mode === 'signup') && (
-            <label>
-              Password
-              <input
-                required
-                type="password"
-                minLength={8}
-                maxLength={128}
-                autoComplete={
-                  mode === 'signup' ? 'new-password' : 'current-password'
-                }
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
-          )}
-          {(error || auth.error) && (
-            <p className="game-alert" role="alert">
-              {error || auth.error}
+        {mode === 'signup' ? (
+          auth.configured ? (
+            <SignupForm
+              onBusyChange={setBusy}
+              email={email}
+              onEmailChange={setEmail}
+            />
+          ) : (
+            <p className="field-hint">
+              Continue as Guest or play local practice while registration is
+              configured.
             </p>
-          )}
-          {notice && (
-            <p className="form-notice" role="status">
-              {notice}
-            </p>
-          )}
-          <button
-            className="button button-primary"
-            disabled={busy || (mode !== 'guest' && !auth.configured)}
-          >
-            {busy
-              ? 'Please wait…'
-              : mode === 'guest'
-                ? 'Enter as guest'
-                : mode === 'signup'
-                  ? 'Create account'
+          )
+        ) : (
+          <CompactForm shortSteps onSubmit={submit}>
+            {mode === 'guest' && (
+              <label>
+                Display name
+                <input
+                  required
+                  minLength={2}
+                  maxLength={24}
+                  autoComplete="nickname"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </label>
+            )}
+            {mode !== 'guest' && (
+              <label>
+                Email address
+                <input
+                  required
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </label>
+            )}
+            {mode === 'signin' && (
+              <label>
+                Password
+                <input
+                  required
+                  type="password"
+                  minLength={8}
+                  maxLength={128}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+            )}
+            {(error || auth.error) && (
+              <p className="game-alert" role="alert">
+                {error || auth.error}
+              </p>
+            )}
+            {notice && (
+              <p className="form-notice" role="status">
+                {notice}
+              </p>
+            )}
+            <button
+              className="button button-primary"
+              disabled={busy || (mode !== 'guest' && !auth.configured)}
+            >
+              {busy
+                ? 'Please wait…'
+                : mode === 'guest'
+                  ? 'Enter as guest'
                   : mode === 'reset'
                     ? 'Send reset link'
                     : 'Sign in'}
-          </button>
-        </CompactForm>
+            </button>
+          </CompactForm>
+        )}
         {mode === 'signin' && (
           <button
             className="text-button"

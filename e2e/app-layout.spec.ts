@@ -214,7 +214,7 @@ test('keyboard-sized signup steps retain values and submit verified email regist
     expect(r.request().postDataJSON()).toMatchObject({
       email: 'new@example.test',
       password: 'test-only-password',
-      data: { display_name: 'New Player' },
+      data: { username: 'newplayer99', first_name: 'New', last_name: 'Player' },
     })
     submitted = true
     return r.fulfill({
@@ -224,9 +224,12 @@ test('keyboard-sized signup steps retain values and submit verified email regist
       },
     })
   })
+  await page.route('**/api/username?**', (r) =>
+    r.fulfill({ json: { available: true } }),
+  )
   await page.goto('/')
   await page.getByRole('button', { name: 'Sign Up', exact: true }).click()
-  await page.getByLabel('Display name', { exact: true }).fill('New Player')
+  await page.getByLabel('Username', { exact: true }).fill('NewPlayer99')
   await page.evaluate(() => {
     Object.defineProperty(visualViewport!, 'height', {
       configurable: true,
@@ -235,12 +238,23 @@ test('keyboard-sized signup steps retain values and submit verified email regist
     visualViewport!.dispatchEvent(new Event('resize'))
   })
   await expect(page.locator('[data-keyboard=true]')).toHaveCount(1)
-  await insideVisualViewport(page.getByLabel('Display name', { exact: true }))
+  await insideVisualViewport(page.getByLabel('Username', { exact: true }))
   await insideVisualViewport(page.getByRole('button', { name: 'Next field' }))
   await page.getByRole('button', { name: 'Next field' }).click()
-  await page.getByLabel('Email address').fill('new@example.test')
+  await page.getByLabel('First Name', { exact: true }).fill('New')
   await page.getByRole('button', { name: 'Next field' }).click()
+  await page.getByLabel('Last Name', { exact: true }).fill('Player')
+  await expect(
+    page.getByRole('button', { name: 'Next', exact: true }),
+  ).toBeEnabled()
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await page.getByLabel('Email address').fill('new@example.test')
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByLabel('Password', { exact: true }).fill('test-only-password')
+  await page.getByRole('button', { name: 'Next field' }).click()
+  await page
+    .getByLabel('Confirm Password', { exact: true })
+    .fill('test-only-password')
   await insideVisualViewport(
     page.getByRole('button', { name: 'Create account', exact: true }),
   )

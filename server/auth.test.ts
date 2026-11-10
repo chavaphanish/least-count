@@ -24,6 +24,13 @@ const request = (data?: unknown) =>
 afterEach(() => {
   vi.unstubAllGlobals()
   row.avatar_path = null
+  for (const key of [
+    'username',
+    'first_name',
+    'last_name',
+    'needs_profile_completion',
+  ])
+    delete (row as Record<string, unknown>)[key]
 })
 function mockProvider(verified = true) {
   const calls: { url: string; method: string; body: unknown }[] = []
@@ -74,6 +81,26 @@ describe('provider-backed identity and profile authorization', () => {
     expect(auth!.identity.id).toBe(`user:${uid}`)
     expect(auth!.identity.accountType).toBe('registered')
     expect('email' in auth!.identity).toBe(false)
+  })
+  it('publishes the username while keeping personal fields out of room identities', async () => {
+    Object.assign(row, {
+      username: 'cardmaster99',
+      first_name: 'José',
+      last_name: 'O’Neill',
+      needs_profile_completion: true,
+    })
+    mockProvider()
+    const auth = await authenticate(request(), env)
+    expect(auth!.user.player.displayName).toBe('@cardmaster99')
+    expect(auth!.user.profile).toEqual({
+      username: 'cardmaster99',
+      firstName: 'José',
+      lastName: 'O’Neill',
+      needsCompletion: true,
+    })
+    expect(JSON.stringify(auth!.identity)).not.toMatch(
+      /José|O’Neill|firstName|lastName|profile/,
+    )
   })
   it('rejects unverified email before loading a profile', async () => {
     const calls = mockProvider(false)
@@ -183,16 +210,33 @@ describe('provider-backed identity and profile authorization', () => {
     expect(publicConfig({} as Env)).toEqual({ supabase: null }))
 })
 
-it('preserves the old photo when saving avatar removal fails',async()=>{
-  row.avatar_path=`${uid}/old.png`
-  const calls=mockProvider()
-  const provider=globalThis.fetch
-  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo | URL,options?:RequestInit)=>{
-    if(String(input).includes('/rest/v1/profiles') && options?.method==='PATCH')
-      return new Response(JSON.stringify({message:'database unavailable'}),{status:500,headers:{'Content-Type':'application/json'}})
-    return provider(input,options)
-  }))
-  await expect(updateProfile(new Request('https://game.test/api/profile/avatar',{method:'DELETE',headers:{Authorization:`Bearer ${token}`}}),env)).rejects.toMatchObject({status:503})
-  expect(calls.some(call=>call.method==='DELETE')).toBe(false)
+it('preserves the old photo when saving avatar removal fails', async () => {
+  row.avatar_path = `${uid}/old.png`
+  const calls = mockProvider()
+  const provider = globalThis.fetch
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, options?: RequestInit) => {
+      if (
+        String(input).includes('/rest/v1/profiles') &&
+        options?.method === 'PATCH'
+      )
+        return new Response(
+          JSON.stringify({ message: 'database unavailable' }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } },
+        )
+      return provider(input, options)
+    }),
+  )
+  await expect(
+    updateProfile(
+      new Request('https://game.test/api/profile/avatar', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      env,
+    ),
+  ).rejects.toMatchObject({ status: 503 })
+  expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
   expect(row.avatar_path).toBe(`${uid}/old.png`)
 })

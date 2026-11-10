@@ -25,7 +25,10 @@ function flatten(children: ReactNode): ReactNode[] {
 function disable(node: ReactNode, off: boolean): ReactNode {
   if (!isValidElement<{ children?: ReactNode; disabled?: boolean }>(node))
     return node
-  if (['input', 'select', 'textarea'].includes(String(node.type)))
+  if (
+    typeof node.type !== 'string' ||
+    ['input', 'select', 'textarea'].includes(String(node.type))
+  )
     return cloneElement(node, { disabled: off || node.props.disabled })
   return node.props.children
     ? cloneElement(node, {
@@ -45,7 +48,11 @@ export function CompactForm({
   const ref = useRef<HTMLFormElement>(null)
   const [step, setStep] = useState(0)
   const nodes = flatten(children),
-    fields = nodes.filter((n) => isValidElement(n) && n.type === 'label')
+    fields = nodes.filter(
+      (n) =>
+        isValidElement<{ 'data-form-field'?: boolean }>(n) &&
+        (n.type === 'label' || n.props['data-form-field']),
+    )
   useEffect(() => setStep(0), [fields.length])
   const wizard =
     mobile &&

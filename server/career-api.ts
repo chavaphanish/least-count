@@ -60,6 +60,9 @@ export async function careerApi(request: Request, env: Env) {
     request.method === 'POST'
       ? await body(request)
       : Object.fromEntries(url.searchParams)
+  if (typeof args.username === 'string')
+    args.username = args.username.replace(/^@/, '').toLowerCase()
+  if (typeof args.query === 'string') args.query = args.query.replace(/^@/, '')
   const result = await client.rpc('career_api', { operation, args })
   if (result.error)
     throw new ApiError(
@@ -78,6 +81,8 @@ export async function careerApi(request: Request, env: Env) {
         .filter(([key]) => key !== 'avatarPath')
         .map(([key, v]) => [key, images(v)]),
     )
+    if (typeof object.username === 'string')
+      next.displayName = `@${object.username}`
     if (typeof object.xp === 'number')
       next.progress = xpProgress(
         object.xp,

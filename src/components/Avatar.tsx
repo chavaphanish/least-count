@@ -16,7 +16,7 @@ export function Avatar({
         />
       ) : (
         <span aria-hidden="true">
-          {player.displayName.slice(0, 2).toUpperCase()}
+          {player.displayName.replace(/^@/, '').slice(0, 2).toUpperCase()}
         </span>
       )}
     </span>
