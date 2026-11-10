@@ -47,7 +47,7 @@ export function RulesPage() {
   return (
     <section className="rules-page" aria-labelledby="rules-title">
       <a className="text-link back-link" href="#/">
-        ← Back to the lounge
+        ← Back to the Lounge
       </a>
       <div className="rules-intro">
         <p className="eyebrow">A LITTLE STRATEGY. A LITTLE LUCK.</p>

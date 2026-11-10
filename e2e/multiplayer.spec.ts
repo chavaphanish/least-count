@@ -71,7 +71,7 @@ test('default room form is four players, 100 points, and timed; invalid codes fa
   await expect(page.getByLabel('Number of players')).toHaveValue('4')
   await expect(page.getByLabel('Elimination cutoff')).toHaveValue('100')
   await expect(page.getByLabel('Timed game')).toBeChecked()
-  await page.getByRole('button', { name: '← Back to dashboard' }).click()
+  await page.getByRole('button', { name: '← Back to Lounge' }).click()
   await page.getByRole('button', { name: /Join Game Room/ }).click()
   await page.getByLabel('Room code', { exact: true }).fill('ZZZZZZ')
   await page.getByRole('button', { name: 'Join Room', exact: true }).click()

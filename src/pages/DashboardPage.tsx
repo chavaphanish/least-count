@@ -95,7 +95,7 @@ export function DashboardPage() {
       {mobile && ['ranking', 'buddies', 'settings'].includes(mode) ? (
         <div className="dashboard-focused">
           <button className="text-button" onClick={() => go('home')}>
-            ← Back to dashboard
+            ← Back to Lounge
           </button>
           {mode === 'ranking' ? (
             <Leaderboard />
@@ -189,7 +189,7 @@ export function DashboardPage() {
       ) : (
         <div className="room-form-panel">
           <button className="text-button" onClick={() => go('home')}>
-            ← Back to dashboard
+            ← Back to Lounge
           </button>
           <h2>
             {mode === 'create'
