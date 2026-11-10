@@ -84,12 +84,24 @@ export function DashboardPage() {
         </div>
         {mobile && <CareerGlance />}
       </div>
-      {auth.room && (
+      {(auth.room || auth.user?.profile?.needsCompletion) && (
         <div className="invitation-banner">
-          You have a seat in <strong>{auth.room.code}</strong>.{' '}
-          <a className="text-link" href={`#/room/${auth.room.code}`}>
-            Return to your room →
-          </a>
+          {auth.user?.profile?.needsCompletion && (
+            <>
+              Complete your player identity.{' '}
+              <a className="text-link" href="#/profile">
+                Update profile →
+              </a>{' '}
+            </>
+          )}
+          {auth.room && (
+            <>
+              You have a seat in <strong>{auth.room.code}</strong>.{' '}
+              <a className="text-link" href={`#/room/${auth.room.code}`}>
+                Return to your room →
+              </a>
+            </>
+          )}
         </div>
       )}
       {mobile && ['ranking', 'buddies', 'settings'].includes(mode) ? (

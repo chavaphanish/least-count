@@ -451,3 +451,34 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 .dashboard-page .lounge-nav-button.button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .dashboard-page .lounge-nav-button.button:active { background: var(--gold); transform: translateY(1px); box-shadow: inset 0 2px 4px #0002; }
 .dashboard-page .lounge-nav-button.button:is(:disabled,[aria-disabled=true]) { background: var(--gold); opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; outline: none; outline-offset: 0; }
+/* Signup retains three overall steps; the existing compact form handles keyboard field focus. */
+.signup-step { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--gold); margin: 4px 0 8px; }
+.signup-step .text-button { padding: 4px 8px; }
+.password-input { display: block; position: relative; width: 100%; }
+.password-input input { padding-right: 42px !important; width: 100%; }
+.password-toggle { position: absolute; inset: 0 0 0 auto; width: 38px; display: grid; place-items: center; border: 0; background: transparent; color: var(--gold); border-radius: 6px; padding: 0; }
+.identity-feedback { grid-column: 1 / -1; }
+.identity-editor form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.identity-editor form > .button, .identity-editor form > p { grid-column: 1 / -1; }
+[data-mobile-device] .signup-form .form-field:first-child { grid-column: 1 / -1; }
+[data-mobile-device] .signup-step { margin: 0 0 4px; min-height: 24px; }
+[data-mobile-device] .signup-step .text-button { min-height: 24px; }
+[data-mobile-device] .identity-editor { min-height: 0; height: 100%; }
+[data-mobile-device] .identity-editor > h2 { font-size: 18px; margin-bottom: 8px; }
+[data-mobile-device] .identity-editor form { margin: 0; }
+[data-mobile-device] .signup-form[data-form-steps] > .form-field, [data-mobile-device] .identity-editor form[data-form-steps] > .form-field { grid-column: 1; grid-row: 1; }
+[data-mobile-device] .signup-form[data-form-steps] > .identity-feedback, [data-mobile-device] .identity-editor form[data-form-steps] > p { grid-column: 2; grid-row: 1; margin: 0; font-size: 11px; line-height: 1.3; }
+[data-keyboard] .profile-panel .screen-page-tabs, [data-keyboard] .identity-editor > h2, [data-keyboard] .identity-editor > .field-hint { display: none; }
+[data-keyboard] .identity-editor { padding: 4px; }
+[data-keyboard] .signup-form:not([data-form-steps]) > .form-field { grid-column: 1; grid-row: 1; }
+[data-keyboard] .signup-form:not([data-form-steps]) > .identity-feedback { grid-column: 2; grid-row: 1; margin: 0; }
+[data-mobile-device] .signup-wizard:not([data-signup-step="3"]) .signup-form:not([data-form-steps]) > .form-field:first-child > label { grid-column: 1 / -1; }
+[data-keyboard] .signup-form:not([data-form-steps]) > .form-field:first-child > label { grid-column: 1; }
+
+[data-keyboard] .access-card:has(.signup-wizard) { padding: 4px 8px; }
+[data-keyboard] .access-page:has(.signup-wizard) { padding: 0; }
+[data-mobile-device] .identity-editor form:not([data-form-steps]) > .form-field:first-child > label { grid-column: 1 / -1; }
+[data-mobile-device] .identity-editor form:not([data-form-steps]) > p { grid-column: 1; grid-row: 3; margin: 0; align-self: center; }
+[data-mobile-device] .identity-editor form:not([data-form-steps]) .form-submit > .button { grid-column: 2; grid-row: 3; }
+[data-keyboard] .access-card:has(.signup-wizard) { padding-top: 2px; padding-bottom: 2px; }
+[data-keyboard] .signup-step .text-button { padding-top: 2px; padding-bottom: 2px; }

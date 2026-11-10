@@ -94,15 +94,32 @@ test('email signup requests verification and recovery requests a real provider r
   await expect(page.getByRole('button', { name: /google/i })).toHaveCount(0)
   await page.getByRole('button', { name: 'Sign Up', exact: true }).click()
   await expect(page.getByRole('button', { name: /google/i })).toHaveCount(0)
-  await page.getByLabel('Display name', { exact: true }).fill('New Player')
+  await page.route('**/api/username?**', (r) =>
+    r.fulfill({ json: { available: true } }),
+  )
+  await page.getByLabel('Username', { exact: true }).fill('NewPlayer99')
+  await page.getByLabel('First Name', { exact: true }).fill('New')
+  await page.getByLabel('Last Name', { exact: true }).fill('Player')
+  await expect(
+    page.getByRole('button', { name: 'Next', exact: true }),
+  ).toBeEnabled()
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByLabel('Email address').fill('new@example.test')
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByLabel('Password', { exact: true }).fill('test-only-password')
+  await page
+    .getByLabel('Confirm Password', { exact: true })
+    .fill('test-only-password')
   await page
     .getByRole('button', { name: 'Create account', exact: true })
     .click()
   await expect(page.getByRole('status')).toContainText('verification link')
   expect(signup.email).toBe('new@example.test')
-  expect(signup.data).toEqual({ display_name: 'New Player' })
+  expect(signup.data).toEqual({
+    username: 'newplayer99',
+    first_name: 'New',
+    last_name: 'Player',
+  })
   await page.getByRole('button', { name: 'Sign In', exact: true }).click()
   await page.getByRole('button', { name: 'Forgot password?' }).click()
   await page.getByRole('button', { name: 'Send reset link' }).click()

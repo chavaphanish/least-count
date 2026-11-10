@@ -1,3 +1,4 @@
+import { IdentityEditor } from '../auth/IdentityEditor'
 import { ScreenPages } from '../components/ScreenPages'
 import { useMobileLandscape } from '../components/MobileOrientation'
 import { CompactForm } from '../components/CompactForm'
@@ -12,8 +13,10 @@ import {
 } from '../shared/multiplayer'
 export function ProfilePage() {
   const mobile = useMobileLandscape()
-  const [section, setSection] = useState(0)
   const auth = useAuth()
+  const [section, setSection] = useState(() =>
+    auth.user?.profile?.needsCompletion ? 1 : 0,
+  )
   const user = auth.user!
   const [name, setName] = useState(user.player.displayName)
   const [file, setFile] = useState<File | null>(null)
@@ -22,7 +25,7 @@ export function ProfilePage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [processing, setProcessing] = useState(false)
-  const pending = !!file || name !== user.player.displayName
+  const pending = !!file || (!user.profile && name !== user.player.displayName)
   useEffect(() => {
     if (!pending) return
     const unload = (event: BeforeUnloadEvent) => {
@@ -141,10 +144,11 @@ export function ProfilePage() {
     setError('')
     setNotice('')
     try {
-      await auth.services.api('/profile', {
-        method: 'PATCH',
-        body: JSON.stringify({ displayName: displayName(name) }),
-      })
+      if (!user.profile)
+        await auth.services.api('/profile', {
+          method: 'PATCH',
+          body: JSON.stringify({ displayName: displayName(name) }),
+        })
       if (file)
         await auth.services.api('/profile/avatar', {
           method: 'POST',
@@ -180,6 +184,86 @@ export function ProfilePage() {
       setBusy(false)
     }
   }
+  const photoEditor = (
+    <div id={user.profile ? "profile-photo-editor" : "profile-editor"} className="career-section profile-editor">
+      <h2>Edit Profile</h2>
+      <Avatar
+        player={{
+          ...user.player,
+          avatarUrl: preview ?? user.player.avatarUrl,
+        }}
+      />
+      <p className="field-hint">
+        {processing
+          ? 'Preparing your preview…'
+          : pending
+            ? 'Unsaved changes'
+            : 'All changes saved'}
+      </p>
+      <CompactForm onSubmit={save}>
+        {!user.profile && (
+          <label>
+            Display name
+            <input
+              id="profile-name"
+              required
+              minLength={2}
+              maxLength={24}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+        )}
+        <label>
+          Profile picture
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={busy || processing}
+            onChange={(e) => void choose(e.target.files?.[0])}
+          />
+        </label>
+        <p className="field-hint">
+          JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped and
+          optimized to 512 × 512. Profile pictures are visible to other players.
+        </p>
+        <div className="auth-actions">
+          <button
+            className="button button-primary"
+            disabled={busy || processing || !pending}
+          >
+            {busy
+              ? 'Uploading / saving…'
+              : processing
+                ? 'Preparing photo…'
+                : error && pending
+                  ? 'Retry save'
+                  : 'Save profile'}
+          </button>
+          {user.player.avatarUrl && (
+            <button
+              type="button"
+              className="button button-secondary"
+              disabled={busy}
+              onClick={remove}
+            >
+              Remove picture
+            </button>
+          )}
+        </div>
+      </CompactForm>
+      {error && (
+        <p className="game-alert" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p className="form-notice" role="status">
+          {notice}
+        </p>
+      )}
+    </div>
+  )
   return (
     <section className="profile-panel">
       <a className="text-link" href="#/">
@@ -205,87 +289,16 @@ export function ProfilePage() {
           },
           {
             label: 'Settings',
-            content: (
-              <div
-                id="profile-editor"
-                className="career-section profile-editor"
-              >
-                <h2>Edit Profile</h2>
-                <Avatar
-                  player={{
-                    ...user.player,
-                    avatarUrl: preview ?? user.player.avatarUrl,
-                  }}
-                />
-                <p className="field-hint">
-                  {processing
-                    ? 'Preparing your preview…'
-                    : pending
-                      ? 'Unsaved changes'
-                      : 'All changes saved'}
-                </p>
-                <CompactForm onSubmit={save}>
-                  <label>
-                    Display name
-                    <input
-                      id="profile-name"
-                      required
-                      minLength={2}
-                      maxLength={24}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Profile picture
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      disabled={busy || processing}
-                      onChange={(e) => void choose(e.target.files?.[0])}
-                    />
-                  </label>
-                  <p className="field-hint">
-                    JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped
-                    and optimized to 512 × 512. Profile pictures are visible to
-                    other players.
-                  </p>
-                  <div className="auth-actions">
-                    <button
-                      className="button button-primary"
-                      disabled={busy || processing || !pending}
-                    >
-                      {busy
-                        ? 'Uploading / saving…'
-                        : processing
-                          ? 'Preparing photo…'
-                          : error && pending
-                            ? 'Retry save'
-                            : 'Save profile'}
-                    </button>
-                    {user.player.avatarUrl && (
-                      <button
-                        type="button"
-                        className="button button-secondary"
-                        disabled={busy}
-                        onClick={remove}
-                      >
-                        Remove picture
-                      </button>
-                    )}
-                  </div>
-                </CompactForm>
-                {error && (
-                  <p className="game-alert" role="alert">
-                    {error}
-                  </p>
-                )}
-                {notice && (
-                  <p className="form-notice" role="status">
-                    {notice}
-                  </p>
-                )}
-              </div>
+            content: user.profile ? (
+              <ScreenPages
+                label="Profile settings sections"
+                pages={[
+                  { label: 'Identity', content: <IdentityEditor /> },
+                  { label: 'Photo', content: photoEditor },
+                ]}
+              />
+            ) : (
+              photoEditor
             ),
           },
           {

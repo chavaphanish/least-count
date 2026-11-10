@@ -1,3 +1,4 @@
+import type { PrivateProfile } from './identity'
 import type { GameEvent } from '../game/events'
 import type { Card } from '../game/cards'
 import type { GameCard } from '../game/deck'
@@ -11,6 +12,7 @@ export type PublicPlayer = {
   accountType: AccountType
 }
 export type SessionUser = {
+  profile?: PrivateProfile
   player: PublicPlayer
   email: string | null
   createdAt: string
