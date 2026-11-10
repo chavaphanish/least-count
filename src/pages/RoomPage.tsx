@@ -1,3 +1,4 @@
+import { ResultScores } from '../components/ResultScores'
 import { MobileGameBar } from '../components/MobileGameBar'
 import { OpponentSeat } from '../components/OpponentSeat'
 import { CareerRewards } from '../career/CareerRewards'
@@ -135,7 +136,7 @@ export function RoomPage({
     <section
       data-room-state={g ? 'playing' : 'lobby'}
       data-hand-count={g?.hand.length}
-      className={`room-page ${g && g.hand.length > 14 ? 'expanded-hand' : ''} ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       <div className="room-heading">
         <div>
@@ -264,6 +265,8 @@ export function RoomPage({
               <article
                 className={`lobby-player ${!m.connected ? 'disconnected-player' : ''}`}
                 key={m.id}
+                data-host={m.id === room.hostId}
+                data-connected={m.connected}
               >
                 <Avatar player={m} />
                 <h3>
@@ -299,9 +302,11 @@ export function RoomPage({
             {host ? (
               <>
                 <p role="status">
-                  {full
-                    ? 'All players have joined. Ready when you are.'
-                    : 'Waiting for every configured seat to be filled and connected.'}
+                  {connection !== 'live'
+                    ? 'Reconnect to start the game.'
+                    : full
+                      ? 'All players have joined. Ready when you are.'
+                      : 'Waiting for every configured seat to be filled and connected.'}
                 </p>
                 <button
                   className="button button-primary"
@@ -472,69 +477,68 @@ export function RoomPage({
           />
           {g.result && (
             <section className="round-summary">
-              {g.career?.eligible && (
-                <CareerRewards
-                  key={g.round}
-                  game={g.career.gameId}
+              <div className="result-intro">
+                {g.career?.eligible && (
+                  <CareerRewards
+                    key={g.round}
+                    game={g.career.gameId}
+                    round={g.round}
+                  />
+                )}
+                <h2>
+                  {g.phase === 'game-over'
+                    ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`
+                    : g.result.reason === 'show'
+                      ? g.result.successful
+                        ? 'Least successful!'
+                        : 'Least failed!'
+                      : 'Round complete'}
+                </h2>
+                {g.result.reason === 'show' && (
+                  <p>
+                    {g.result.successful
+                      ? 'The lowest hand wins; zero-point ties share the win.'
+                      : 'A 40-point penalty was applied to the unsuccessful declaration.'}
+                  </p>
+                )}
+                <p>
+                  Only totals are shared. Opponents’ individual cards remain
+                  private.
+                </p>
+              </div>
+              {!!g.result.scores.length && (
+                <ResultScores
+                  scores={g.result.scores}
                   round={g.round}
+                  winners={g.result.winners}
                 />
               )}
-              <h2>
-                {g.phase === 'game-over'
-                  ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`
-                  : g.result.reason === 'show'
-                    ? g.result.successful
-                      ? 'Least successful!'
-                      : 'Least failed!'
-                    : 'Round complete'}
-              </h2>
-              {g.result.reason === 'show' && (
-                <p>
-                  {g.result.successful
-                    ? 'The lowest hand wins; zero-point ties share the win.'
-                    : 'A 40-point penalty was applied to the unsuccessful declaration.'}
-                </p>
-              )}
-              <p>
-                Only totals are shared. Opponents’ individual cards remain
-                private.
-              </p>
-              {!!g.result.scores.length && (
-                <div className="score-scroll">
-                  <table className="score-table">
-                    <thead>
-                      <tr>
-                        <th>Player</th>
-                        <th>Hand</th>
-                        <th>Penalty</th>
-                        <th>Cumulative</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.result.scores.map((p) => (
-                        <tr key={p.id}>
-                          <th>{p.name}</th>
-                          <td>{p.total}</td>
-                          <td>+{p.penalty}</td>
-                          <td>{p.score}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {g.phase === 'round-over' &&
-                (host ? (
+              <div className="result-actions">
+                {g.phase === 'round-over' &&
+                  (host ? (
+                    <button
+                      className="button button-primary"
+                      disabled={busy || connection !== 'live'}
+                      onClick={() => send({ type: 'next-round' })}
+                    >
+                      Start round {g.round + 1}
+                    </button>
+                  ) : (
+                    <p>Waiting for the host to start the next round.</p>
+                  ))}
+                {final && (
                   <button
-                    className="button button-primary"
-                    disabled={busy || connection !== 'live'}
-                    onClick={() => send({ type: 'next-round' })}
+                    className="button button-secondary"
+                    disabled={busy}
+                    onClick={async () => {
+                      onExit()
+                      await command('leave')
+                    }}
                   >
-                    Start round {g.round + 1}
+                    Leave Room
                   </button>
-                ) : (
-                  <p>Waiting for the host to start the next round.</p>
-                ))}
+                )}
+              </div>
             </section>
           )}
           <div className="game-below-table">

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useAppViewport } from './MobileOrientation'
+import { useAuth } from '../auth/AuthProvider'
 import { PwaStatus } from '../pwa/PwaStatus'
 
 export function Layout({
@@ -10,6 +11,7 @@ export function Layout({
   page: string
 }) {
   const { mobile, keyboard } = useAppViewport()
+  const { user } = useAuth()
   return (
     <div className="app-shell">
       <a
@@ -41,7 +43,7 @@ export function Layout({
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
             Dashboard
           </a>
-          {mobile && <a href="#/profile">Profile</a>}
+          {mobile && user && <a href="#/profile">Profile</a>}
           {mobile && keyboard && (
             <button
               type="button"

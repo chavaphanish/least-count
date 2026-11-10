@@ -12,11 +12,13 @@ export function ScreenPages({
   label = 'Sections',
   value,
   onChange,
+  navigation = 'always',
 }: {
   pages: { label: string; content: ReactNode }[]
   label?: string
   value?: number
   onChange?: (index: number) => void
+  navigation?: 'always' | 'on-detail'
 }) {
   const mobile = useMobileLandscape()
   const [index, setIndex] = useState(0)
@@ -35,14 +37,22 @@ export function ScreenPages({
     )
   return (
     <div className="screen-pages">
-      <nav className="screen-page-tabs" aria-label={label}>
+      <nav
+        className={`screen-page-tabs ${navigation === 'on-detail' ? 'detail-navigation' : ''}`}
+        aria-label={label}
+        hidden={navigation === 'on-detail' && current === 0}
+      >
         <button
           type="button"
-          aria-label={`Previous ${label}`}
+          aria-label={
+            navigation === 'on-detail'
+              ? 'Back to player career'
+              : `Previous ${label}`
+          }
           disabled={!current}
-          onClick={() => change(current - 1)}
+          onClick={() => change(navigation === 'on-detail' ? 0 : current - 1)}
         >
-          ‹
+          {navigation === 'on-detail' ? '← Career' : '‹'}
         </button>
         <select
           aria-label={label}
@@ -80,12 +90,14 @@ export function PagedItems({
   size = 3,
   as: Container = 'div',
   className = '',
+  ariaLabel,
 }: {
   children: ReactNode
   label?: string
   size?: number
   as?: 'div' | 'ul' | 'ol' | 'dl'
   className?: string
+  ariaLabel?: string
 }) {
   const mobile = useMobileLandscape()
   const { height } = useAppViewport()
@@ -98,7 +110,7 @@ export function PagedItems({
     current = Math.min(page, Math.max(0, pages - 1))
   return (
     <>
-      <Container className={className}>
+      <Container className={className} aria-label={ariaLabel}>
         {items.map((item, i) =>
           isValidElement(item)
             ? cloneElement(

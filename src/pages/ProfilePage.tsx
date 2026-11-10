@@ -23,6 +23,39 @@ export function ProfilePage() {
   const [notice, setNotice] = useState('')
   const [processing, setProcessing] = useState(false)
   const pending = !!file || name !== user.player.displayName
+  useEffect(() => {
+    if (!pending) return
+    const unload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    const navigate = (event: MouseEvent) => {
+      const link = (event.target as Element).closest('a')
+      if (
+        !link ||
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        link.target === '_blank' ||
+        link.hasAttribute('download')
+      )
+        return
+      const url = new URL(link.href, location.href)
+      if (
+        url.hash === '#profile-editor' ||
+        (url.hash === location.hash && url.pathname === location.pathname)
+      )
+        return
+      if (!confirm('Discard unsaved profile changes?')) event.preventDefault()
+    }
+    window.addEventListener('beforeunload', unload)
+    document.addEventListener('click', navigate, true)
+    return () => {
+      window.removeEventListener('beforeunload', unload)
+      document.removeEventListener('click', navigate, true)
+    }
+  }, [pending])
   useEffect(
     () => () => {
       if (preview) URL.revokeObjectURL(preview)
@@ -157,6 +190,7 @@ export function ProfilePage() {
         Player <em>profile.</em>
       </h1>
       <ScreenPages
+        navigation="on-detail"
         label="Profile views"
         value={section}
         onChange={setSection}

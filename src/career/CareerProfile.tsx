@@ -46,6 +46,11 @@ export function CareerProfile({
             Retry career data
           </button>
         )}
+        {onEdit && (
+          <button className="button button-secondary" onClick={onEdit}>
+            Edit Profile
+          </button>
+        )}
       </section>
     )
   const p =
@@ -183,6 +188,7 @@ export function CareerProfile({
                         </div>
                       ))}
                     </div>
+                    {data.own && overviewDetails}
                     {!data.own && (
                       <p className="field-hint">
                         Detailed statistics, game history, and frequent
@@ -194,7 +200,6 @@ export function CareerProfile({
               },
               ...(data.own
                 ? [
-                    { label: 'Career details', content: overviewDetails },
                     {
                       label: 'Recent Games',
                       content: (

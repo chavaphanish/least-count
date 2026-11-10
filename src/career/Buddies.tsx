@@ -139,6 +139,9 @@ export function Buddies() {
             content: (
               <>
                 <h3>Blocked players</h3>
+                {!list.data?.blocked.length && (
+                  <p className="field-hint">No blocked players.</p>
+                )}
                 <PagedItems
                   as="ul"
                   className="social-list"

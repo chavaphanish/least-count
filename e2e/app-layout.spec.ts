@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page, Locator } from '@playwright/test'
+import { profileView } from './ux-navigation'
 import { mock } from './career-fixture'
 const sizes = [
   { width: 667, height: 375 },
@@ -49,7 +50,7 @@ async function fits(page: Page) {
   const result = await page.evaluate(() => {
     const controls = Array.from(
       document.querySelectorAll(
-        'main button,main input,main select,main a,main [data-page-item],main .rule-tile,main .career-summary',
+        'main button,main input,main select,main a,main [data-page-item],main .rule-tile,main .career-summary,main .account-details dt,main .account-details dd',
       ),
     ).filter((el) => el.checkVisibility() && !el.closest('[hidden]'))
     return {
@@ -143,9 +144,7 @@ for (const size of sizes)
       }
     }
     for (const value of ['1', '2']) {
-      await page
-        .getByRole('combobox', { name: 'Profile views' })
-        .selectOption(value)
+      await profileView(page, value)
       await fits(page)
     }
     await page.goto('/#/history/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
@@ -455,7 +454,7 @@ test('create, join, profile and recovery fields fit a keyboard-reduced viewport'
   )
   await restore()
   await page.goto('/#/profile')
-  await page.getByRole('combobox', { name: 'Profile views' }).selectOption('1')
+  await profileView(page, '1')
   await page.getByLabel('Display name', { exact: true }).fill('Updated Tester')
   await keyboard()
   await insideVisualViewport(page.getByLabel('Display name', { exact: true }))
@@ -465,6 +464,7 @@ test('create, join, profile and recovery fields fit a keyboard-reduced viewport'
     page.getByRole('button', { name: 'Save profile', exact: true }),
   )
   await restore()
+  page.once('dialog', (dialog) => void dialog.accept())
   await page.goto('/auth/callback?flow=recovery')
   await page.getByLabel('New password').fill('test-only-password')
   await keyboard()

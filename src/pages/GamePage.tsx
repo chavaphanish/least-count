@@ -254,7 +254,7 @@ export function GamePage({
   return (
     <section
       data-hand-count={human.hand.length}
-      className={`game-page active-game ${human.hand.length > 14 ? 'expanded-hand' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      className={`game-page active-game ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
       aria-labelledby="game-title"
     >
       {header}
