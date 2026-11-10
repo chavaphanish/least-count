@@ -16,6 +16,8 @@ select
   (select count(*) from public.buddy_relationships) as buddy_pairs;
 ```
 
+Use **Run** with the SQL as written. If the editor offers **Run and enable RLS**, choose the option that leaves the query unchanged: permanent profile RLS is already enabled, and the planning table is temporary. An automatic RLS command added after commit can report `identity_username_plan does not exist` even though the migration committed. In that case, check the new profile column, case-insensitive index, signup trigger and existing profile RLS before rerunning anything; if all are present/enabled, continue with the after-migration checks.
+
 Run the complete migration as one transaction. It briefly locks account/profile writes, adds private identity fields, backfills only usernames, and installs signup validation. It does not delete accounts, recreate IDs, alter password hashes, or change statistics, XP, buddies, history, avatars or existing personal names. The old case-sensitive username index and profile-insert trigger are replaced by the new constraints/transactional auth trigger; these are schema changes, not data deletions. RLS stays enabled. The temporary planning table is session-local and dropped at commit.
 
 - Unique valid legacy display names become lowercase usernames.
