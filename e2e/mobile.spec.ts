@@ -105,8 +105,8 @@ test.describe('landscape mobile presentation', () => {
       const before = await saved(page)
       await page.setViewportSize({ width: size.height, height: size.width })
       const overlay = page.getByRole('dialog', { name: 'Rotate Your Phone' })
-      await expect(overlay).toHaveCount(0)
-      await expect(page.locator('.orientation-content')).not.toHaveAttribute(
+      await expect(overlay).toBeVisible()
+      await expect(page.locator('.orientation-content')).toHaveAttribute(
         'inert',
         '',
       )
@@ -185,7 +185,7 @@ test.describe('landscape mobile presentation', () => {
     expect(shell!.y + shell!.height).toBeLessThanOrEqual(375 - 21)
     await fullyVisible(page.locator('.activity-heading'))
   })
-  test('opening in portrait keeps navigation usable and preserves state on rotation', async ({
+  test('opening in portrait blocks navigation and preserves state on rotation', async ({
     page,
   }) => {
     // Older Safari has no Screen Orientation API; the media query is sufficient.
@@ -196,8 +196,8 @@ test.describe('landscape mobile presentation', () => {
     await page.goto('/')
     await expect(
       page.getByRole('dialog', { name: 'Rotate Your Phone' }),
-    ).toHaveCount(0)
-    await expect(page.locator('.orientation-content')).not.toHaveAttribute(
+    ).toBeVisible()
+    await expect(page.locator('.orientation-content')).toHaveAttribute(
       'inert',
       '',
     )
@@ -245,7 +245,7 @@ test('desktop portrait windows remain usable; iPadOS desktop UA receives the mob
     await ipad.goto('/')
     await expect(
       ipad.getByRole('dialog', { name: 'Rotate Your Phone' }),
-    ).toHaveCount(0)
+    ).toBeVisible()
     await ipad.setViewportSize({ width: 1024, height: 768 })
     await expect(ipad.getByRole('dialog')).toHaveCount(0)
   } finally {
@@ -397,7 +397,7 @@ test('real multiplayer retains its socket, selection and deadline through rotati
     await actor.setViewportSize({ width: 390, height: 844 })
     await expect(
       actor.getByRole('dialog', { name: 'Rotate Your Phone' }),
-    ).toHaveCount(0)
+    ).toBeVisible()
     expect((await view(actor)).game).toEqual(before.game)
     await actor.setViewportSize(sizes[1])
     await expect(actor.getByRole('dialog')).toHaveCount(0)
@@ -405,7 +405,7 @@ test('real multiplayer retains its socket, selection and deadline through rotati
     expect((await view(actor)).game).toEqual(before.game)
     expect(sockets).toBe(socketCount)
     await actor.setViewportSize({ width: 390, height: 844 })
-    await expect(actor.getByRole('dialog')).toHaveCount(0)
+    await expect(actor.getByRole('dialog', { name: 'Rotate Your Phone' })).toBeVisible()
     await expect
       .poll(async () => (await view(actor)).game.phase, {
         timeout: 75_000,
@@ -428,7 +428,7 @@ test('real multiplayer retains its socket, selection and deadline through rotati
       new Set(after.game.events.map((e: { id: string }) => e.id)).size,
     ).toBe(after.game.events.length)
     expect(sockets).toBe(socketCount)
-    await expect(actor.getByRole('dialog')).toHaveCount(0)
+    await expect(actor.getByRole('dialog', { name: 'Rotate Your Phone' })).toBeVisible()
     await actor.setViewportSize(sizes[1])
     await expect(actor.getByRole('dialog')).toHaveCount(0)
     await expect(actor.locator('.round-summary')).toContainText(

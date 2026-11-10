@@ -157,3 +157,13 @@
 }
 @keyframes mobile-card-arrival { from { opacity: .3; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { [data-mobile-device] .active-game .hand-card { animation: none; } }
+
+/* The shared guard covers all routes without unmounting their controllers. */
+.orientation-content[hidden] { display: none !important; }
+.orientation-content[inert] dialog { visibility: hidden; }
+.orientation-guard { border: 0; margin: 0; padding: max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); position: fixed; inset: 0; width: 100dvw; height: 100dvh; max-width: none; max-height: none; box-sizing: border-box; background: #0c2e26; color: var(--cream); text-align: center; }
+.orientation-guard[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.orientation-guard::backdrop { background: #0c2e26; }
+.orientation-guard svg { color: var(--gold); flex-shrink: 0; }
+.orientation-guard h1 { margin: 0; font: 400 32px/1.15 'Libre Caslon Display',Georgia,serif; }
+.orientation-guard p { margin: 0; max-width: 300px; line-height: 1.6; font-size: 16px; }

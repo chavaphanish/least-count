@@ -274,28 +274,12 @@ test.describe('fixed landscape table', () => {
       await fits(page)
       if (handSize === 104) {
         await page.setViewportSize({ width: 375, height: 667 })
-        await expect(page.locator('.app-shell')).toHaveCSS('height', '667px')
+        await expect(page.getByRole('dialog', { name: 'Rotate Your Phone' })).toBeVisible()
+        await expect(page.locator('.orientation-content')).toBeHidden()
+        expect((await saved(page)).players[0].hand.map((c) => c.id)).toEqual(visited)
+        await page.setViewportSize(sizes[0])
+        await expect(page.locator('.adaptive-hand')).toBeVisible()
         await fits(page)
-        const occluded = await page.locator('.hand-card').evaluateAll((cards) =>
-          cards
-            .filter((card) => {
-              const r = card.getBoundingClientRect()
-              return (
-                document.elementFromPoint(
-                  r.x + Math.min(9, r.width / 2),
-                  r.y + Math.min(12, r.height / 2),
-                ) !== card
-              )
-            })
-            .map((card) => card.getAttribute('data-hand-card')),
-        )
-        expect(occluded).toEqual([])
-        expect((await saved(page)).players[0].hand.map((c) => c.id)).toEqual(
-          visited,
-        )
-        await page.screenshot({
-          path: 'docs/mobile-layout/hand-104-portrait.png',
-        })
       }
     })
   test('matching selection survives resizing, rotation and secondary panels', async ({
@@ -347,7 +331,7 @@ test.describe('fixed landscape table', () => {
     await page.setViewportSize({ width: 375, height: 667 })
     await expect(
       page.getByRole('dialog', { name: 'Rotate Your Phone' }),
-    ).toHaveCount(0)
+    ).toBeVisible()
     await page.setViewportSize(sizes[0])
     expect(
       await page
