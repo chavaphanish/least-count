@@ -65,7 +65,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
     }
   }
   return (
-    <section className="access-page" aria-labelledby="access-title">
+    <section className="access-page" data-access-mode={mode} aria-labelledby="access-title">
       <div className="access-story">
         <p className="eyebrow">GOOD FRIENDS. GREAT CARDS.</p>
         <h1 id="access-title">

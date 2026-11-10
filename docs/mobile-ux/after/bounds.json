@@ -1,0 +1,542 @@
+[
+  {
+    "name": "dashboard",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "create",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "join",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "leaderboards",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "rank-global",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "rank-buddies",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "buddies",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "buddy-search",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "settings",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-statistics",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-game-history",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-buddies",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-edit",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-unsaved",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "profile-photo-error",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "account",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "history-report",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "history-round",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "public-profile",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "recovery",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "rules",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "practice-setup",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "hand-7",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "hand-15",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "hand-25",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "hand-30",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "activity",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "activity-history",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "table-options",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "opponent",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "power-seven",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "least",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "replacement",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "round-results",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "game-results",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "lobby-8",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "disconnected",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "sign-in",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "sign-up",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "guest",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "reset-request",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "callback-error",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "loading",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  },
+  {
+    "name": "startup-error",
+    "viewport": [
+      667,
+      375
+    ],
+    "document": [
+      667,
+      375
+    ],
+    "outside": []
+  }
+]

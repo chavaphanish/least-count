@@ -1,0 +1,7 @@
+/* Shared mobile type, spacing and controls; the established felt/card palette stays intact. */
+[data-mobile-device] {
+  --ui-space-1: 4px; --ui-space-2: 8px; --ui-space-3: 12px; --ui-space-4: 16px; --ui-space-6: 24px;
+  --ui-radius: 12px; --ui-control: 36px; --ui-action: 44px;
+  --ui-body: 13px; --ui-caption: 11px; --ui-title: 26px;
+  --ui-panel: #103e32d9; --ui-raised: #1c4d3d; --ui-focus: var(--gold);
+}

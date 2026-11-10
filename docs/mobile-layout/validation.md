@@ -1,3 +1,5 @@
+> Historical validation for PR #16. The current single-row mobile design and current evidence are documented in [the mobile UX audit](../mobile-ux/README.md). Density and portrait-layout claims below describe that earlier implementation.
+
 # Mobile fixed-screen validation
 
 The implementation was checked in Linux Chromium with iPhone/Android user-agent, touch and viewport emulation. Captures in this directory use mock/local test data, not private production hands.

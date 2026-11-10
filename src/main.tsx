@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { App } from './App'
 import './styles.css'
 import './mobile.css'
+import './mobile-tokens.css'
 import './app-mobile.css'
 import { AuthProvider } from './auth/AuthProvider'
 

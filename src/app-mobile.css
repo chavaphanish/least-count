@@ -165,8 +165,8 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] .profile-editor > form { grid-column: 2; grid-row: 1 / 4; display: grid; grid-template-columns: 1fr 1fr; align-content: center; }
 [data-mobile-device] .profile-editor form > p, [data-mobile-device] .profile-editor .auth-actions { grid-column: 1 / -1; }
 [data-mobile-device] .auth-actions { margin: 0; gap: 8px; }
-[data-mobile-device] .account-details { margin: 0; padding: 20px; gap: 12px 18px; font-size: 13px; }
-[data-mobile-device] .account-details dd { min-width: 0; overflow-wrap: anywhere; }
+[data-mobile-device] .account-details { margin: 0; padding: 16px; display: grid; grid-template-columns: 140px minmax(0,1fr); align-content: start; gap: 16px 18px; font-size: 13px; }
+[data-mobile-device] .account-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 [data-mobile-device] .rules-page { padding: 0 4px; display: flex; flex-direction: column; gap: 6px; }
 [data-mobile-device] .rules-page > .back-link { display: none; }
 [data-mobile-device] .rules-intro { padding: 0; }
@@ -202,36 +202,6 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] .active-game .adaptive-hand .joker-corner { top: 3px; left: 3px; font-size: var(--corner-font); }
 [data-mobile-device] .active-game .adaptive-hand .selected-card { outline: 2px solid var(--gold); outline-offset: 0; }
 [data-mobile-device] .active-game .adaptive-hand .selected-card > .playing-card { outline: none; translate: 0 calc(-1 * min(3px,var(--selection-lift))); clip-path: inset(0 max(0px,calc(var(--card-width) - var(--hit-width))) max(0px,calc(var(--adaptive-height) - var(--hit-height) - 3px)) 0); }
-[data-mobile-device] .active-game.expanded-hand { --hand-zone: calc(var(--table-height)*.5); grid-template-columns: 1fr; grid-template-rows: 30px minmax(0,1fr) var(--hand-zone) 44px 28px; gap: 2px; }
-[data-mobile-device] .expanded-hand .live-table { grid-column: 1; grid-row: 2 / 4; grid-template-columns: 1fr; }
-[data-mobile-device] .expanded-hand .your-live-seat { grid-column: 1; }
-[data-mobile-device] .expanded-hand .turn-panel { grid-column: 1; grid-row: 4; height: 44px; padding: 0 6px; margin: 0 4px; display: flex; flex-direction: row; gap: 8px; align-items: center; }
-[data-mobile-device] .expanded-hand .turn-message { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-[data-mobile-device] .expanded-hand .turn-actions, [data-mobile-device] .expanded-hand .selection-actions { flex-shrink: 0; }
-[data-mobile-device] .expanded-hand .turn-actions .button { padding: 4px 10px; min-height: 40px; font-size: 12px; }
-[data-mobile-device] .expanded-hand .pickup-panel { flex: 1; }
-[data-mobile-device] .expanded-hand .pickup-cards .table-tool, [data-mobile-device] .expanded-hand .pickup-button { min-height: 40px; }
-[data-mobile-device] .expanded-hand .compact-game-activity { grid-column: 1; grid-row: 5; }
-[data-mobile-device] .expanded-hand .compact-game-activity .table-tool { min-height: 28px; height: 28px; padding: 2px 10px; }
-[data-mobile-device] .expanded-hand .opponent-row { height: 100%; align-items: center; grid-template-columns: repeat(6,minmax(0,1fr)); grid-template-rows: repeat(2,minmax(0,1fr)); grid-auto-flow: row; gap: 2px 4px; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent { height: min(28px,100%); padding: 1px 4px; grid-template-columns: 18px minmax(0,1fr); row-gap: 0; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent .profile-avatar { grid-row: 1 / 3; width: 18px; height: 18px; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent strong { font-size: 9px; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent > span:last-child { grid-column: 2; font-size: 8px; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(1) { grid-column: 1; grid-row: 1; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(2) { grid-column: 2; grid-row: 1; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(3) { grid-column: 1; grid-row: 2; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(4) { grid-column: 2; grid-row: 2; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(5) { grid-column: 5; grid-row: 1; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(6) { grid-column: 6; grid-row: 1; }
-[data-mobile-device] .expanded-hand .opponent-row > .live-opponent:nth-of-type(7) { grid-column: 5; grid-row: 2; }
-[data-mobile-device] .expanded-hand .live-piles { width: 32%; justify-self: center; height: 100%; margin-top: 0; gap: 8px; align-items: center; }
-[data-mobile-device] .expanded-hand .live-piles .sample-pile { display: flex; flex-direction: row; align-items: center; gap: 4px; min-width: 0; }
-[data-mobile-device] .expanded-hand .live-piles .playing-card { --card-width: min(40px,calc(100cqh/1.4)); }
-[data-mobile-device] .expanded-hand .live-piles .card-corner { top: 3px; left: 3px; font-size: 11px; }
-[data-mobile-device] .expanded-hand .live-piles .card-corner-bottom { top: auto; left: auto; bottom: 3px; right: 3px; }
-[data-mobile-device] .expanded-hand .live-piles .sample-pile > span { font-size: 8px; white-space: normal; max-width: 44px; letter-spacing: 0; }
-[data-mobile-device] .expanded-hand .live-piles .joker-indicator { display: none; }
 /* A keyboard reduces the form, not its reachability: one validated field at a time. */
 [data-keyboard] .app-shell { grid-template-rows: 28px minmax(0,1fr); }
 [data-keyboard] .site-header { height: 28px; }
@@ -246,27 +216,6 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] form[data-form-steps] .form-submit > .button { grid-column: 2; grid-row: auto; }
 [data-keyboard] .profile-editor { display: block; padding: 2px; }
 [data-keyboard] .profile-editor > h2, [data-keyboard] .profile-editor > .profile-avatar, [data-keyboard] .profile-editor > .field-hint, [data-keyboard] .profile-editor form > .field-hint { display: none; }
-@media (max-width: 600px) {
-  [data-mobile-device] .access-page { grid-template-columns: minmax(0,1fr); gap: 4px; align-content: center; }
-  [data-mobile-device] .access-story { display: none; }
-  [data-mobile-device] .dashboard-heading .player-chip { display: none; }
-  [data-mobile-device] .mobile-main-menu { grid-template-columns: 1fr 1fr; }
-  [data-mobile-device] .dashboard-action h2 { font-size: 15px; }
-  [data-mobile-device] .dashboard-action { padding: 8px; gap: 4px; }
-  [data-mobile-device] .dashboard-action > span { font-size: 24px; }
-  [data-mobile-device] .room-code-panel { gap: 6px; }
-  [data-mobile-device] .room-code-panel .compact-button { font-size: 10px; padding: 4px; }
-  [data-mobile-device] .lobby-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: repeat(4,minmax(0,1fr)); }
-  [data-mobile-device] .active-game { --hand-zone: calc(var(--table-height)*.5); grid-template-columns: 1fr; grid-template-rows: 36px minmax(0,1fr) var(--hand-zone) 44px 28px; gap: 2px; }
-  [data-mobile-device] .active-game .live-table { grid-column: 1; grid-row: 2 / 4; grid-template-columns: 1fr; }
-  [data-mobile-device] .active-game .your-live-seat { grid-column: 1; }
-  [data-mobile-device] .active-game .turn-panel { grid-column: 1; grid-row: 4; flex-direction: row; margin: 0; padding: 0 4px; gap: 4px; }
-  [data-mobile-device] .active-game .turn-message { max-width: 100px; font-size: 10px; }
-  [data-mobile-device] .active-game .compact-game-activity { grid-column: 1; grid-row: 5; }
-  [data-mobile-device] .mobile-game-bar { gap: 6px; font-size: 10px; }
-  [data-mobile-device] .mobile-active-player { font-size: 10px; }
-  [data-mobile-device] .mobile-joker small { display: none; }
-}
 @media (prefers-reduced-motion: reduce) { [data-mobile-device] .adaptive-hand .hand-card, [data-mobile-device] .adaptive-hand .playing-card { transition: none; } }
 [data-mobile-device] .career-profile { margin: 0; }
 [data-mobile-device] .career-profile-header { flex-wrap: nowrap; flex-shrink: 0; }
@@ -321,4 +270,178 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-keyboard] .career-section[aria-label=Buddies] > h2, [data-keyboard] .career-section[aria-label=Buddies] > .screen-pages { display: none; }
 [data-keyboard] .career-section[aria-label=Buddies] .player-search { margin: 0; flex: none; flex-wrap: nowrap; }
 [data-keyboard] .dashboard-focused > .text-button { min-height: 24px; padding: 2px 6px; }
-@media(max-width:600px) { [data-mobile-device] .expanded-hand .live-piles .sample-pile { flex-direction: column; gap: 2px; } }
+
+/* UX foundation: shared control/type rhythm across every mobile route. */
+[data-mobile-device] #main { font-size: var(--ui-body); }
+[data-mobile-device] .button { min-height: var(--ui-action); border-radius: var(--ui-radius); font-size: var(--ui-body); padding: var(--ui-space-2) var(--ui-space-4); }
+[data-mobile-device] .text-button { min-height: var(--ui-control); }
+[data-mobile-device] .career-section, [data-mobile-device] .access-card, [data-mobile-device] .room-form-panel { border-radius: var(--ui-radius); }
+[data-mobile-device] .screen-pages { gap: var(--ui-space-2); }
+[data-mobile-device] .screen-page-tabs { height: var(--ui-control); grid-template-columns: 40px minmax(0,1fr) 40px; }
+[data-mobile-device] .screen-page-tabs button, [data-mobile-device] .screen-page-tabs select { min-height: var(--ui-control); border-radius: 8px; }
+[data-mobile-device] .detail-navigation { grid-template-columns: 92px minmax(0,1fr) 40px; }
+[data-mobile-device] .detail-navigation > button:first-child { font-size: 12px; }
+[data-mobile-device] .item-pages { height: var(--ui-control); }
+[data-mobile-device] .item-pages button { min-height: var(--ui-control); }
+/* Entry has one balanced landscape composition, including when the OS stays portrait. */
+[data-mobile-device] .access-page { grid-template-columns: minmax(150px,.7fr) minmax(0,1.3fr); gap: var(--ui-space-6); padding: var(--ui-space-2); }
+[data-mobile-device] .access-story { padding: 0; }
+[data-mobile-device] .access-story h1 { font-size: clamp(30px,4.8vw,44px); }
+[data-mobile-device] .access-card { padding: var(--ui-space-3) var(--ui-space-4); background: var(--ui-panel); }
+[data-mobile-device] .access-card h2 { margin: var(--ui-space-2) 0; font-size: 24px; }
+[data-mobile-device] .access-card form .form-submit > .button { grid-column: 1 / -1; width: 100%; }
+[data-mobile-device] .access-tabs { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 4px; padding-bottom: 8px; }
+[data-mobile-device] .access-tabs button { min-height: var(--ui-control); padding: 4px; }
+[data-mobile-device] .field-steps button { min-height: var(--ui-control); white-space: nowrap; }
+[data-mobile-device] .startup-screen { display: grid; grid-template-columns: 80px minmax(0,330px); grid-template-rows: repeat(5,min-content); align-content: center; justify-content: center; gap: 8px 24px; text-align: left; }
+[data-mobile-device] .startup-logo { grid-column: 1; grid-row: 1 / 5; align-self: center; font-size: 72px; }
+[data-mobile-device] .startup-screen > .eyebrow { grid-column: 2; grid-row: 1; }
+[data-mobile-device] .startup-screen h1 { grid-column: 2; grid-row: 2; font-size: 42px; }
+[data-mobile-device] .startup-screen > p[role] { grid-column: 2; grid-row: 3; margin: 0; }
+[data-mobile-device] .startup-progress, [data-mobile-device] .startup-screen .auth-actions { grid-column: 2; grid-row: 4; width: 100%; }
+[data-mobile-device] .startup-screen > small { grid-column: 2; grid-row: 5; font-size: 11px; }
+[data-mobile-device] .startup-screen .loading-spinner { display: none; }
+/* Dashboard: one player rail and one action area, without duplicate profile links. */
+[data-mobile-device] .dashboard-page[data-mode=home] { display: grid; grid-template-columns: minmax(170px,.8fr) minmax(0,1.8fr); grid-template-rows: minmax(0,1fr) auto 32px; gap: 12px; padding: 8px; }
+[data-mobile-device] .dashboard-page[data-mode=home] .dashboard-heading { grid-column: 1; grid-row: 1 / 4; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; border-right: 1px solid var(--border); padding: 0 16px 40px 0; }
+[data-mobile-device] .dashboard-heading h1 { font-size: 25px; line-height: 1.15; }
+[data-mobile-device] .dashboard-heading .eyebrow { font-size: 9px; }
+[data-mobile-device] .player-chip { border: 0; padding: 0; background: none; }
+[data-mobile-device] .player-chip-name { display: none; }
+[data-mobile-device] .player-chip small { font-size: 11px; }
+[data-mobile-device] .player-chip .profile-avatar { width: 36px; height: 36px; }
+[data-mobile-device] .dashboard-actions { grid-column: 2; grid-row: 1; grid-template-columns: 1fr 1fr; gap: 8px; }
+[data-mobile-device] .dashboard-action { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 16px; gap: 12px; background: #e9cd9106; }
+[data-mobile-device] .dashboard-action > span { font-size: 32px; color: var(--gold); }
+[data-mobile-device] .dashboard-action h2 { font-size: 23px; }
+[data-mobile-device] .dashboard-action strong { font-size: 11px; }
+[data-mobile-device] .mobile-main-menu { grid-column: 2; grid-row: 2; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+[data-mobile-device] .mobile-main-menu .button { min-height: 40px; padding: 6px 8px; }
+[data-mobile-device] .dashboard-links { grid-column: 2; grid-row: 3; justify-content: space-between; gap: 8px; font-size: 12px; }
+[data-mobile-device] .dashboard-page[data-mode=home] > .text-button { right: auto; left: 8px; bottom: 8px; }
+[data-mobile-device] .career-glance { display: grid; gap: 8px; width: 100%; }
+[data-mobile-device] .career-glance > div { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--gold); }
+[data-mobile-device] .career-glance progress { width: 100%; height: 6px; accent-color: var(--gold); }
+[data-mobile-device] .career-glance small, [data-mobile-device] .career-glance-note { font-size: 11px; line-height: 1.4; color: var(--muted); }
+/* Focused forms and player information share alignment and message treatment. */
+[data-mobile-device] .room-form-panel { padding: 12px 16px; }
+[data-mobile-device] .room-form-panel > h2 { font-size: 25px; margin: 8px 0 16px; }
+[data-mobile-device] .room-form-panel form { gap: 10px 12px; }
+[data-mobile-device] .room-form-panel form > .form-submit > .button { justify-self: start; min-width: 160px; }
+[data-mobile-device] .profile-editor { max-width: none; grid-template-columns: 88px minmax(0,1fr); grid-template-rows: 28px auto 1fr auto; padding: 12px; }
+[data-mobile-device] .profile-editor > .game-alert, [data-mobile-device] .profile-editor > .form-notice { grid-column: 1 / -1; width: 100%; grid-row: 4; }
+[data-mobile-device] .profile-editor > form { grid-row: 1 / 4; }
+[data-mobile-device] .career-profile-header { border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+[data-mobile-device] .career-profile-header h1, [data-mobile-device] .career-profile-header h2 { font-size: 24px; }
+[data-mobile-device] .career-tabs button { min-height: var(--ui-control); border-radius: 8px; }
+[data-mobile-device] .career-summary > div { border-radius: 8px; padding: 8px; }
+[data-mobile-device] .career-summary span { font-size: 10px; }
+[data-mobile-device] .career-summary strong { font-size: 23px; }
+[data-mobile-device] .player-search { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; margin: 8px 0; }
+[data-mobile-device] .player-search label { grid-column: 1; }
+[data-mobile-device] .player-search .form-submit > .button { grid-column: 2; min-height: var(--ui-control); }
+[data-mobile-device] .career-identity { gap: 8px; }
+[data-mobile-device] .career-identity a { font-size: 13px; }
+[data-mobile-device] .ranking-self { border: 1px solid var(--border); border-radius: 8px; }
+[data-mobile-device] .game-report > h1 { font: 400 var(--ui-title) 'Libre Caslon Display',Georgia,serif; }
+/* Lobby rows are explicit, so adding a connection banner cannot collapse seats. */
+[data-mobile-device] .room-page[data-room-state=lobby] { grid-template-rows: 26px auto 36px 18px 18px minmax(88px,1fr) 44px 24px; gap: 3px; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .room-heading { grid-row: 1; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .game-alert { grid-row: 2; margin: 0; padding: 0 8px; display: flex; align-items: center; gap: 8px; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .room-code-panel { grid-row: 3; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .room-settings-summary { grid-row: 4; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .lobby-count { grid-row: 5; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .lobby-grid { grid-row: 6; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .lobby-start { grid-row: 7; }
+[data-mobile-device] .room-page[data-room-state=lobby] > .room-footer { grid-row: 8; }
+[data-mobile-device] .room-settings-summary > span { border: 0; padding: 0; font-size: 10px; line-height: 18px; background: none; }
+[data-mobile-device] .lobby-player { padding: 3px 6px; gap: 1px 6px; }
+[data-mobile-device] .lobby-player h3 { line-height: 13px; }
+[data-mobile-device] .lobby-player .account-badge, [data-mobile-device] .lobby-player > p { line-height: 10px; }
+[data-mobile-device] .lobby-player[data-host=true] { border-color: #e9cd9170; background: #e9cd9108; }
+[data-mobile-device] .lobby-player[data-connected=true] > p { color: #b9d8bf; }
+/* Results and modal content paginate; primary actions remain in a stable region. */
+[data-mobile-device] .active-game > .round-summary { display: grid; grid-template-columns: minmax(180px,.8fr) minmax(0,1.4fr); grid-template-rows: minmax(0,1fr) auto; gap: 16px; padding: 16px; overflow: clip; }
+[data-mobile-device] .result-intro { grid-column: 1; grid-row: 1; min-width: 0; }
+[data-mobile-device] .result-intro h2 { font: 400 26px/1.1 'Libre Caslon Display',Georgia,serif; margin: 8px 0; }
+[data-mobile-device] .result-intro p { font-size: 12px; line-height: 1.4; }
+[data-mobile-device] .result-scores { grid-column: 2; grid-row: 1 / 3; min-width: 0; align-self: center; }
+[data-mobile-device] .result-actions { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 0; }
+[data-mobile-device] .result-actions p { margin: 0; font-size: 11px; }
+[data-mobile-device] .score-table { width: 100%; font-size: 11px; }
+[data-mobile-device] .score-table caption { margin: 0 0 8px; font-size: 12px; text-align: left; }
+[data-mobile-device] .score-table td, [data-mobile-device] .score-table th { padding: 10px 5px; }
+[data-mobile-device] .table-overlay { width: min(620px,calc(var(--app-width) - 24px)); max-height: calc(var(--app-height) - 24px); }
+[data-mobile-device] .table-overlay-shell { max-height: calc(var(--app-height) - 28px); }
+[data-mobile-device] .table-overlay header { padding: 4px 16px; flex-shrink: 0; }
+[data-mobile-device] .table-overlay header h2 { font-size: 18px; }
+[data-mobile-device] .table-overlay-body { overflow: clip; padding: 12px; min-height: 0; }
+[data-mobile-device] .table-overlay .recent-history li, [data-mobile-device] .table-overlay .full-history li { padding: 6px 8px; line-height: 1.25; font-size: 12px; gap: 2px; }
+[data-mobile-device] .table-overlay .event-round { font-size: 9px; }
+[data-mobile-device] .table-overlay .match-scores ul { margin: 4px 0; }
+[data-mobile-device] .table-overlay .match-scores li { padding: 6px 8px; display: grid; grid-template-columns: 1fr 60px 80px; font-size: 12px; }
+[data-mobile-device] .table-overlay .table-options { display: flex; flex-wrap: wrap; gap: 12px; }
+[data-mobile-device] .table-overlay .table-options p { width: 100%; }
+/* One landscape table composition and one hand row at every count. */
+[data-mobile-device] .active-game { --hand-zone: calc(var(--table-height)*.43); grid-template-columns: 1fr; grid-template-rows: 32px minmax(0,1fr) var(--hand-zone) 48px 28px; gap: 4px; }
+[data-mobile-device] .active-game .live-table { grid-column: 1; grid-row: 2 / 4; grid-template-columns: 1fr; }
+[data-mobile-device] .active-game .your-live-seat { grid-column: 1; }
+[data-mobile-device] .active-game .turn-panel { grid-column: 1; grid-row: 4; display: flex; flex-direction: row; align-items: center; gap: 8px; height: 48px; padding: 2px 8px; margin: 0 4px; }
+[data-mobile-device] .active-game .turn-message { flex: 1; min-width: 0; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+[data-mobile-device] .active-game .turn-panel:has(.selection-actions) .turn-message { display: none; }
+[data-mobile-device] .active-game .turn-actions, [data-mobile-device] .active-game .selection-actions { flex-shrink: 0; }
+[data-mobile-device] .active-game .turn-actions { width: max-content; flex: 0 1 auto; min-width: 0; }
+[data-mobile-device] .active-game .turn-actions .button { min-height: 44px; padding: 6px 12px; font-size: 13px; flex: 0 1 auto; }
+[data-mobile-device] .active-game .pickup-panel { flex: 1; }
+[data-mobile-device] .active-game .compact-game-activity { grid-column: 1; grid-row: 5; }
+[data-mobile-device] .active-game .compact-game-activity .table-tool { min-height: 28px; height: 28px; padding: 2px 12px; font-size: 12px; }
+[data-mobile-device] .active-game .opponent-row { height: 100%; align-items: center; grid-template-columns: repeat(6,minmax(0,1fr)); grid-template-rows: repeat(2,minmax(0,1fr)); grid-auto-flow: row; gap: 2px 4px; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent { height: min(36px,100%); padding: 2px 4px; grid-template-columns: 22px minmax(0,1fr); row-gap: 1px; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent .profile-avatar { grid-row: 1 / 3; width: 22px; height: 22px; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent strong { font-size: 10px; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent > span:last-child { grid-column: 2; font-size: 9px; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(3) { grid-column: 1; grid-row: 2; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(4) { grid-column: 2; grid-row: 2; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(5) { grid-column: 5; grid-row: 1; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(6) { grid-column: 6; grid-row: 1; }
+[data-mobile-device] .active-game .opponent-row > .live-opponent:nth-of-type(7) { grid-column: 5; grid-row: 2; }
+[data-mobile-device] .active-game .live-piles { width: 32%; justify-self: center; height: 100%; margin-top: 0; gap: 8px; align-items: center; }
+[data-mobile-device] .active-game .live-piles .sample-pile { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+[data-mobile-device] .active-game .live-piles .playing-card { --card-width: min(48px,calc((100cqh - 16px)/1.4)); }
+[data-mobile-device] .active-game .live-piles .card-corner { top: 3px; left: 3px; font-size: 11px; }
+[data-mobile-device] .active-game .live-piles .card-corner-bottom { top: auto; left: auto; bottom: 3px; right: 3px; }
+[data-mobile-device] .active-game .live-piles .sample-pile > span { font-size: 9px; white-space: nowrap; letter-spacing: 0; }
+[data-mobile-device] .active-game .adaptive-hand .selected-card .playing-card { translate: 0 calc(-1 * var(--selection-lift)); }
+[data-mobile-device] .active-game .adaptive-hand[data-density=compact] { touch-action: none; }
+[data-mobile-device] .hand-inspection { position: absolute; left: 0; top: 0; width: 100%; font-size: 12px; line-height: 1.2; color: var(--gold); text-align: center; pointer-events: none; padding: 4px; }
+/* Keyboard focus uses the same landscape form arrangement without off-screen actions. */
+[data-keyboard] .access-page { display: block; }
+[data-keyboard] .access-card form .form-submit > .button { grid-column: 2; width: 100%; }
+[data-keyboard] .dashboard-page { padding: 2px; }
+[data-keyboard] .player-search { margin: 0; }
+[data-keyboard] .profile-editor { display: block; padding: 2px; }
+[data-keyboard] form[data-form-steps] .field-steps { grid-row: 2; }
+[data-keyboard] form[data-form-steps] .form-submit > .button, [data-keyboard] form[data-form-steps] .form-submit > .auth-actions { grid-column: 2; grid-row: 2; }
+[data-mobile-device] .access-card form[data-form-steps] .form-submit > .button { grid-column: 2; grid-row: 2; }
+[data-mobile-device] .access-page[data-access-mode=guest] .form-field > label, [data-mobile-device] .access-page[data-access-mode=reset] .form-field > label { grid-column: 1 / -1; }
+[data-mobile-device] .active-game .live-piles .joker-indicator { display: none; }
+[data-mobile-device] .career-summary > div { padding: 6px; }
+[data-mobile-device] .career-summary strong { font-size: 20px; line-height: 1.1; }
+[data-mobile-device] .career-summary span { font-size: 10px; line-height: 1.2; }
+[data-mobile-device] .ranking-list > li { flex-wrap: nowrap; }
+[data-mobile-device] .ranking-score { display: grid; margin-left: auto; text-align: right; }
+[data-keyboard] .access-card > .access-tabs { display: none; }
+/* An existing room is a first-class return action, within the same fixed dashboard. */
+[data-mobile-device] .dashboard-page[data-mode=home]:has(> .invitation-banner) { grid-template-rows: auto minmax(0,1fr) auto 32px; }
+[data-mobile-device] .dashboard-page[data-mode=home]:has(> .invitation-banner) .dashboard-heading { grid-row: 1 / 5; }
+[data-mobile-device] .dashboard-page[data-mode=home] > .invitation-banner { grid-column: 2; grid-row: 1; margin: 0; padding: 4px 8px; font-size: 11px; }
+[data-mobile-device] .dashboard-page[data-mode=home]:has(> .invitation-banner) .dashboard-actions { grid-row: 2; }
+[data-mobile-device] .dashboard-page[data-mode=home]:has(> .invitation-banner) .mobile-main-menu { grid-row: 3; }
+[data-mobile-device] .dashboard-page[data-mode=home]:has(> .invitation-banner) .dashboard-links { grid-row: 4; }
+/* Long public summaries remain readable in a dedicated paginated detail view. */
+[data-mobile-device] .table-overlay .recent-history li, [data-mobile-device] .table-overlay .full-history li { display: grid; grid-template-columns: 44px minmax(0,1fr); align-items: center; gap: 8px; padding: 2px 6px; }
+[data-mobile-device] .table-overlay .activity-entry { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; border: 0; border-left: 1px solid var(--border); background: transparent; color: inherit; font: inherit; line-height: 18px; min-height: 36px; max-height: 36px; padding: 0 8px; text-align: left; cursor: pointer; }
+[data-mobile-device] .activity-entry:focus-visible { outline: 2px solid var(--gold); }
+[data-mobile-device] .activity-detail { font-size: 14px; line-height: 1.6; padding: 8px; margin: 0; }

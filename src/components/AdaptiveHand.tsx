@@ -26,8 +26,29 @@ export function AdaptiveHand({
     update()
     return () => observer.disconnect()
   }, [])
+  const [inspection, setInspection] = useState<number | null>(null)
+  const pointer = useRef<number | null>(null)
+  const suppressClickUntil = useRef(0)
   const cards = Children.toArray(children)
   const layout = layoutHand(cards.length, size.width, size.height)
+  const inspect = (clientX: number) => {
+    const bounds = region.current!.getBoundingClientRect()
+    return Math.max(
+      0,
+      Math.min(
+        cards.length - 1,
+        Math.floor(
+          (clientX - bounds.left - (layout.items[0]?.x ?? 0)) /
+            Math.max(0.001, layout.stepX),
+        ),
+      ),
+    )
+  }
+  const inspected =
+    inspection === null ? null : cards[Math.min(inspection, cards.length - 1)]
+  const description = isValidElement<{ 'aria-label'?: string }>(inspected)
+    ? inspected.props['aria-label']
+    : ''
   return (
     <div
       ref={region}
@@ -36,7 +57,51 @@ export function AdaptiveHand({
       aria-label="Your hand"
       data-hand-target
       data-rows={layout.rows}
+      data-density={layout.compact ? 'compact' : 'standard'}
+      onFocusCapture={(event) => {
+        const index = Array.from(
+          region.current!.querySelectorAll('.hand-card'),
+        ).indexOf(event.target as Element)
+        if (index >= 0) setInspection(index)
+      }}
+      onPointerDown={(event) => {
+        if (!layout.compact || !cards.length || event.button !== 0) return
+        event.preventDefault()
+        pointer.current = event.pointerId
+        event.currentTarget.setPointerCapture(event.pointerId)
+        setInspection(inspect(event.clientX))
+      }}
+      onPointerMove={(event) => {
+        if (pointer.current === event.pointerId)
+          setInspection(inspect(event.clientX))
+      }}
+      onPointerUp={(event) => {
+        if (pointer.current !== event.pointerId) return
+        const index = inspect(event.clientX)
+        pointer.current = null
+        suppressClickUntil.current = performance.now() + 500
+        setInspection(index)
+        region
+          .current!.querySelectorAll<HTMLButtonElement>('.hand-card')
+          [index]?.click()
+      }}
+      onPointerCancel={() => {
+        pointer.current = null
+      }}
+      onClickCapture={(event) => {
+        if (event.isTrusted && performance.now() < suppressClickUntil.current) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }}
     >
+      {layout.compact && (
+        <output className="hand-inspection" aria-live="polite">
+          {description
+            ? `${description} · ${(inspection ?? 0) + 1}/${cards.length}`
+            : 'Hold and move across your hand to inspect; release to select.'}
+        </output>
+      )}
       {cards.map((node, i) => {
         if (!isValidElement(node)) return node
         const card = node as ReactElement<{

@@ -1,3 +1,4 @@
+import { CareerGlance } from '../career/CareerGlance'
 import { Buddies } from '../career/Buddies'
 import { useMobileLandscape } from '../components/MobileOrientation'
 import { CompactForm } from '../components/CompactForm'
@@ -73,7 +74,7 @@ export function DashboardPage() {
         <div className="player-chip">
           <Avatar player={player} />
           <span>
-            {player.displayName}
+            <strong className="player-chip-name">{player.displayName}</strong>
             <small>
               {player.accountType === 'guest'
                 ? 'Guest player'
@@ -81,6 +82,7 @@ export function DashboardPage() {
             </small>
           </span>
         </div>
+        {mobile && <CareerGlance />}
       </div>
       {auth.room && (
         <div className="invitation-banner">
@@ -174,7 +176,7 @@ export function DashboardPage() {
             <a className="button button-secondary" href="#/rules">
               How to Play
             </a>
-            {player.accountType === 'registered' && (
+            {!mobile && player.accountType === 'registered' && (
               <a className="button button-secondary" href="#/profile">
                 Profile Settings
               </a>
