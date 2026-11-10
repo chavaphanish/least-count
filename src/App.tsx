@@ -74,7 +74,7 @@ export function App() {
     return () => removeEventListener('hashchange', navigate)
   }, [])
   useEffect(() => {
-    document.title = `Least Count — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : 'Your card table'}`
+    document.title = `Least Count — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
     if (previous.current !== current.page) {
       document.getElementById('main')?.focus()
       scrollTo(0, 0)
@@ -129,7 +129,7 @@ export function App() {
     } catch {
       content = (
         <p role="alert">
-          Invalid room code. <a href="#/">Return to dashboard</a>
+          Invalid room code. <a href="#/">Return to Lounge</a>
         </p>
       )
     }

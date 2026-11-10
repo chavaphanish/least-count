@@ -52,7 +52,7 @@ export function RecoveryPage() {
         </p>
       )}
       <a href="#/" className="text-link">
-        Back to dashboard
+        Back to Lounge
       </a>
     </section>
   )

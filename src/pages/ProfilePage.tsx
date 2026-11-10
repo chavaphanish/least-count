@@ -77,7 +77,7 @@ export function ProfilePage() {
         >
           Leave guest session to register
         </button>
-        <a href="#/">Return to dashboard</a>
+        <a href="#/">Return to Lounge</a>
       </section>
     )
   async function choose(image: File | undefined) {
@@ -183,7 +183,7 @@ export function ProfilePage() {
   return (
     <section className="profile-panel">
       <a className="text-link" href="#/">
-        ← Dashboard
+        ← Lounge
       </a>
       <p className="eyebrow">YOUR SEAT AT THE TABLE</p>
       <h1>

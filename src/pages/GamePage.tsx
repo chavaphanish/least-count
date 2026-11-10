@@ -84,7 +84,7 @@ export function GamePage({
   const header = (
     <>
       <a href="#/" className="text-link back-link">
-        ← Back to the lounge
+        ← Back to the Lounge
       </a>
       <div className="page-heading">
         <div>
@@ -275,7 +275,7 @@ export function GamePage({
           New game
         </button>
         <a className="text-link" href="#/">
-          Back to the lounge
+          Back to the Lounge
         </a>
         <a className="text-link" href="#/rules">
           How to Play →

@@ -92,7 +92,7 @@ export function RoomPage({
               location.hash = '#/'
             }}
           >
-            Back to dashboard
+            Back to Lounge
           </button>
         </div>
       </section>

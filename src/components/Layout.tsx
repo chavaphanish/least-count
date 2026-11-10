@@ -41,7 +41,7 @@ export function Layout({
             Rules
           </a>
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
-            Dashboard
+            Lounge
           </a>
           {mobile && user && <a href="#/profile">Profile</a>}
           {mobile && keyboard && (

@@ -87,7 +87,7 @@ test('visual audit of all existing mobile surfaces', async ({
   for (const mode of ['Create Game Room', 'Join Game Room']) {
     await page.getByRole('button', { name: mode }).click()
     await shot(mode.startsWith('Create') ? 'create' : 'join')
-    await page.getByRole('button', { name: 'Back to dashboard' }).click()
+    await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
   for (const mode of ['Leaderboards', 'Buddies', 'Settings']) {
     await page.getByRole('button', { name: mode, exact: true }).click()
@@ -106,7 +106,7 @@ test('visual audit of all existing mobile surfaces', async ({
       ).toBeVisible()
       await shot('buddy-search')
     }
-    await page.getByRole('button', { name: 'Back to dashboard' }).click()
+    await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
   await page.goto('/#/profile')
   await expect(
