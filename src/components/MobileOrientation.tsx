@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Capacitor } from '@capacitor/core'
 
@@ -31,6 +38,23 @@ function dimensions() {
 }
 export function MobileOrientation({ children }: { children: ReactNode }) {
   const [mobile] = useState(mobileDevice)
+  const [portrait, setPortrait] = useState(
+    () => matchMedia('(orientation: portrait)').matches,
+  )
+  const guard = useRef<HTMLDialogElement>(null)
+  const blocked = mobile && portrait
+  useEffect(() => {
+    const query = matchMedia('(orientation: portrait)')
+    const update = () => setPortrait(query.matches)
+    query.addEventListener('change', update)
+    update()
+    return () => query.removeEventListener('change', update)
+  }, [])
+  useLayoutEffect(() => {
+    const dialog = guard.current!
+    if (blocked && !dialog.open) dialog.showModal()
+    else if (!blocked && dialog.open) dialog.close()
+  }, [blocked])
   const [viewport, setViewport] = useState<Viewport>(() => ({
     mobile,
     ...dimensions(),
@@ -91,7 +115,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
     )
       return
     requested.current = true
-    // One supported request, no resize loop, fullscreen coercion or orientation warning.
+    // One supported request, no resize loop, fullscreen coercion.
     void orientation.lock('landscape').catch(() => {})
   }, [mobile])
   return (
@@ -107,7 +131,45 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           } as CSSProperties
         }
       >
-        <div className="orientation-content">{children}</div>
+        <div
+          className="orientation-content"
+          hidden={blocked}
+          inert={blocked}
+          aria-hidden={blocked || undefined}
+        >
+          {children}
+        </div>
+        <dialog
+          ref={guard}
+          className="orientation-guard"
+          aria-labelledby="orientation-title"
+          aria-describedby="orientation-description"
+          onCancel={(event) => event.preventDefault()}
+        >
+          <svg
+            viewBox="0 0 80 80"
+            width="80"
+            height="80"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            aria-hidden="true"
+          >
+            <rect
+              x="24"
+              y="13"
+              width="32"
+              height="54"
+              rx="5"
+              transform="rotate(35 40 40)"
+            />
+            <path d="M10 35a31 31 0 0 1 49-20m-1-10 2 11-11 1M70 45a31 31 0 0 1-49 20m1 10-2-11 11-1" />
+          </svg>
+          <h1 id="orientation-title">Rotate Your Phone</h1>
+          <p id="orientation-description">
+            Least Count is designed to be played in landscape mode.
+          </p>
+        </dialog>
       </div>
     </ViewportContext.Provider>
   )

@@ -64,7 +64,7 @@ async function controlled(page: Page) {
 test.describe('Android landscape', () => {
   test.use({ userAgent: android, isMobile: true, hasTouch: true })
   for (const size of sizes)
-    test(`touch play, portrait fallback and eligible Declare Least at ${size.width} × ${size.height}`, async ({
+    test(`touch play, portrait guard and eligible Declare Least at ${size.width} × ${size.height}`, async ({
       page,
     }) => {
       await page.setViewportSize(size)
@@ -92,8 +92,8 @@ test.describe('Android landscape', () => {
       await page.setViewportSize({ width: size.height, height: size.width })
       await expect(
         page.getByRole('dialog', { name: 'Rotate Your Phone' }),
-      ).toHaveCount(0)
-      await expect(page.locator('.orientation-content')).not.toHaveAttribute(
+      ).toBeVisible()
+      await expect(page.locator('.orientation-content')).toHaveAttribute(
         'inert',
         '',
       )
