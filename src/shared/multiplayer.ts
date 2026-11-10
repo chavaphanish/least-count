@@ -1,3 +1,4 @@
+import type { PlayerIdentityData } from './playerIdentity'
 import type { PrivateProfile } from './identity'
 import type { GameEvent } from '../game/events'
 import type { Card } from '../game/cards'
@@ -5,7 +6,7 @@ import type { GameCard } from '../game/deck'
 import type { Phase, RoundResult } from '../game/engine'
 
 export type AccountType = 'guest' | 'registered'
-export type PublicPlayer = {
+export type PublicPlayer = PlayerIdentityData & {
   id: string
   displayName: string
   avatarUrl: string | null

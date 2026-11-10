@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import type { PublicPlayer } from '../shared/multiplayer'
+import type { PlayerIdentityData } from '../shared/playerIdentity'
+import { playerIdentity } from '../shared/playerIdentity'
 export function Avatar({
   player,
 }: {
-  player: Pick<PublicPlayer, 'displayName' | 'avatarUrl'>
+  player: PlayerIdentityData
 }) {
   const [failed, setFailed] = useState<string | null>(null)
   return (
@@ -11,12 +12,12 @@ export function Avatar({
       {player.avatarUrl && failed !== player.avatarUrl ? (
         <img
           src={player.avatarUrl}
-          alt={`${player.displayName}'s profile picture`}
-          onError={() => setFailed(player.avatarUrl)}
+          alt={`${playerIdentity(player).label}'s profile picture`}
+          onError={() => setFailed(player.avatarUrl ?? null)}
         />
       ) : (
         <span aria-hidden="true">
-          {player.displayName.replace(/^@/, '').slice(0, 2).toUpperCase()}
+          {(player.firstName && player.lastName ? `${player.firstName[0]}${player.lastName[0]}` : player.displayName.replace(/^@/, '').slice(0, 2)).toUpperCase()}
         </span>
       )}
     </span>

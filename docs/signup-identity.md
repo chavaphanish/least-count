@@ -1,3 +1,5 @@
+> Public identity update: after the signup migration, apply [`202611100002_public_player_names.sql`](../supabase/migrations/202611100002_public_player_names.sql) as one complete query. Names and @usernames are now public, including career/history identities; email and authentication remain private. This additive function changes no account IDs, profiles, XP, buddies or history. Missing legacy names fall back to usernames and can be completed in My Profile. The sections below describe the original signup rollout.
+
 # Signup identity rollout
 
 Apply `supabase/migrations/202611100001_signup_identity.sql` after the three earlier profile/avatar/career migrations. Use the **Supabase SQL editor** with the project owner connection. The app's public key cannot perform migrations. No service-role key belongs in the browser or chat.
@@ -37,7 +39,7 @@ select count(*) as profiles,
 from public.profiles;
 ```
 
-The first two counts should match, `invalid_usernames` must be zero, and legacy completion prompts are expected. The earlier account/XP/history/buddy counts must be unchanged. Confirm both existing users can sign in, see their original careers and photos, and complete their own profile without seeing another person's private names.
+The first two counts should match, `invalid_usernames` must be zero, and legacy completion prompts are expected. The earlier account/XP/history/buddy counts must be unchanged. Confirm both existing users can sign in, see their original careers and photos, and complete their own profile without seeing another person's email or authentication data.
 
 ## Provider settings and deployment
 

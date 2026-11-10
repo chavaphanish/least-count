@@ -2,6 +2,8 @@ import { ScreenPages, PagedItems } from '../components/ScreenPages'
 import { useMobileLandscape } from '../components/MobileOrientation'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
+import { PlayerIdentity as Identity } from '../components/PlayerIdentity'
+import { playerIdentity } from '../shared/playerIdentity'
 import { Avatar } from '../components/Avatar'
 import { useCareer } from './useCareer'
 import { BuddyAction } from './BuddyAction'
@@ -58,6 +60,11 @@ export function CareerProfile({
       ? {
           ...data.profile,
           displayName: auth.user.player.displayName,
+          ...(auth.user.player.username ? {
+            username: auth.user.player.username,
+            firstName: auth.user.player.firstName,
+            lastName: auth.user.player.lastName,
+          } : {}),
           avatarUrl: auth.user.player.avatarUrl,
         }
       : data.profile
@@ -105,8 +112,7 @@ export function CareerProfile({
           <p className="eyebrow">
             LEVEL {xp.level} · {p.xp.toLocaleString()} XP
           </p>
-          <NameHeading>{p.displayName}</NameHeading>
-          <p className="public-username">@{p.username}</p>
+          <NameHeading><Identity player={p} /></NameHeading>
           <small>
             Joined {new Date(p.createdAt).toLocaleDateString()} · Global #
             {p.rank ?? '—'}
@@ -382,7 +388,7 @@ function History({ games }: { games: GameReport[] }) {
               <small>
                 {game.players
                   .filter((p) => p.id !== uid)
-                  .map((p) => p.name)
+                  .map((p) => playerIdentity({ ...p, displayName: p.name }).label)
                   .join(', ')}{' '}
                 · {duration(own?.stats.playingMs ?? 0)}
               </small>
@@ -442,7 +448,7 @@ export function GameHistoryReport({ id }: { id: string }) {
                   <PagedItems as="ul" label="players" size={3}>
                     {data.players.map((p) => (
                       <li key={p.id}>
-                        {p.name} · {p.outcome} · score {p.score} · place{' '}
+                        <Identity player={{ ...p, displayName: p.name }} compact /> · {p.outcome} · score {p.score} · place{' '}
                         {p.rank ?? '—'}
                         {p.elimination === 'score'
                           ? ' · score eliminated'
@@ -468,7 +474,7 @@ export function GameHistoryReport({ id }: { id: string }) {
                   <PagedItems as="ul" label="scores" size={3}>
                     {round.scores.map((score) => (
                       <li key={score.id}>
-                        {score.name}: hand {score.total}, +{score.penalty}{' '}
+                        <Identity player={{ ...score, displayName: score.name }} compact />: hand {score.total}, +{score.penalty}{' '}
                         penalty, {score.score} cumulative
                       </li>
                     ))}

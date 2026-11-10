@@ -13,6 +13,8 @@ import { GameActivity } from '../components/GameActivity'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
+import { playerIdentity } from '../shared/playerIdentity'
+import { PlayerIdentity } from '../components/PlayerIdentity'
 import { Avatar } from '../components/Avatar'
 import { PlayingCard } from '../components/PlayingCard'
 import { cardLabel, handTotal } from '../game/deck'
@@ -104,6 +106,9 @@ export function RoomPage({
     connected === room.settings.maxPlayers
   const g = room.game
   const own = g?.players.find((p) => p.id === id)
+  const current = g?.players.find((p) => p.id === g.currentPlayerId)
+  const activeName = current ? playerIdentity(current).label : 'the active player'
+  const winner = g?.players.find((p) => !p.eliminated)
   const yours =
     !!g &&
     g.currentPlayerId === id &&
@@ -159,16 +164,13 @@ export function RoomPage({
       {g && (
         <MobileGameBar
           round={g.round}
-          activeName={
-            g.players.find((p) => p.id === g.currentPlayerId)?.displayName ??
-            'Player'
-          }
+          activeName={activeName}
           seconds={final ? null : seconds}
           joker={g.indicator}
           penalty={g.penalty}
           players={g.players.map((p) => ({
             id: p.id,
-            name: p.displayName,
+            name: playerIdentity(p).label,
             score: p.score,
             eliminated: p.eliminated,
           }))}
@@ -270,7 +272,7 @@ export function RoomPage({
               >
                 <Avatar player={m} />
                 <h3>
-                  {m.displayName}
+                  <PlayerIdentity player={m} compact />
                   {m.id === id ? ' (You)' : ''}
                 </h3>
                 <span className="account-badge">
@@ -339,7 +341,7 @@ export function RoomPage({
           </p>
           <div className="match-toolbar">
             <strong>
-              {g.players.find((p) => p.id === g.currentPlayerId)?.displayName}’s
+              {activeName}’s
               turn
             </strong>
           </div>
@@ -363,7 +365,7 @@ export function RoomPage({
                     status={p.accountType === 'guest' ? 'Guest' : 'Registered'}
                     timer={
                       !final && p.id === g.currentPlayerId ? (
-                        <TurnTimer seconds={seconds} name={p.displayName} />
+                        <TurnTimer seconds={seconds} name={playerIdentity(p).label} />
                       ) : null
                     }
                   />
@@ -405,7 +407,7 @@ export function RoomPage({
                 !final && g.currentPlayerId === id ? (
                   <TurnTimer
                     seconds={seconds}
-                    name={own?.displayName ?? 'You'}
+                    name={own ? playerIdentity(own).label : 'You'}
                   />
                 ) : null
               }
@@ -442,10 +444,7 @@ export function RoomPage({
           <TurnActions
             phase={g.phase}
             yours={yours}
-            activeName={
-              g.players.find((player) => player.id === g.currentPlayerId)
-                ?.displayName ?? 'the active player'
-            }
+            activeName={activeName}
             busy={busy}
             moving={!!animation}
             hand={g.hand}
@@ -487,7 +486,7 @@ export function RoomPage({
                 )}
                 <h2>
                   {g.phase === 'game-over'
-                    ? `${g.players.find((p) => !p.eliminated)?.displayName} wins the match!`
+                    ? `${winner ? playerIdentity(winner).label : 'The remaining player'} wins the match!`
                     : g.result.reason === 'show'
                       ? g.result.successful
                         ? 'Least successful!'
@@ -547,7 +546,7 @@ export function RoomPage({
               <ul>
                 {g.players.map((p) => (
                   <li key={p.id}>
-                    <span>{p.displayName}</span>
+                    <PlayerIdentity player={p} compact />
                     <strong>{p.score}</strong>
                     <small>{p.eliminated ? 'Eliminated' : 'Active'}</small>
                   </li>

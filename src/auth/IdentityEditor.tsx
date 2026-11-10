@@ -39,7 +39,7 @@ export function IdentityEditor() {
         }),
       })
       await auth.refresh()
-      setNotice('Your identity is saved. Personal names stay private.')
+      setNotice('Your public name and username are saved.')
     } catch (reason) {
       availability.refresh()
       setError(reason instanceof Error ? reason.message : 'Please retry.')
@@ -77,7 +77,7 @@ export function IdentityEditor() {
       </CompactForm>
       {!notice && !error && (
         <p className="field-hint">
-          Only your @username is public. First and last names are private.
+          Your name and @username are visible to other players.
         </p>
       )}
     </section>

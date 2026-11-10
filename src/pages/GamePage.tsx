@@ -1,3 +1,5 @@
+import { playerIdentity, withPlayerNames } from '../shared/playerIdentity'
+import { PlayerIdentity } from '../components/PlayerIdentity'
 import { MobileGameBar } from '../components/MobileGameBar'
 import { OpponentSeat } from '../components/OpponentSeat'
 import { useActiveSeat } from '../hooks/useActiveSeat'
@@ -157,7 +159,8 @@ export function GamePage({
     )
 
   const human = game.players[0]
-  const current = game.players[game.current]
+  const displayGame = auth.user ? withPlayerNames(game, [{ ...auth.user.player, id: human.id }]) : game
+  const current = displayGame.players[game.current]
   const playing = isPlaying(game)
   const yours = playing && game.current === 0 && !human.eliminated && !animation
   const canSelect =
@@ -264,7 +267,7 @@ export function GamePage({
         seconds={playing && game.deadline !== null ? seconds : null}
         joker={game.indicator}
         penalty={game.phase === 'penalty' ? (game.sevens?.amount ?? 0) : 0}
-        players={game.players}
+        players={displayGame.players}
       >
         <p>Local practice · cutoff 100</p>
         <button
@@ -399,7 +402,7 @@ export function GamePage({
             playing && game.current === 0 ? (
               <TurnTimer
                 seconds={game.deadline === null ? null : seconds}
-                name={human.name}
+                name={auth.user ? playerIdentity(auth.user.player).label : human.name}
               />
             ) : null
           }
@@ -466,7 +469,7 @@ export function GamePage({
       )}
       {game.result && (
         <RoundSummary
-          game={game}
+          game={displayGame}
           nextRound={() => {
             setSelected([])
             send({ type: 'next-round' })
@@ -478,9 +481,9 @@ export function GamePage({
         <section className="match-scores" aria-labelledby="match-scores-title">
           <h2 id="match-scores-title">Match scores</h2>
           <ul>
-            {game.players.map((player) => (
+            {displayGame.players.map((player) => (
               <li key={player.id}>
-                <span>{player.name}</span>
+                <span>{auth.user && player.id === human.id ? <PlayerIdentity player={auth.user.player} compact /> : player.name}</span>
                 <strong>{player.score}</strong>
                 <small>
                   {player.eliminated
@@ -491,7 +494,7 @@ export function GamePage({
             ))}
           </ul>
         </section>
-        <GameActivity events={gameEvents(game)} />
+        <GameActivity events={gameEvents(displayGame)} />
       </div>
       <div className="table-footnote">
         <span>

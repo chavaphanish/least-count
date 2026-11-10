@@ -1,6 +1,7 @@
 import { Children } from 'react'
 import type { ReactNode } from 'react'
-import type { PublicPlayer } from '../shared/multiplayer'
+import { PlayerIdentity } from './PlayerIdentity'
+import type { PlayerIdentityData } from '../shared/playerIdentity'
 import { Avatar } from './Avatar'
 import { useMobileLandscape } from './MobileOrientation'
 import { AdaptiveHand } from './AdaptiveHand'
@@ -15,7 +16,7 @@ export function PlayerHand({
   active = false,
   timer,
 }: {
-  player: Pick<PublicPlayer, 'displayName' | 'avatarUrl'>
+  player: PlayerIdentityData
   total: number
   score: number
   children: ReactNode
@@ -35,7 +36,7 @@ export function PlayerHand({
           <Avatar player={player} />
           <div>
             <h2>Your hand</h2>
-            <span className="hand-player-name">{player.displayName}</span>
+            <span className="hand-player-name"><PlayerIdentity player={player} compact /></span>
           </div>
         </div>
         {timer}

@@ -142,6 +142,9 @@ export async function authenticate(
           typeof row.username === 'string' && !usernameError(row.username)
             ? `@${row.username}`
             : row.display_name,
+        ...(typeof row.username === 'string' && !usernameError(row.username) ? {
+          username: row.username, firstName: row.first_name ?? '', lastName: row.last_name ?? '',
+        } : {}),
         avatarUrl,
         accountType: 'registered',
       },
