@@ -10,6 +10,7 @@ import {
   inspectDiscard,
   latestGroup,
   pickupCards,
+  resolveForcedDraw,
   TURN_MS,
 } from './engine'
 import type { Action, GameState } from './engine'
@@ -693,4 +694,104 @@ describe('simulated opponents and whole matches', () => {
       }
     },
   )
+})
+
+describe('Power Card 7 pickup exclusion', () => {
+  function fullCycle(count = 2) {
+    let s = fixture(count)
+    s.players.forEach((p) => { p.hand = [card('7'), card('5'), card('K')] })
+    const sevens = s.players.map((p) => p.hand[0])
+    for (const seven of sevens) {
+      s = discard(s, [seven.id])
+      expect(s.eligible).toEqual([])
+      expect(pickupCards(s)).toEqual([])
+    }
+    return { s, sevens }
+  }
+  it.each([2, 3, 4, 5, 6, 7, 8])(
+    'excludes all 7s after a %i-player cycle and automatically replaces a nonmatching drop',
+    (count) => {
+      const { s, sevens } = fullCycle(count)
+      expect(s.sevens).toBeNull()
+      expect(s.current).toBe(0)
+      expect(s.phase).toBe('turn')
+      expect(s.discards.flat()).toEqual(expect.arrayContaining(sevens))
+      const outgoing = s.players[0].hand[0]
+      const before = structuredClone(s)
+      expect(() => act(s, {type:'play-turn',playerId:'p0',cardIds:[outgoing.id],source:'discard',cardId:sevens.at(-1)!.id})).toThrow()
+      expect(s).toEqual(before)
+      const next = discard(s, [outgoing.id])
+      expect(next.current).toBe(1)
+      expect(next.phase).toBe('turn')
+      expect(next.players[0].hand).toEqual([s.players[0].hand[1], s.drawPile.at(-1)])
+      expect(next.drawPile).toHaveLength(s.drawPile.length - 1)
+      expect(next.discards.flat()).toEqual(expect.arrayContaining(sevens))
+      expect(pickupCards(next)).toEqual([outgoing])
+      expect(next.events!.at(-1)).toMatchObject({type:'TURN_COMPLETED',draw:'automatic'})
+    },
+  )
+  it.each(['draw', 'play-turn'] as const)('rejects a stale eligible 7 via %s atomically while preserving normal pickup', (type) => {
+    const s = fixture()
+    const seven = card('7'), normal = card('3'), outgoing = s.players[0].hand[0]
+    s.discards = [[seven], [normal]]
+    s.eligible = [seven.id, normal.id]
+    expect(pickupCards(s)).toEqual([normal])
+    const pending = type === 'draw' ? discard(s, [outgoing.id]) : s
+    const before = structuredClone(pending)
+    const action: Action = type === 'draw'
+      ? {type,playerId:'p0',source:'discard',cardId:seven.id}
+      : {type,playerId:'p0',source:'discard',cardId:seven.id,cardIds:[outgoing.id]}
+    expect(() => act(pending, action)).toThrow(/eligible group/)
+    expect(pending).toEqual(before)
+    const next = act(pending, {...action,cardId:normal.id})
+    expect(next.players[0].hand).toContainEqual(normal)
+    expect(next.players[0].hand).not.toContainEqual(seven)
+    expect(next.discards.flat()).toContainEqual(seven)
+  })
+  it('automatically resolves a legacy normal draw with only stale eligible 7 IDs', () => {
+    const s = fixture()
+    const seven = card('7'), ownDrop = card('5')
+    s.discards = [[seven], [ownDrop]]
+    s.eligible = [seven.id]
+    s.discardedRank = '5'
+    s.phase = 'draw'
+    const before = structuredClone(s)
+    expect(() => act(s, {type:'draw',playerId:'p0',source:'discard',cardId:seven.id})).toThrow(/eligible group/)
+    expect(s).toEqual(before)
+    const next = resolveForcedDraw(s, 100, seeded(3))
+    expect(next.players[0].hand).toEqual([...s.players[0].hand,s.drawPile.at(-1)])
+    expect(next.current).toBe(1)
+    expect(next.discards.flat()).toContainEqual(seven)
+    expect(pickupCards(next)).toEqual([ownDrop])
+    expect(s).toEqual(before)
+  })
+  it('rejects pickup in a legacy pending 7 draw instead of silently accepting the action', () => {
+    const s = fixture()
+    const seven = card('7')
+    s.discards = [[seven]]
+    s.eligible = [seven.id]
+    s.discardedRank = '7'
+    s.phase = 'draw'
+    const before = structuredClone(s)
+    expect(() => act(s, {type:'draw',playerId:'p0',source:'discard',cardId:seven.id})).toThrow(/no replacement pickup/)
+    expect(s).toEqual(before)
+  })
+  it('allows a face-down 7 draw after a cycle and preserves every card when the pile recycles', () => {
+    const {s,sevens} = fullCycle()
+    const outgoing = s.players[0].hand[0]
+    // Once returned to the face-down pile, a 7 may be drawn normally.
+    s.drawPile = [card('7')]
+    const fromPile = s.drawPile[0]
+    const next = act(s, {type:'play-turn',playerId:'p0',cardIds:[outgoing.id],source:'pile'})
+    expect(next.players[0].hand).toContainEqual(fromPile)
+    expect(next.discards.flat()).toEqual(expect.arrayContaining(sevens))
+    const recycling = structuredClone(s)
+    recycling.drawPile = []
+    const ids = (state: GameState) => [state.indicator, ...state.players.flatMap(p=>p.hand), ...state.discards.flat(), ...state.drawPile].map(c=>c.id).sort()
+    const recycled = discard(recycling, [outgoing.id])
+    expect(ids(recycled)).toEqual(ids(recycling))
+    expect(new Set(ids(recycled)).size).toBe(ids(recycled).length)
+    expect(recycled.events!.some(e=>e.type==='PILE_RECYCLED')).toBe(true)
+    expect(pickupCards(recycled)).toEqual([outgoing])
+  })
 })

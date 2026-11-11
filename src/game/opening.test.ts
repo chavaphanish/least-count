@@ -352,6 +352,8 @@ describe('opening 7 remains a penalty', () => {
       expect(s.sevens).toBeNull()
       expect(s.phase).toBe('turn')
       expect(s.current).toBe(first)
+      expect(s.eligible).toEqual([])
+      expect(pickupCards(s)).toEqual([])
     },
   )
 })

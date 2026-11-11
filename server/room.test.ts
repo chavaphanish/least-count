@@ -264,3 +264,34 @@ it('projects only public name fields and uses both names and handles in game eve
   expect(r.game!.players[0].name).toBe('John Smith (@cardmaster99)')
   expect(JSON.stringify(r.game)).toBe(before)
 })
+
+it('rejects forged 7 pickups after a full cycle and synchronizes the automatic replacement', () => {
+  const r = full(2, false)
+  start(r, r.hostId, 0, () => .5)
+  const game = r.game!
+  game.current = 0
+  game.phase = 'turn'
+  game.sevens = null
+  game.discardedRank = null
+  game.eligible = []
+  game.discards = [[{...createCard('clubs','4'),id:'previous-four'}]]
+  const host = r.members[0].id, other = r.members[1].id
+  game.players.forEach((p,i)=>{p.hand=[{...createCard('clubs','7'),id:`seven-${i}`},{...createCard('clubs','5'),id:`five-${i}`},{...createCard('clubs','K'),id:`king-${i}`}]})
+  gameAction(r,host,{type:'discard',cardIds:['seven-0']},1)
+  gameAction(r,other,{type:'discard',cardIds:['seven-1']},2)
+  expect(r.game!.sevens).toBeNull()
+  expect(r.game!.current).toBe(0)
+  for (const id of [host,other]) expect(view(r,id,2).game!.pickup).toEqual([])
+  // Also protect a persisted old state whose cycle left the last 7 eligible.
+  r.game!.eligible = ['seven-1']
+  const before = structuredClone(r)
+  expect(()=>gameAction(r,host,{type:'play-turn',cardIds:['five-0'],source:'discard',cardId:'seven-1'},3)).toThrow()
+  expect(r).toEqual(before)
+  gameAction(r,host,{type:'discard',cardIds:['five-0']},3)
+  expect(r.game!.current).toBe(1)
+  const own = view(r,host,3).game!, peer = view(r,other,3).game!
+  expect(own.players).toEqual(peer.players)
+  expect(own.drawCount).toBe(peer.drawCount)
+  expect(own.pickup).toEqual([{...createCard('clubs','5'),id:'five-0'}])
+  expect(peer.pickup).toEqual(own.pickup)
+})
