@@ -5,12 +5,16 @@ export function PasswordField({
   onChange,
   error,
   disabled,
+  autoComplete = 'new-password',
+  minimumLength = 8,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   error?: string
   disabled?: boolean
+  autoComplete?: 'new-password' | 'current-password'
+  minimumLength?: number
   'data-form-field'?: boolean
 }) {
   const [shown, setShown] = useState(false)
@@ -25,9 +29,10 @@ export function PasswordField({
           disabled={disabled}
           required
           type={shown ? 'text' : 'password'}
-          minLength={8}
+          minLength={minimumLength}
           maxLength={128}
-          autoComplete="new-password"
+          autoComplete={autoComplete}
+          placeholder={label === 'Confirm Password' ? 'Confirm password' : 'Password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           aria-invalid={!!error}

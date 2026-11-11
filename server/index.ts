@@ -1,3 +1,4 @@
+import { accessLimit, availability, login, register } from './access'
 import { checkUsername, saveIdentity } from './identity'
 import { careerOriginAllowed } from './career'
 import { careerApi } from './career-api'
@@ -92,6 +93,12 @@ export default {
       ) {
         // Await here so asynchronous failures use the JSON error handler below.
         return await careerApi(request, env)
+      }
+      if (['/api/auth/login','/api/auth/availability','/api/auth/register'].includes(url.pathname) && request.method === 'POST') {
+        const operation=url.pathname.split('/').at(-1)!
+        await accessLimit(request,env,operation)
+        const input=await body(request)
+        return json(operation==='login'?await login(env,input):operation==='register'?await register(request,env,input):await availability(env,input))
       }
       if (url.pathname === '/api/username' && request.method === 'GET')
         return json(await checkUsername(request, env))

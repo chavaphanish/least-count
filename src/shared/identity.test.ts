@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  registrationUsername,
+  registrationName,
   username,
   usernameError,
   personalName,
@@ -45,4 +47,18 @@ describe('registration validation', () => {
     expect(passwordError('short')).not.toBe('')
     expect(passwordError('        ')).not.toBe('')
   })
+})
+
+describe('new registration rules preserve legacy identity compatibility',()=>{
+ it('uses the 8–20 new username limit without rejecting existing 24-character handles',()=>{
+  expect(registrationUsername('CardMaster99')).toBe('cardmaster99')
+  expect(registrationUsername('A'.repeat(20))).toHaveLength(20)
+  expect(()=>registrationUsername('A'.repeat(21))).toThrow(/8 and 20/)
+  expect(username('A'.repeat(24))).toHaveLength(24)
+ })
+ it.each(['John123','Mary-Jane',"O'Connor",'John Smith','李','', '   '])('rejects new-account personal name %j',value=>expect(()=>registrationName(value,'First Name')).toThrow())
+ it('trims valid English names without rewriting legacy international names',()=>{
+  expect(registrationName(' John ')).toBe('John');expect(personalName('Élodie O’Neill')).toBe('Élodie O’Neill')
+ })
+ it.each(['a..b@example.test','.a@example.test','a.@example.test','a@-example.test','a@domain..test','x'.repeat(65)+'@example.test'])('rejects malformed email %j',value=>expect(validEmail(value)).toBe(false))
 })

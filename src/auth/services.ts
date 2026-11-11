@@ -27,6 +27,14 @@ export class Services {
     this.providerUrl = config.supabase?.url ?? ''
     this.provider = config.supabase
       ? createClient(config.supabase.url, config.supabase.publishableKey, {
+          global: { fetch: (input, init) => {
+            const url=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url)
+            // The SDK still owns PKCE, verification and session storage. Only signup
+            // transport passes through the Worker for final validation/race checks.
+            if(url.origin===config.supabase!.url && url.pathname==='/auth/v1/signup' && init?.method==='POST')
+              return fetch('/api/auth/register',{...init,headers:{'Content-Type':'application/json'},credentials:'same-origin',signal:init.signal??AbortSignal.timeout(25000)})
+            return fetch(input,init)
+          }},
           auth: {
             flowType: 'pkce',
             persistSession: true,

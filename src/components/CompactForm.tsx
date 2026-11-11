@@ -62,7 +62,7 @@ export function CompactForm({
     fields.length > 1
   const current = Math.min(step, fields.length - 1)
   const advance = () => {
-    if (ref.current?.reportValidity()) setStep(current + 1)
+    if (props.noValidate || ref.current?.reportValidity()) setStep(current + 1)
   }
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     if (wizard && current < fields.length - 1) {
@@ -70,7 +70,7 @@ export function CompactForm({
       advance()
       return
     }
-    if (wizard) {
+    if (wizard && !props.noValidate) {
       const inputs = Array.from(
         ref.current!.querySelectorAll<
           HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement

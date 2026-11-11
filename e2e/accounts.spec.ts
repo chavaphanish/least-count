@@ -71,12 +71,12 @@ test('email signup requests verification and recovery requests a real provider r
   await mockProvider(page)
   let signup: Record<string, unknown> = {}
   await page.route(
-    'https://mock-project.supabase.co/auth/v1/signup**',
+    '**/api/auth/register',
     async (route) => {
       signup = route.request().postDataJSON()
       await route.fulfill({
         json: {
-          user: { id: 'new-user', email: 'new@example.test', identities: [] },
+          user: { id: 'new-user', email: 'new@example.test', identities: [{}] },
           session: null,
         },
       })
@@ -97,13 +97,14 @@ test('email signup requests verification and recovery requests a real provider r
   await page.route('**/api/username?**', (r) =>
     r.fulfill({ json: { available: true } }),
   )
-  await page.getByLabel('Username', { exact: true }).fill('NewPlayer99')
   await page.getByLabel('First Name', { exact: true }).fill('New')
   await page.getByLabel('Last Name', { exact: true }).fill('Player')
   await expect(
     page.getByRole('button', { name: 'Next', exact: true }),
   ).toBeEnabled()
   await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await page.route('**/api/auth/availability',r=>r.fulfill({json:{usernameAvailable:true,emailAvailable:true}}))
+  await page.getByLabel('Username', { exact: true }).fill('NewPlayer99')
   await page.getByLabel('Email address').fill('new@example.test')
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByLabel('Password', { exact: true }).fill('test-only-password')
@@ -141,7 +142,7 @@ test('failed email callback keeps its invitation and allows another sign-in atte
   await expect(
     page.getByText('Your invitation to room', { exact: false }),
   ).toContainText('ABC234')
-  await expect(page.getByLabel('Email address')).toBeVisible()
+  await expect(page.getByLabel('Email or Username')).toBeVisible()
 })
 
 test('registered profile restores, saves name, rejects invalid image, and removes avatar', async ({

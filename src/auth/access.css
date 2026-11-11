@@ -1,0 +1,18 @@
+/* The tagline deliberately shares the exact regular copy typography below it. */
+.access-story > .brand-tagline { font-family: inherit; font-style: normal; font-weight: 400; font-size: 14px; line-height: 1.9; letter-spacing: normal; display: block; color: var(--muted); }
+.access-story h1.brand-wordmark { margin-bottom: 6px; }
+.access-page input::placeholder { color: var(--muted); opacity: .8; }
+.validation-dialog .table-overlay-body { display: grid; gap: 16px; }
+.validation-dialog li { line-height: 1.6; }
+.validation-dialog .button { justify-self: end; }
+[data-mobile-device] .access-story > .brand-tagline { font-size: 12px; line-height: 1.5; }
+[data-mobile-device] .access-story h1.brand-wordmark { margin-bottom: 4px; }
+.validation-dialog { inset: auto; top: calc(var(--app-height,100dvh) / 2); left: calc(var(--app-width,100dvw) / 2); transform: translate(-50%,-50%); margin: 0; width: min(520px,calc(var(--app-width,100dvw) - 32px)); max-height: calc(var(--app-height,100dvh) - 16px); }
+[data-keyboard] .validation-dialog .table-overlay-shell { max-height: calc(var(--app-height) - 16px); }
+[data-keyboard] .validation-dialog header, [data-keyboard] .validation-dialog .table-overlay-body { padding: 6px 10px; }
+[data-keyboard] .validation-dialog .table-overlay-body { gap: 6px; }
+[data-keyboard] .validation-dialog li { font-size: 12px; line-height: 1.35; }
+[data-keyboard] .validation-dialog ul { margin: 0; padding-left: 16px; }
+[data-mobile-device] .validation-dialog { width: min(520px,calc(var(--app-width) - 32px)); max-height: calc(var(--app-height) - 16px); }
+[data-keyboard] .validation-dialog .table-overlay-body { grid-template-columns: minmax(0,1fr) auto; align-items: center; overflow: auto; }
+[data-keyboard] .validation-dialog .button { min-height: 44px; padding: 10px 16px; }
