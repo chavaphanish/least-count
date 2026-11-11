@@ -1,3 +1,5 @@
+import { PasswordField } from '../components/PasswordField'
+import { registrationEmail } from '../shared/identity'
 import { SignupForm } from '../auth/SignupForm'
 import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
@@ -36,16 +38,19 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             'If an account exists for that email, a reset link has been requested. Check your inbox. Email delivery depends on the configured provider.',
           )
         } else {
-          const { error } = await provider.auth.signInWithPassword({
-            email,
-            password,
-          })
-          if (error) throw error
+          if(email.includes('@')) {
+            const {error}=await provider.auth.signInWithPassword({email:registrationEmail(email),password})
+            if(error)throw error
+          } else {
+            const result=await auth.services.api<{session:{access_token:string;refresh_token:string}}>('/auth/login',{method:'POST',body:JSON.stringify({identifier:email,password})},AbortSignal.timeout(25000))
+            const applied=await provider.auth.setSession(result.session)
+            if(applied.error)throw applied.error
+          }
           await auth.refresh()
         }
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Please retry.')
+      setError(mode==='signin' ? 'Invalid email/username or password.' : error instanceof Error ? error.message : 'Please retry.')
     } finally {
       setBusy(false)
     }
@@ -96,15 +101,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             </button>
           ))}
         </div>
-        <h2>
-          {mode === 'guest'
-            ? 'Make yourself at home.'
-            : mode === 'signup'
-              ? 'A new seat at the table.'
-              : mode === 'reset'
-                ? 'Reset your password.'
-                : 'Welcome back.'}
-        </h2>
+        {(mode==='guest'||mode==='reset')&&<h2>{mode==='guest'?'Make yourself at home.':'Reset your password.'}</h2>}
         {!auth.configured && mode !== 'guest' && (
           <p className="service-note">
             Registered accounts need Supabase configuration. Guest rooms and
@@ -134,6 +131,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
                   minLength={2}
                   maxLength={24}
                   autoComplete="nickname"
+                  placeholder="Enter guest name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -141,30 +139,19 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             )}
             {mode !== 'guest' && (
               <label>
-                Email address
+                {mode==='signin'?'Email or Username':'Email address'}
                 <input
                   required
-                  type="email"
-                  autoComplete="email"
+                  type={mode==='signin'?'text':'email'}
+                  placeholder={mode==='signin'?'Email or username':'yourmail@provider.com'}
+                  autoComplete={mode==='signin'?'username':'email'}
+                  autoCapitalize="none"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
             )}
-            {mode === 'signin' && (
-              <label>
-                Password
-                <input
-                  required
-                  type="password"
-                  minLength={8}
-                  maxLength={128}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </label>
-            )}
+            {mode==='signin'&&<PasswordField data-form-field label="Password" value={password} onChange={setPassword} autoComplete="current-password" minimumLength={1} />}
             {(error || auth.error) && (
               <p className="game-alert" role="alert">
                 {error || auth.error}

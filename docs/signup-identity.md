@@ -1,3 +1,5 @@
+> Current form update: [access validation rollout](access-validation.md) adds the new Personal → Account → Password steps, private username login and registration uniqueness checks without rewriting existing account data. Apply the earlier migrations below first.
+
 > Public identity update: after the signup migration, apply [`202611100002_public_player_names.sql`](../supabase/migrations/202611100002_public_player_names.sql) as one complete query. Names and @usernames are now public, including career/history identities; email and authentication remain private. This additive function changes no account IDs, profiles, XP, buddies or history. Missing legacy names fall back to usernames and can be completed in My Profile. The sections below describe the original signup rollout.
 
 # Signup identity rollout

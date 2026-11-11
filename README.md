@@ -8,7 +8,7 @@ YAYDU is a responsive browser card game with a green felt table, local practice,
 
 **Accounts and multiplayer:** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
 
-**Three-step registration:** Username plus private first/last names, email, then password/confirmation. Usernames use 8–24 ASCII letters/numbers, are stored lowercase, and appear publicly with `@`. Legacy accounts keep their IDs/careers and get an optional completion prompt. Apply [the identity migration and provider settings](docs/signup-identity.md) before enabling new registrations; existing sign-in stays backward compatible.
+**Three-step registration:** First/last names (English letters only), then username (8–20 letters/numbers) and email with server-side availability checks, then the existing password/confirmation step. Names and @usernames are public; email remains private. Invalid steps show one themed popup and clear only that step after dismissal. Existing accounts and legacy 8–24-character usernames remain compatible. Sign in by email or username using the same Supabase account/session system. Apply [the access-validation migration and rollout checks](docs/access-validation.md) before deploying this update; the [earlier identity rollout](docs/signup-identity.md) remains a prerequisite.
 
 ## Player careers and social features
 

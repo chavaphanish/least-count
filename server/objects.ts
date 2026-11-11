@@ -32,6 +32,16 @@ export class Directory {
       try {
         const data = await body(request)
         const path = new URL(request.url).pathname
+        if (path === '/access-limit') {
+          const now=Date.now(),limit=data.limit===40?40:12
+          let bucket=await this.ctx.storage.get<{count:number;expires:number}>('access-rate')
+          if(!bucket||bucket.expires<=now)bucket={count:0,expires:now+300000}
+          bucket.count++
+          await this.ctx.storage.put('access-rate',bucket)
+          await this.ctx.storage.setAlarm(bucket.expires)
+          if(bucket.count>limit)throw new ApiError(429,'Too many attempts.')
+          return json({ok:true})
+        }
         if (path === '/guest') {
           const name = displayName(data.displayName)
           const token = randomToken()
@@ -168,6 +178,7 @@ export class Directory {
       }
     })
   }
+  async alarm(){await this.ctx.blockConcurrencyWhile(async()=>{const bucket=await this.ctx.storage.get<{expires:number}>('access-rate');if(!bucket||bucket.expires<=Date.now())await this.ctx.storage.delete('access-rate');else await this.ctx.storage.setAlarm(bucket.expires)})}
 }
 
 type Ticket = { identity: Identity; expiresAt: number }

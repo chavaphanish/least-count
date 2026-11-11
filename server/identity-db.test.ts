@@ -328,3 +328,32 @@ describe('public identity migration', () => {
     expect((await db.query('select first_name from public.profiles where id=$1',[first])).rows[0]).toEqual({first_name:''})
   })
 })
+
+describe('access validation migration',()=>{
+ const migrate=()=>db.exec(readFileSync(new URL('../supabase/migrations/202611110001_access_validation.sql',import.meta.url),'utf8').replace(/^begin;$/m,'').replace(/^commit;$/m,''))
+ const create=(id:string,handle:string,email:string,firstName='John',lastName='Smith')=>db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3::jsonb)',[id,email,JSON.stringify({username:handle,first_name:firstName,last_name:lastName})])
+ it('preserves all existing account IDs, names, careers and relationships exactly',async()=>{
+  const old=await snapshot(),profiles=await db.query('select * from public.profiles order by id');await migrate()
+  expect(await snapshot()).toEqual(old);expect(await db.query('select * from public.profiles order by id')).toEqual(profiles)
+  await role(second);expect((await db.query('select * from public.ensure_player_profile($1)',['Ignored'])).rows).toHaveLength(1)
+ })
+ it('validates direct provider inserts and atomically reserves username/email case-insensitively',async()=>{
+  await migrate();await create(fresh,'FreshUser99','Fresh@Example.test')
+  for(const [handle,email,firstName] of [['FRESHUSER99','other@example.test','John'],['OtherUser99','FRESH@example.test','John'],['X'.repeat(21),'new@example.test','John'],['OtherUser99','new@example.test','John1']]){
+   await db.exec('savepoint invalid_signup');await expect(create(other,handle,email,firstName)).rejects.toThrow();await db.exec('rollback to invalid_signup')
+   expect((await db.query('select id from auth.users where id=$1',[other])).rows).toHaveLength(0)
+  }
+  expect((await db.query('select username,first_name,last_name from public.profiles where id=$1',[fresh])).rows[0]).toEqual({username:'freshuser99',first_name:'John',last_name:'Smith'})
+ })
+ it('keeps email resolution and email availability private to the server role',async()=>{
+  await migrate()
+  for(const caller of [null,first]){
+   await role(caller);await db.exec('savepoint private_rpc')
+   await expect(db.query('select public.resolve_login_email($1)',['CardMaster99'])).rejects.toThrow(/permission denied/);await db.exec('rollback to private_rpc')
+   await expect(db.query('select public.signup_availability($1,$2)',['CardMaster99','private@example.test'])).rejects.toThrow(/permission denied/);await db.exec('rollback to private_rpc');await db.exec('reset role')
+  }
+  await db.exec('set role service_role')
+  expect((await db.query('select public.resolve_login_email($1) email',['CARDMASTER99'])).rows[0]).toEqual({email:`${first}@example.test`})
+  expect((await db.query('select public.signup_availability($1,$2) availability',['CardMaster99',`${first}@EXAMPLE.TEST`])).rows[0]).toEqual({availability:{usernameAvailable:false,emailAvailable:false}})
+ })
+})
