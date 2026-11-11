@@ -167,3 +167,8 @@
 .orientation-guard svg { color: var(--gold); flex-shrink: 0; }
 .orientation-guard h1 { margin: 0; font: 400 32px/1.15 'Libre Caslon Display',Georgia,serif; }
 .orientation-guard p { margin: 0; max-width: 300px; line-height: 1.6; font-size: 16px; }
+.orientation-guard .studio-logo { width: min(300px, 72vw, 38dvh); }
+@media (max-height: 600px) {
+  .orientation-guard[open] { gap: 12px; }
+  .orientation-guard > svg { width: 56px; height: 56px; }
+}

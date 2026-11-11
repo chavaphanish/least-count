@@ -1,3 +1,5 @@
+import { StudioLogo } from './StudioLogo'
+
 export function LoadingScreen({
   step,
   message,
@@ -10,12 +12,9 @@ export function LoadingScreen({
   retry: () => void
 }) {
   return (
-    <section className="startup-screen" aria-labelledby="startup-title">
-      <span className="startup-logo" aria-hidden="true">
-        ♠
-      </span>
-      <p className="eyebrow">A SEAT IS WAITING</p>
-      <h1 id="startup-title">Least Count</h1>
+    <section className="startup-screen studio-loading" aria-labelledby="startup-title">
+      <StudioLogo />
+      <h1 id="startup-title" className="visually-hidden">Least Count</h1>
       {!error && <div className="loading-spinner" aria-hidden="true" />}
       <p role={error ? 'alert' : 'status'}>{error || message}</p>
       {!error && (

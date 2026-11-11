@@ -616,3 +616,8 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .identity-compact .identity-primary, .identity-compact .identity-username { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .live-opponent > .player-identity { max-width: 100%; font-size: 12px; }
 .player-identity .profile-avatar { flex-shrink: 0; }
+
+/* Studio artwork keeps its original 3:2 canvas and transparent background. */
+.studio-logo { display: block; width: min(320px, 75vw); height: auto; object-fit: contain; flex-shrink: 0; }
+.startup-screen.studio-loading { gap: 12px; padding: 24px 16px; }
+.startup-screen.studio-loading > p { margin: 0; }

@@ -1,3 +1,4 @@
+import { StudioLogo } from './StudioLogo'
 import {
   createContext,
   useContext,
@@ -146,6 +147,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           aria-describedby="orientation-description"
           onCancel={(event) => event.preventDefault()}
         >
+          <StudioLogo />
           <svg
             viewBox="0 0 80 80"
             width="80"
