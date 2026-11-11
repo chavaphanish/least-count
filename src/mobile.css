@@ -32,8 +32,6 @@
 .table-options p { width: 100%; font-size: 13px; color: var(--muted); }
 .table-options button, .table-options a { min-height: 44px; display: inline-flex; align-items: center; }
 .opponent-detail { display: grid; gap: 12px; font-size: 14px; }
-.overlay-pickups { display: flex; flex-wrap: wrap; gap: 16px; }
-.overlay-pickups .playing-card { --card-width: 70px; }
 .hand-row[hidden] { display: none; }
 .hand-page, .hand-page-count { display: none; }
 .mobile-game-bar { display: none; }

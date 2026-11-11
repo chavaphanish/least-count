@@ -531,7 +531,7 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .eligible-pickup.button { flex-direction: row; justify-content: center; height: 51px; gap: 10px; }
 .eligible-pickup > span { color: inherit; font: inherit; }
 .eligible-pickup .pickup-preview { display: block; width: 18px; height: 26px; flex: 0 0 18px; }
-.eligible-pickup .pickup-preview .playing-card { font-weight: 400; transform: scale(.29); transform-origin: top left; }
+.eligible-pickup .pickup-preview .playing-card { --card-width: 62px; font-weight: 400; transform: scale(.29); transform-origin: top left; }
 .active-hand-player .profile-avatar { outline: 2px solid var(--gold); outline-offset: 3px; }
 .hand-heading .turn-clock, .live-opponent .turn-clock { padding: 5px 8px; gap: 6px; border-radius: 7px; }
 .hand-heading .turn-clock span, .live-opponent .turn-clock span { font-size: 9px; }
@@ -634,3 +634,8 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 
 .startup-content { display: contents; }
 .startup-content[hidden] { display: none; }
+
+/* Only the current player's replacement choice is an unboxed, centered group. */
+.turn-panel.replacement-panel { border: 0; border-radius: 0; background: transparent; text-align: center; }
+.replacement-panel .turn-message { max-width: none; text-align: center; }
+.replacement-panel .turn-actions { justify-content: center; flex-wrap: nowrap; }

@@ -18,7 +18,8 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
     let game=auditGame(2)
     game.settings={timedGame:false,eliminationThreshold:100};game.deadline=null
     const eligible={...createCard('clubs','4'),id:'eligible-four'}
-    game.discards=[[eligible]];game.eligible=[eligible.id]
+    const group=online?[eligible,{...createCard('hearts','4'),id:'second-four'}]:[eligible]
+    game.discards=[group];game.eligible=group.map(c=>c.id)
     const outgoing=game.players[0].hand.find(c=>c.rank!=='7'&&c.rank!=='4')!
     game=applyAction(game,{type:'discard',playerId:'p0',cardIds:[outgoing.id]})
     expect(game.phase).toBe('draw')
@@ -42,6 +43,23 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
     const pickup=page.getByRole('button',{name:'Pick up 4 of clubs',exact:true})
     await expect(draw).toBeEnabled();await expect(pickup).toBeEnabled()
     await expect(pickup).toContainText('Pick Up 4♣')
+    const panel=page.getByRole('region',{name:'Turn actions'})
+    await expect(panel.getByRole('button')).toHaveCount(2)
+    await expect(panel.locator('[data-pickup-card]')).toHaveCount(1)
+    await expect(page.getByRole('button',{name:/all.*open cards/i})).toHaveCount(0)
+    await expect(page.getByRole('dialog',{name:'Choose an open card'})).toHaveCount(0)
+    await expect(panel).toHaveCSS('border-top-width','0px')
+    await expect(panel).toHaveCSS('background-color','rgba(0, 0, 0, 0)')
+    const panelBox=(await panel.boundingBox())!, instruction=(await panel.locator('.turn-message').boundingBox())!, buttons=(await panel.locator('.turn-actions').boundingBox())!
+    expect(Math.abs(instruction.x+instruction.width/2-panelBox.x-panelBox.width/2)).toBeLessThan(1)
+    expect(Math.abs(buttons.x+buttons.width/2-panelBox.x-panelBox.width/2)).toBeLessThan(1)
+    const drawBox=(await draw.boundingBox())!, pickupBox=(await pickup.boundingBox())!
+    expect(Math.abs(drawBox.y-pickupBox.y)).toBeLessThan(1)
+    expect(pickupBox.x-drawBox.x-drawBox.width).toBeGreaterThanOrEqual(6)
+    if(mobile) {
+      expect(pickupBox.y+pickupBox.height).toBeLessThanOrEqual(390)
+      expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true)
+    }
     await draw.evaluate(el=>(el as HTMLElement).blur())
     expect(await appearance(pickup)).toEqual(await appearance(draw))
     const gold=await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--gold').trim())
