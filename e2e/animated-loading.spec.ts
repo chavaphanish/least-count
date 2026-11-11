@@ -13,6 +13,29 @@ async function session(page: Page) {
   await page.route('**/api/session', r=>r.fulfill({json:{user:null,room:null}}))
 }
 const fill = (page: Page) => page.locator('.loading-logo').getAttribute('data-fill').then(Number)
+// Count actual artwork pixels inside the rendered clipping boundary, ignoring
+// the transparent canvas margins. This catches a visually complete slow load.
+async function visibleGold(page: Page) {
+  return page.locator('.loading-logo').evaluate(async element => {
+    const image = element.querySelector('img')!
+    await image.decode()
+    const clip = getComputedStyle(element.querySelector('.loading-logo-gold')!).clipPath
+    const right = Number(clip.match(/([\d.]+)%/)![1])
+    const edge = image.naturalWidth * (1 - right / 100)
+    const canvas = document.createElement('canvas')
+    canvas.width = image.naturalWidth; canvas.height = image.naturalHeight
+    const context = canvas.getContext('2d')!
+    context.drawImage(image, 0, 0)
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+    let gold = 0, total = 0
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (!pixels[i]) continue
+      total++
+      if (((i - 3) / 4) % canvas.width + .5 < edge) gold++
+    }
+    return { gold, total }
+  })
+}
 for (const mobile of [false,true]) test.describe(mobile?'mobile animated splash':'desktop animated splash',()=>{
   test.use({viewport:mobile?{width:844,height:390}:{width:1280,height:800},...(mobile?{userAgent:iphone,isMobile:true,hasTouch:true}:{})})
   test('fast initialization proceeds independently while the white logo fills over at least three seconds',async({page})=>{
@@ -22,7 +45,7 @@ for (const mobile of [false,true]) test.describe(mobile?'mobile animated splash'
     await expect(loading).toHaveAttribute('data-ready','true')
     expect(await fill(page)).toBe(0)
     await expect(page.locator('.loading-logo-white')).toHaveCSS('filter','brightness(0) invert(1)')
-    await expect(page.locator('.loading-logo-gold')).toHaveCSS('clip-path','inset(0px 100% 0px 0px)')
+    expect((await visibleGold(page)).gold).toBe(0)
     await expect(page.getByRole('progressbar')).toHaveCount(0)
     await expect(page.locator('.loading-spinner,.startup-progress')).toHaveCount(0)
     await expect(loading).not.toContainText('%')
@@ -38,7 +61,8 @@ for (const mobile of [false,true]) test.describe(mobile?'mobile animated splash'
     await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toHaveCount(0)
     await page.clock.runFor(200)
     expect(await fill(page)).toBe(1)
-    await expect(page.locator('.loading-logo-gold')).toHaveCSS('clip-path','inset(0px 0% 0px 0px)')
+    const completed = await visibleGold(page)
+    expect(completed.gold).toBe(completed.total)
     await page.clock.runFor(500)
     await expect(loading).toHaveCount(0)
     await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
@@ -61,10 +85,13 @@ test.describe('slow and interrupted splash',()=>{
     await expect(portrait.getByRole('img',{name:'Chavium Games'})).toBeVisible()
     await expect(portrait.locator('.loading-logo')).toHaveCount(0)
     await page.evaluate(()=>{window.dispatchEvent(new Event('pageshow'));document.dispatchEvent(new Event('visibilitychange'))})
-    await page.clock.runFor(2000)
+    await page.clock.runFor(5000)
     await page.setViewportSize({width:844,height:390})
     expect(await fill(page)).toBeGreaterThanOrEqual(before)
     expect(await fill(page)).toBeLessThan(.95)
+    const pending = await visibleGold(page)
+    expect(pending.gold).toBeGreaterThan(0)
+    expect(pending.gold).toBeLessThan(pending.total)
     await expect(page.locator('.startup-screen')).not.toHaveAttribute('data-ready')
     release()
     await expect(page.locator('.startup-screen')).toHaveAttribute('data-ready','true')
