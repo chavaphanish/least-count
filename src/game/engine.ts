@@ -83,8 +83,9 @@ export type Action =
 export class RuleError extends Error {}
 const active = (s: GameState) => s.players.filter((p) => !p.eliminated)
 export const latestGroup = (s: GameState): GameCard[] => s.discards.at(-1) ?? []
+// Rank 7 is never a face-up pickup, including in saves with stale eligible IDs.
 export const pickupCards = (s: GameState): GameCard[] =>
-  s.discards.flat().filter((c) => s.eligible.includes(c.id))
+  s.discards.flat().filter((c) => c.rank !== '7' && s.eligible.includes(c.id))
 export const isPlaying = (s: GameState) =>
   ['turn', 'draw', 'penalty'].includes(s.phase)
 export const canShow = (s: GameState, playerId: string) =>
@@ -360,7 +361,9 @@ function acceptPenalty(s: GameState, now: number, random: () => number) {
 }
 
 function finishNormalTurn(s: GameState, now: number, random: () => number) {
-  s.eligible = latestGroup(s).map((c) => c.id)
+  s.eligible = latestGroup(s)
+    .filter((c) => c.rank !== '7')
+    .map((c) => c.id)
   if (s.discardedRank === '7') {
     s.sevens = { initiator: s.current, participants: [s.current], amount: 2 }
     emit(
@@ -583,7 +586,7 @@ export function applyAction(
     player.hand = player.hand.filter((c) => !action.cardIds.includes(c.id))
     s.discards.push(group)
     if (s.phase === 'penalty') {
-      s.eligible = group.map((c) => c.id)
+      s.eligible = []
       s.sevens!.participants.push(s.current)
       s.sevens!.amount += 2
       const cycleComplete = s.sevens!.participants.length === active(s).length
@@ -667,6 +670,8 @@ export function applyAction(
     const discardedCards = latestGroup(s)
     // Resolve older saves that were waiting for a now-unnecessary 7 draw.
     if (s.discardedRank === '7') {
+      if (action.source === 'discard')
+        throw new RuleError('Playing 7s requires no replacement pickup.')
       finishNormalTurn(s, now, random)
       return s
     }
