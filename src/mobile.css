@@ -130,7 +130,7 @@
   [data-mobile-device] .active-game .turn-panel { grid-column: 2; grid-row: 3; z-index: 2; align-self: center; margin: 0 16px 0 8px; padding: 8px 10px; min-height: 0; border-radius: 12px; background: #103e3280; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
   [data-mobile-device] .active-game .turn-message { font-size: 11px; line-height: 1.35; margin: 0; }
   [data-mobile-device] .active-game .turn-actions { margin: 0; display: flex; gap: 6px; flex-wrap: nowrap; }
-  [data-mobile-device] .active-game .turn-actions .button { padding: 8px 10px; min-height: 44px; font-size: 12px; gap: 5px; flex: 1; white-space: normal; }
+  [data-mobile-device] .active-game .turn-actions .button, [data-mobile-device] .active-game .eligible-pickup.button { padding: 8px 10px; min-height: 44px; font-size: 12px; gap: 5px; flex: 1; white-space: normal; }
   [data-mobile-device] .active-game .selection-actions { margin: 0; gap: 6px; flex-wrap: nowrap; }
   [data-mobile-device] .active-game .selection-actions .text-button { padding: 4px 0; min-height: 28px; font-size: 10px; }
   [data-mobile-device] .active-game .pickup-panel { border: 0; margin: 0; padding: 0; }

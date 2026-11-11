@@ -46,7 +46,7 @@ em { color: var(--gold); font-weight: 400; }
 .hero-actions { display: flex; gap: 14px; margin-top: 30px; }
 .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 35px; min-height: 51px; padding: 14px 24px; border-radius: 5px; font-size: 13px; font-weight: 600; transition: transform .2s, background .2s; }
 .button:hover { transform: translateY(-2px); }
-.button span { font-size: 19px; font-weight: 400; transform: rotate(-45deg); }
+.button:where(:not(.eligible-pickup)) span { font-size: 19px; font-weight: 400; transform: rotate(-45deg); }
 .button-primary { color: #193c2e; background: var(--gold); box-shadow: 0 4px 15px #00000012; }
 .button-primary:hover { background: #f7dda5; }
 .button-secondary { border: 1px solid #c4d4bf55; background: #ffffff03; }
@@ -272,7 +272,7 @@ select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); ou
 .eliminated-seat { opacity: .6; }
 .live-piles { display: flex; justify-content: center; align-items: flex-start; gap: 38px; position: relative; z-index: 1; }
 .live-piles .sample-pile .playing-card { --card-width: 80px; }
-.pile-button, .hand-card, .pickup-button { background: none; border: 0; padding: 0; color: inherit; border-radius: 8px; }
+.pile-button, .hand-card, .pickup-button:not(.button) { background: none; border: 0; padding: 0; color: inherit; border-radius: 8px; }
 .pile-button:disabled { cursor: default; }
 .pile-button:not(:disabled) { outline: 2px solid var(--gold); outline-offset: 5px; }
 .joker-indicator { padding-left: 30px; border-left: 1px solid #e9cd9133; }
@@ -380,7 +380,7 @@ select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); ou
   .hand-heading { gap: 8px; }
   .live-opponent { flex-basis: 95px; }
   .live-opponent > span { font-size: 9px; }
-  .turn-actions .button { font-size: 12px; padding: 13px 16px; }
+  .turn-actions .button, .eligible-pickup.button { font-size: 12px; padding: 13px 16px; }
   .match-scores li { grid-template-columns: 1fr 35px 92px; }
   .round-summary h2 { font-size: 30px; }
 }
@@ -528,9 +528,10 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .action-hint { font-size: 11px; color: var(--muted); margin: 12px 0 0; line-height: 1.6; }
 .selection-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .selection-actions .text-button { min-height: 44px; }
-.eligible-pickup { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px; border: 1px solid #e9cd9180; background: #e9cd910c; }
-.eligible-pickup > span { color: var(--gold); font-size: 12px; }
-.eligible-pickup:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.eligible-pickup.button { flex-direction: row; justify-content: center; height: 51px; gap: 10px; }
+.eligible-pickup > span { color: inherit; font: inherit; }
+.eligible-pickup .pickup-preview { display: block; width: 18px; height: 26px; flex: 0 0 18px; }
+.eligible-pickup .pickup-preview .playing-card { font-weight: 400; transform: scale(.29); transform-origin: top left; }
 .active-hand-player .profile-avatar { outline: 2px solid var(--gold); outline-offset: 3px; }
 .hand-heading .turn-clock, .live-opponent .turn-clock { padding: 5px 8px; gap: 6px; border-radius: 7px; }
 .hand-heading .turn-clock span, .live-opponent .turn-clock span { font-size: 9px; }
@@ -541,7 +542,8 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 @media (max-width: 420px) {
   .turn-panel { padding: 16px 12px; }
   .turn-actions { gap: 8px; }
-  .turn-actions .button { min-height: 44px; flex: 1 1 auto; }
+  .turn-actions .button, .eligible-pickup.button { min-height: 44px; flex: 1 1 auto; }
+  .eligible-pickup.button { height: 44px; }
   .hand-heading { gap: 12px; }
 }
 
