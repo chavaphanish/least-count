@@ -82,7 +82,7 @@ test('portrait guard covers initial loading and unauthenticated entry', async ({
   ).toBeVisible()
   await expect(page.locator('main')).toBeHidden()
   await page.setViewportSize(landscape)
-  await expect(page.getByText('Connecting to game services…')).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('Connecting to game services…')
   await page.unroute('**/api/config')
   await page.route('**/api/config', (r) =>
     r.fulfill({ json: { service: 'least-count', supabase: null } }),

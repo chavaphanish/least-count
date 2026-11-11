@@ -18,8 +18,8 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     const loading = page.locator('.startup-screen')
     const logo = loading.getByRole('img',{name:'Chavium Games'})
     await expect(logo).toBeVisible()
-    await expect(loading.getByRole('progressbar')).toHaveAttribute('aria-valuenow','0')
-    const pixels = await logo.evaluate(async (element) => {
+    await expect(loading.getByRole('progressbar')).toHaveCount(0)
+    const pixels = await loading.locator('.loading-logo-gold img').evaluate(async (element) => {
       const image = element as HTMLImageElement
       await image.decode()
       const canvas = document.createElement('canvas')

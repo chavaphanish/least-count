@@ -1,45 +1,103 @@
+import { useEffect, useRef, useState } from 'react'
 import { StudioLogo } from './StudioLogo'
+
+const MINIMUM_MS = 3000
+const FINISH_MS = 350
+const HOLD_MS = 120
+const EXIT_MS = 180
 
 export function LoadingScreen({
   step,
   message,
   error,
   retry,
+  ready,
+  onComplete,
 }: {
   step: number
   message: string
   error: string
   retry: () => void
+  ready: boolean
+  onComplete: () => void
 }) {
+  const timing = useRef({ start: -1, last: -1, progress: 0, finish: -1, from: 0 })
+  const [view, setView] = useState({ progress: 0, exiting: false })
+  const [assetFailed, setAssetFailed] = useState(false)
+  const [reducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
+
+  useEffect(() => {
+    if (error) return
+    let frame: number
+    function animate(now: number) {
+      const t = timing.current
+      if (t.start < 0) t.start = t.last = now
+      const elapsed = now - t.start
+      if (ready) {
+        if (t.finish < 0) {
+          t.finish = Math.max(t.start + MINIMUM_MS, now + FINISH_MS)
+          t.from = t.progress
+          t.last = now
+        }
+        const duration = t.finish - t.last
+        const fraction = duration > 0 ? Math.min(1, (now - t.last) / duration) : 1
+        t.progress = t.from + (1 - t.from) * fraction
+      } else {
+        // Estimated motion follows real milestones smoothly, capped below completion.
+        const estimate = .94 * (1 - Math.exp(-elapsed / 1600))
+        const target = Math.min(.94, Math.max(estimate, Math.min(step, 3) * .24))
+        t.progress += Math.max(0, target - t.progress) * (1 - Math.exp(-(now - t.last) / 500))
+        t.last = now
+      }
+      const exiting = ready && now >= t.finish + HOLD_MS
+      setView({ progress: reducedMotion && t.progress < 1 ? 0 : t.progress, exiting })
+      if (ready && now >= t.finish + HOLD_MS + EXIT_MS) {
+        onComplete()
+        return
+      }
+      frame = requestAnimationFrame(animate)
+    }
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [ready, step, error, onComplete, reducedMotion])
+
+  function restart() {
+    timing.current = { start: -1, last: -1, progress: 0, finish: -1, from: 0 }
+    setView({ progress: 0, exiting: false })
+    setAssetFailed(false)
+    retry()
+  }
   return (
-    <section className="startup-screen studio-loading" aria-labelledby="startup-title">
-      <StudioLogo />
+    <section
+      className="startup-screen studio-loading"
+      aria-labelledby="startup-title"
+      data-ready={ready || undefined}
+      data-exiting={(view.exiting && !error) || undefined}
+    >
+      <div className="studio-logo loading-logo" role="img" aria-label="Chavium Games" data-fill={view.progress}>
+        {assetFailed ? (
+          <span className="studio-logo-fallback">Chavium Games</span>
+        ) : (
+          <>
+            <span className="loading-logo-white" aria-hidden="true">
+              <StudioLogo onError={() => setAssetFailed(true)} />
+            </span>
+            <span
+              className="loading-logo-gold"
+              aria-hidden="true"
+              style={{ clipPath: `inset(0 ${(1 - view.progress) * 100}% 0 0)` }}
+            >
+              <StudioLogo onError={() => setAssetFailed(true)} />
+            </span>
+          </>
+        )}
+      </div>
       <h1 id="startup-title" className="visually-hidden">Least Count</h1>
-      {!error && <div className="loading-spinner" aria-hidden="true" />}
-      <p role={error ? 'alert' : 'status'}>{error || message}</p>
-      {!error && (
-        <>
-          <div
-            className="startup-progress"
-            role="progressbar"
-            aria-label="Initialization checks completed"
-            aria-valuemin={0}
-            aria-valuemax={4}
-            aria-valuenow={step}
-          >
-            <span style={{ width: `${(step / 4) * 100}%` }} />
-          </div>
-          <small>{step} of 4 initialization checks completed</small>
-        </>
-      )}
+      <p role={error ? 'alert' : 'status'} className={error ? undefined : 'visually-hidden'}>{error || message}</p>
       {error && (
         <div className="auth-actions">
-          <button className="button button-primary" onClick={retry}>
-            Retry initialization
-          </button>
-          <a className="button button-secondary" href="#/game">
-            Play offline practice
-          </a>
+          <button className="button button-primary" onClick={restart}>Retry initialization</button>
+          <a className="button button-secondary" href="#/game">Play offline practice</a>
         </div>
       )}
     </section>

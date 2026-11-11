@@ -57,7 +57,7 @@ test('a stalled initialization times out instead of leaving a permanent spinner'
   await page.clock.install()
   await page.route('**/api/config', () => {})
   await page.goto('/')
-  await expect(page.getByText('Connecting to game services…')).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('Connecting to game services…')
   await page.clock.fastForward(16_000)
   await expect(page.getByRole('alert')).toContainText(
     /timed out|could not be reached/,
