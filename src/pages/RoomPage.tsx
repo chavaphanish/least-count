@@ -345,6 +345,7 @@ export function RoomPage({
               turn
             </strong>
           </div>
+          <div className="gameplay-stage">
           <div className="game-table live-table">
             <div
               className="opponent-row"
@@ -474,6 +475,7 @@ export function RoomPage({
             }
             onClear={() => setSelected([])}
           />
+          </div>
           {g.result && (
             <section className="round-summary">
               <div className="result-intro">

@@ -1,0 +1,46 @@
+/* The felt table spans the grid; its reserved right padding keeps the action rail clear. */
+.gameplay-stage { --game-action-width: clamp(118px,18vw,190px); --game-action-height: 44px; display: grid; grid-template-columns: minmax(0,1fr) var(--game-action-width); grid-template-rows: minmax(0,1fr) auto; gap: 8px 0; min-width: 0; }
+.gameplay-stage .live-table { grid-column: 1 / -1; grid-row: 1; display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(150px,1fr) 140px; min-height: 420px; padding: 20px calc(var(--game-action-width) + 12px) 16px 20px; gap: 12px; margin: 0; }
+.gameplay-stage .opponent-row { grid-column: 1; grid-row: 1; }
+.gameplay-stage .live-piles { grid-column: 1; grid-row: 2; align-items: center; }
+.gameplay-stage .your-live-seat { grid-column: 1; grid-row: 3; display: flex; flex-direction: column; min-height: 0; min-width: 0; margin: 0; }
+.gameplay-stage .hand-heading { flex-shrink: 0; margin-bottom: 4px; }
+.gameplay-stage .turn-panel { display: contents; border: 0; background: transparent; padding: 0; margin: 0; }
+.gameplay-stage .game-action-rail { grid-column: 2; grid-row: 1; align-self: center; margin-right: 16px; min-width: 0; position: relative; z-index: 3; display: flex; flex-direction: column; gap: 6px; }
+.gameplay-stage .turn-actions, .gameplay-stage .selection-actions { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; margin: 0; width: 100%; }
+.gameplay-stage .game-action-rail .game-action { width: 100%; height: var(--game-action-height); min-height: var(--game-action-height); padding: 6px 8px; border: 0; border-radius: 5px; font-size: 13px; font-weight: 600; line-height: 15px; justify-content: center; gap: 6px; flex: none; white-space: normal; }
+.gameplay-stage .turn-status { grid-column: 1 / -1; grid-row: 2; text-align: center; min-width: 0; padding: 4px; }
+.gameplay-stage .turn-status .action-stage { display: block; margin: 0; }
+.gameplay-stage .turn-status .turn-message { max-width: none; margin: 0; text-align: center; }
+.gameplay-stage .turn-status .action-hint { margin: 2px 0 0; }
+.gameplay-stage .turn-status .game-alert { border: 0; background: transparent; padding: 0; }
+/* Every hand uses the same one-row geometry and existing card/selection artwork. */
+.gameplay-stage .adaptive-hand { display: block; position: relative; width: 100%; flex: 1; min-height: 0; padding: 0; overflow: visible; }
+.gameplay-stage .adaptive-hand .hand-card { position: absolute; padding: 0; border: 0; margin: 0; background: none; transform: none !important; border-radius: 3px; touch-action: manipulation; transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease; }
+.gameplay-stage .adaptive-hand .playing-card { --card-width: inherit; width: var(--card-width); height: var(--adaptive-height); border-radius: max(3px,calc(var(--card-width)*.06)); pointer-events: none; clip-path: inset(0 max(0px,calc(var(--card-width) - var(--hit-width))) max(0px,calc(var(--adaptive-height) - var(--hit-height))) 0); transition: width .18s ease, height .18s ease, translate .12s ease; }
+.gameplay-stage .adaptive-hand .card-corner { top: 3px; left: 3px; font-size: var(--corner-font); line-height: 1; }
+.gameplay-stage .adaptive-hand .card-corner small { margin-top: 0; font-size: .85em; }
+.gameplay-stage .adaptive-hand .card-corner-bottom { top: auto; left: auto; bottom: 3px; right: 3px; }
+.gameplay-stage .adaptive-hand .joker-corner { top: 3px; left: 3px; font-size: var(--corner-font); }
+.gameplay-stage .adaptive-hand .selected-card { outline: 2px solid var(--gold); outline-offset: 0; }
+.gameplay-stage .adaptive-hand .selected-card > .playing-card { outline: none; translate: 0 calc(-1 * var(--selection-lift)); }
+.gameplay-stage .hand-inspection { position: absolute; inset: 0 0 auto; padding: 4px; color: var(--gold); font-size: 12px; text-align: center; pointer-events: none; }
+@media(prefers-reduced-motion:reduce) { .gameplay-stage .adaptive-hand .hand-card, .gameplay-stage .adaptive-hand .playing-card { transition: none; animation: none; } }
+[data-mobile-device] .active-game { grid-template-columns: minmax(0,1fr); grid-template-rows: 32px minmax(0,1fr) 28px; gap: 4px; }
+[data-mobile-device] .active-game .gameplay-stage { --game-action-width: clamp(118px,18vw,180px); --game-action-height: clamp(36px,calc((var(--table-height) - 148px)/4),44px); grid-column: 1; grid-row: 2; min-height: 0; gap: 4px 0; }
+[data-mobile-device] .active-game .gameplay-stage .live-table { grid-column: 1 / -1; grid-row: 1; min-height: 0; height: 100%; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) minmax(0,1fr); padding: 4px calc(var(--game-action-width) + 8px) 4px 8px; gap: 4px; }
+[data-mobile-device] .active-game .gameplay-stage .opponent-row { grid-column: 1; grid-row: 1; }
+[data-mobile-device] .active-game .gameplay-stage .live-piles { grid-column: 1; grid-row: 1; width: 32%; margin: 0; align-self: stretch; height: 100%; }
+[data-mobile-device] .active-game .gameplay-stage .your-live-seat { grid-column: 1; grid-row: 2; }
+[data-mobile-device] .active-game .gameplay-stage .game-action-rail { margin-right: 12px; }
+[data-mobile-device] .active-game .gameplay-stage .turn-panel { display: contents; height: auto; border: 0; background: transparent; padding: 0; margin: 0; }
+[data-mobile-device] .active-game .gameplay-stage .turn-actions, [data-mobile-device] .active-game .gameplay-stage .selection-actions { width: 100%; flex-direction: column; margin: 0; gap: 6px; }
+[data-mobile-device] .active-game .gameplay-stage .game-action { height: var(--game-action-height); min-height: var(--game-action-height); padding: 6px 8px; border-radius: 5px; font-size: 12px; line-height: 14px; flex: none; }
+[data-mobile-device] .active-game .gameplay-stage .turn-status { min-height: 40px; padding: 2px; }
+[data-mobile-device] .active-game .gameplay-stage .turn-status .action-stage { font-size: 10px; line-height: 12px; }
+[data-mobile-device] .active-game .gameplay-stage .turn-status .turn-message { display: block; flex: none; max-width: none; white-space: normal; font-size: 12px; line-height: 15px; }
+[data-mobile-device] .active-game .compact-game-activity { grid-row: 3; }
+
+.mobile-shell:not([data-mobile-device]) .gameplay-stage .live-opponent { padding: 4px; gap: 4px; }
+.mobile-shell:not([data-mobile-device]) .gameplay-stage .live-opponent .profile-avatar { width: 30px; height: 30px; font-size: 11px; }
+.mobile-shell:not([data-mobile-device]) .gameplay-stage .opponent-cards .playing-card { --card-width: 25px; }
