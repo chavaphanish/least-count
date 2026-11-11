@@ -634,8 +634,3 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 
 .startup-content { display: contents; }
 .startup-content[hidden] { display: none; }
-
-/* Only the current player's replacement choice is an unboxed, centered group. */
-.turn-panel.replacement-panel { border: 0; border-radius: 0; background: transparent; text-align: center; }
-.replacement-panel .turn-message { max-width: none; text-align: center; }
-.replacement-panel .turn-actions { justify-content: center; flex-wrap: nowrap; }

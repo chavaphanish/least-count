@@ -496,8 +496,3 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] .active-game .eligible-pickup .pickup-preview { display: none; }
 [data-mobile-device] .active-game .eligible-pickup.button > span { font: inherit; }
 [data-mobile-device] .active-game .eligible-pickup.button { height: 44px; }
-
-[data-mobile-device] .active-game:has(.replacement-panel) { grid-template-rows: 32px minmax(0,1fr) var(--hand-zone) 72px 28px; }
-[data-mobile-device] .active-game .turn-panel.replacement-panel { height: 72px; flex-direction: column; justify-content: center; gap: 4px; border: 0; border-radius: 0; background: transparent; }
-[data-mobile-device] .active-game .replacement-panel .turn-message { flex: 0 0 auto; max-width: none; line-height: 16px; }
-[data-mobile-device] .active-game .replacement-panel .turn-actions { justify-content: center; gap: 8px; }

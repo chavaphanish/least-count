@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { PlayerIdentity } from './PlayerIdentity'
 import type { PlayerIdentityData } from '../shared/playerIdentity'
 import { Avatar } from './Avatar'
-import { useMobileLandscape } from './MobileOrientation'
 import { AdaptiveHand } from './AdaptiveHand'
 
 /** Keep each exposed card strip selectable, even in a large penalty hand. */
@@ -25,10 +24,6 @@ export function PlayerHand({
   timer?: ReactNode
 }) {
   const cards = Children.toArray(children)
-  const mobile = useMobileLandscape()
-  const rows = Array.from({ length: Math.ceil(cards.length / 7) }, (_, i) =>
-    cards.slice(i * 7, (i + 1) * 7),
-  )
   return (
     <div className="your-live-seat">
       <div className="hand-heading">
@@ -47,23 +42,7 @@ export function PlayerHand({
           </span>
         </div>
       </div>
-      {mobile ? (
-        <AdaptiveHand empty={empty}>{children}</AdaptiveHand>
-      ) : (
-        <div
-          className="player-hand"
-          role="group"
-          aria-label="Your hand"
-          data-hand-target
-        >
-          {rows.map((row, i) => (
-            <div className="hand-row" key={i}>
-              {row}
-            </div>
-          ))}
-          {!cards.length && <p className="empty-hand">{empty}</p>}
-        </div>
-      )}
+      <AdaptiveHand empty={empty}>{children}</AdaptiveHand>
     </div>
   )
 }

@@ -50,14 +50,19 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
     await expect(page.getByRole('dialog',{name:'Choose an open card'})).toHaveCount(0)
     await expect(panel).toHaveCSS('border-top-width','0px')
     await expect(panel).toHaveCSS('background-color','rgba(0, 0, 0, 0)')
-    const panelBox=(await panel.boundingBox())!, instruction=(await panel.locator('.turn-message').boundingBox())!, buttons=(await panel.locator('.turn-actions').boundingBox())!
-    expect(Math.abs(instruction.x+instruction.width/2-panelBox.x-panelBox.width/2)).toBeLessThan(1)
-    expect(Math.abs(buttons.x+buttons.width/2-panelBox.x-panelBox.width/2)).toBeLessThan(1)
+    const table=(await page.locator('.live-table').boundingBox())!, rail=(await panel.locator('.game-action-rail').boundingBox())!, status=(await panel.locator('.turn-status').boundingBox())!
+    expect(rail.x).toBeGreaterThan(table.x+table.width/2)
+    expect(rail.x+rail.width).toBeLessThanOrEqual(table.x+table.width)
+    expect(rail.y).toBeGreaterThanOrEqual(table.y)
+    expect(rail.y+rail.height).toBeLessThanOrEqual(table.y+table.height)
+    expect(status.y).toBeGreaterThanOrEqual(table.y+table.height)
+    expect(Math.abs(status.x+status.width/2-table.x-table.width/2)).toBeLessThan(1)
+    await expect(panel.locator('.turn-status').getByRole('button')).toHaveCount(0)
     const drawBox=(await draw.boundingBox())!, pickupBox=(await pickup.boundingBox())!
-    expect(Math.abs(drawBox.y-pickupBox.y)).toBeLessThan(1)
-    expect(pickupBox.x-drawBox.x-drawBox.width).toBeGreaterThanOrEqual(6)
+    expect(Math.abs(drawBox.x-pickupBox.x)).toBeLessThan(1)
+    expect(pickupBox.y-drawBox.y-drawBox.height).toBeGreaterThanOrEqual(6)
     if(mobile) {
-      expect(pickupBox.y+pickupBox.height).toBeLessThanOrEqual(390)
+      expect(status.y+status.height).toBeLessThanOrEqual(390)
       expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true)
     }
     await draw.evaluate(el=>(el as HTMLElement).blur())

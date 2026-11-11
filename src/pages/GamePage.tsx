@@ -305,6 +305,7 @@ export function GamePage({
           New game
         </button>
       </div>
+      <div className="gameplay-stage">
       <div className="game-table live-table" aria-label="Local card table">
         <p className="seat-scroll-hint">
           Simulated opponents · scroll to see all seats
@@ -464,6 +465,7 @@ export function GamePage({
         }
         onClear={() => setSelected([])}
       />
+      </div>
       {animation && (
         <TurnAnimation motion={animation} onComplete={finishMotion} />
       )}
