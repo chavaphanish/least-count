@@ -267,8 +267,8 @@ test('install metadata, icons and deep links are served by the production web bu
   const manifest = await response.json()
   expect(manifest).toMatchObject({
     id: '/',
-    name: 'Least Count',
-    short_name: 'Least Count',
+    name: 'YAYDU',
+    short_name: 'YAYDU',
     display: 'standalone',
     orientation: 'landscape',
     scope: '/',

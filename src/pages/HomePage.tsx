@@ -7,7 +7,8 @@ export function HomePage() {
       <section className="hero" aria-labelledby="home-title">
         <div className="hero-copy">
           <p className="eyebrow"><span /> YOUR NEXT CARD NIGHT STARTS HERE</p>
-          <h1 id="home-title">Good friends.<br />Great cards.<br /><em>Least Count.</em></h1>
+          <h1 id="home-title">Good friends.<br />Great cards.<br /><em>YAYDU.</em></h1>
+          <p className="brand-tagline">The Game of Sevens</p>
           <p className="hero-description">A new seat at your favorite card table.<br className="desktop-break" /> Made for friendly rivalries and just-one-more-round nights.</p>
           <div className="hero-actions"><a className="button button-primary" href="#/game">Play Game <span aria-hidden="true">→</span></a><a className="button button-secondary" href="#/rules">Rules <span aria-hidden="true">→</span></a></div>
           <p className="action-note"><span className="status-dot" /> Play locally with simulated opponents · No sign-up needed</p>

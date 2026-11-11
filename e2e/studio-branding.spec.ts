@@ -16,8 +16,10 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     await page.route('**/api/session', route => route.fulfill({json:{user:null,room:null}}))
     await page.goto('/')
     const loading = page.locator('.startup-screen')
-    const logo = loading.getByRole('img',{name:'Chavium Games'})
+    const logo = loading.getByRole('img',{name:'YAYDU'})
     await expect(logo).toBeVisible()
+    await expect(loading.getByRole('heading',{name:'YAYDU',exact:true})).toBeVisible()
+    await expect(loading.getByText('The Game of Sevens',{exact:true})).toBeVisible()
     await expect(loading.getByRole('progressbar')).toHaveCount(0)
     const pixels = await loading.locator('.loading-logo-gold img').evaluate(async (element) => {
       const image = element as HTMLImageElement
@@ -35,7 +37,7 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
       }
       return {opaque,transparent,wrong,width:canvas.width,height:canvas.height}
     })
-    expect(pixels).toMatchObject({wrong:0,width:1536,height:1024})
+    expect(pixels).toMatchObject({wrong:0,width:1024,height:1024})
     expect(pixels.transparent).toBeGreaterThan(0)
     expect(pixels.opaque).toBeGreaterThan(0)
     async function fits(selector: string) {
@@ -48,15 +50,15 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     }
     await fits('.startup-screen')
     const bounds=await logo.boundingBox()
-    expect(bounds!.width/bounds!.height).toBeCloseTo(1.5,2)
+    expect(bounds!.width/bounds!.height).toBeCloseTo(1,2)
     if(mobile){
       await mkdir(screenshots,{recursive:true})
       await page.screenshot({path:`${screenshots}/loading.png`})
       const main=await page.locator('main').elementHandle()
       await page.setViewportSize({width:390,height:844})
       const guard=page.getByRole('dialog',{name:'Rotate Your Phone'})
-      await expect(guard.getByRole('img',{name:'Chavium Games'})).toBeVisible()
-      await expect(guard).toContainText('Least Count is designed to be played in landscape mode.')
+      await expect(guard.getByRole('img',{name:'YAYDU'})).toBeVisible()
+      await expect(guard).toContainText('YAYDU is designed to be played in landscape mode.')
       await expect(page.locator('.orientation-content')).toBeHidden()
       await fits('.orientation-guard')
       await page.screenshot({path:`${screenshots}/rotate-phone.png`})
@@ -74,5 +76,8 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     release()
     await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
     await expect(loading).toHaveCount(0)
+    await expect(page.getByRole('link',{name:'YAYDU home'})).toBeVisible()
+    await expect(page.locator('.access-story')).toContainText('The Game of Sevens')
+    await expect(page.locator('.access-story')).toContainText('YAYDU')
   })
 })

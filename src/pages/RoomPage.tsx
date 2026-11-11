@@ -58,8 +58,8 @@ export function RoomPage({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Least Count',
-          text: `Join my Least Count room: ${code}`,
+          title: 'YAYDU',
+          text: `Join my YAYDU room: ${code}`,
           url: invitation,
         })
       } catch (error) {

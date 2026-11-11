@@ -5,11 +5,11 @@ const MINIMUM_MS = 3000
 const FINISH_MS = 350
 const HOLD_MS = 120
 const EXIT_MS = 180
-// Exact horizontal alpha bounds in the approved 1536px canvas. Transparent
+// Horizontal artwork bounds in the square 1024px canvas. Transparent
 // margins must not count as progress or make a slow load look complete early.
-const ARTWORK_LEFT = 176
-const ARTWORK_WIDTH = 1184
-const LOGO_WIDTH = 1536
+const ARTWORK_LEFT = 140
+const ARTWORK_WIDTH = 753
+const LOGO_WIDTH = 1024
 
 export function LoadingScreen({
   step,
@@ -79,9 +79,9 @@ export function LoadingScreen({
       data-ready={ready || undefined}
       data-exiting={(view.exiting && !error) || undefined}
     >
-      <div className="studio-logo loading-logo" role="img" aria-label="Chavium Games" data-fill={view.progress}>
+      <div className="studio-logo loading-logo" role="img" aria-label="YAYDU" data-fill={view.progress}>
         {assetFailed ? (
-          <span className="studio-logo-fallback">Chavium Games</span>
+          <span className="studio-logo-fallback">YAYDU</span>
         ) : (
           <>
             <span className="loading-logo-white" aria-hidden="true">
@@ -97,7 +97,8 @@ export function LoadingScreen({
           </>
         )}
       </div>
-      <h1 id="startup-title" className="visually-hidden">Least Count</h1>
+      <h1 id="startup-title" className="startup-brand-name">YAYDU</h1>
+      <p className="brand-tagline">The Game of Sevens</p>
       <p role={error ? 'alert' : 'status'} className={error ? undefined : 'visually-hidden'}>{error || message}</p>
       {error && (
         <div className="auth-actions">

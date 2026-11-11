@@ -8,7 +8,7 @@ if (!/^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*){2,}$/.test(appId)) {
 
 const config: CapacitorConfig = {
   appId,
-  appName: 'Least Count',
+  appName: 'YAYDU',
   webDir: 'dist',
 }
 

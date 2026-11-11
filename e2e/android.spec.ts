@@ -177,8 +177,8 @@ test('Chrome installability checks accept the manifest, maskable icon and active
     ).toEqual([])
     const data = JSON.parse(manifest.data!)
     expect(data).toMatchObject({
-      name: 'Least Count',
-      short_name: 'Least Count',
+      name: 'YAYDU',
+      short_name: 'YAYDU',
       display: 'standalone',
       orientation: 'landscape',
       scope: '/',

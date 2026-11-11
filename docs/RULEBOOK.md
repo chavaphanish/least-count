@@ -1,4 +1,4 @@
-# Least Count — current working rules
+# YAYDU — current working rules
 
 These amendments are authoritative for the current implementation. Read them with the original [Edition 2.0 working draft](../RULEBOOK.md) and [confirmed decisions](rule-clarifications.md). These amendments and confirmed decisions take precedence over conflicting wording in the archived original. Its gameplay rules are retained; display terminology is updated to Drop, Declare Least, and Round Joker. Unaffected scoring, Least, ownership, elimination, and deck rules remain in effect.
 

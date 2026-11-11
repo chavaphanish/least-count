@@ -169,7 +169,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           </svg>
           <h1 id="orientation-title">Rotate Your Phone</h1>
           <p id="orientation-description">
-            Least Count is designed to be played in landscape mode.
+            YAYDU is designed to be played in landscape mode.
           </p>
         </dialog>
       </div>

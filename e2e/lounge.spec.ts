@@ -29,7 +29,7 @@ for (const mobile of [false, true]) {
       await expect(
         page.getByRole('heading', { name: 'Welcome, Lounge Guest.' }),
       ).toBeVisible()
-      await expect(page).toHaveTitle('Least Count — Lounge')
+      await expect(page).toHaveTitle('YAYDU — Lounge')
       const before = (await (await page.request.get('/api/session')).json())
         .user.player.id
       await page.getByRole('button', { name: 'Create Game Room' }).click()
@@ -43,7 +43,7 @@ for (const mobile of [false, true]) {
       expect(
         (await (await page.request.get('/api/session')).json()).user.player.id,
       ).toBe(before)
-      await expect(page).toHaveTitle('Least Count — Lounge')
+      await expect(page).toHaveTitle('YAYDU — Lounge')
       await expect(page.locator('body')).not.toContainText(/dashboard/i)
     })
     test('registered profile returns to Lounge and recovery keeps its existing link destination', async ({
@@ -56,7 +56,7 @@ for (const mobile of [false, true]) {
       ).toBeVisible()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await expect(page).toHaveURL(/#\/$/)
-      await expect(page).toHaveTitle('Least Count — Lounge')
+      await expect(page).toHaveTitle('YAYDU — Lounge')
       await expect(
         page.getByRole('heading', { name: 'Welcome, Career Tester.' }),
       ).toBeVisible()

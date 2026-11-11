@@ -57,12 +57,10 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
       aria-labelledby="access-title"
     >
       <div className="access-story">
-        <p className="eyebrow">GOOD FRIENDS. GREAT CARDS.</p>
         <h1 id="access-title">
-          Welcome to
-          <br />
-          <em>your table.</em>
+          YAYDU
         </h1>
+        <p className="eyebrow brand-tagline">The Game of Sevens</p>
         <p>Bring a name. Bring a little strategy. We’ll bring the cards.</p>
         {invitation && (
           <p className="invitation-banner">

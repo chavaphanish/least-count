@@ -29,7 +29,7 @@ test('one guard covers routes and dashboard screens without replacing mounted co
     const guard = page.getByRole('dialog', { name: 'Rotate Your Phone' })
     await expect(guard).toBeVisible()
     await expect(guard).toContainText(
-      'Least Count is designed to be played in landscape mode.',
+      'YAYDU is designed to be played in landscape mode.',
     )
     await expect(page.locator('.orientation-content')).toBeHidden()
     await expect(page.locator('.orientation-content')).toHaveAttribute(
