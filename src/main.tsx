@@ -6,6 +6,7 @@ import './mobile.css'
 import './mobile-tokens.css'
 import './app-mobile.css'
 import './gameplay-layout.css'
+import './branding.css'
 import { AuthProvider } from './auth/AuthProvider'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -1,3 +1,4 @@
+import { useNavigationLoading } from '../components/NavigationLoading'
 import { CareerGlance } from '../career/CareerGlance'
 import { Buddies } from '../career/Buddies'
 import { useMobileLandscape } from '../components/MobileOrientation'
@@ -15,6 +16,7 @@ import {
 } from '../shared/multiplayer'
 import type { RoomSettings } from '../shared/multiplayer'
 export function DashboardPage() {
+  const navigation = useNavigationLoading()
   const mobile = useMobileLandscape()
   const auth = useAuth()
   const player = auth.user!.player
@@ -28,6 +30,7 @@ export function DashboardPage() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const go = (value: typeof mode) => {
+    if (value !== mode) navigation.start()
     setMode(value)
     setError('')
   }

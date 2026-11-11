@@ -1,3 +1,4 @@
+import { NavigationLoadingProvider, useNavigationLoading } from './components/NavigationLoading'
 import { CareerProfile, GameHistoryReport } from './career/CareerProfile'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Layout } from './components/Layout'
@@ -55,6 +56,10 @@ function invitation() {
   return null
 }
 export function App() {
+  return <NavigationLoadingProvider><Application /></NavigationLoadingProvider>
+}
+function Application() {
+  const navigation = useNavigationLoading()
   const local = useLocalGame()
   const auth = useAuth()
   const [current, setCurrent] = useState(route)
@@ -75,10 +80,14 @@ export function App() {
     }
   }, [])
   useEffect(() => {
-    const navigate = () => setCurrent(route())
+    const navigate = () => {
+      const next = route()
+      if (JSON.stringify(next) !== JSON.stringify(current) && next.page !== 'game') navigation.start()
+      setCurrent(next)
+    }
     addEventListener('hashchange', navigate)
     return () => removeEventListener('hashchange', navigate)
-  }, [])
+  }, [current, navigation.start])
   useEffect(() => {
     document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
     if (previous.current !== current.page) {
@@ -132,18 +141,31 @@ export function App() {
       )
     }
   } else content = <DashboardPage />
-  const showStartup = !['game', 'rules'].includes(current.page) && (auth.status !== 'ready' || !startupDone)
+  const identity = auth.user?.player.id ?? null
+  const previousIdentity = useRef(identity)
+  useEffect(() => {
+    if (startupDone && previousIdentity.current !== identity && auth.status === 'ready') navigation.start()
+    previousIdentity.current = identity
+  }, [identity, auth.status, startupDone, navigation.start])
+  const atGame = current.page === 'game' || (current.page === 'room' && navigation.gameplay)
+  useEffect(() => {
+    if (atGame) { navigation.finish(); setStartupDone(true) }
+  }, [atGame, navigation.finish])
+  const showStartup = !atGame && !['game', 'rules'].includes(current.page) && (auth.status !== 'ready' || !startupDone)
+  const showNavigation = !atGame && !showStartup && !!navigation.pending
+  const covered = showStartup || showNavigation
   return (
     <MobileOrientation>
       <Layout page={current.page}>
         <div
           className="startup-content"
-          hidden={showStartup}
-          inert={showStartup}
-          aria-hidden={showStartup || undefined}
+          hidden={covered}
+          inert={covered}
+          aria-hidden={covered || undefined}
         >
           {content}
         </div>
+        {showNavigation && <LoadingScreen key={navigation.pending} navigation ready onComplete={navigation.finish} step={3} message="Opening your next screen…" error="" retry={navigation.finish} />}
         {showStartup && (
           <LoadingScreen
             ready={auth.status === 'ready'}

@@ -16,12 +16,12 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     await page.route('**/api/session', route => route.fulfill({json:{user:null,room:null}}))
     await page.goto('/')
     const loading = page.locator('.startup-screen')
-    const logo = loading.getByRole('img',{name:'YAYDU'})
+    const logo = loading.getByRole('img',{name:'YAYDU',exact:true})
     await expect(logo).toBeVisible()
-    await expect(loading.getByRole('heading',{name:'YAYDU',exact:true})).toBeVisible()
+    await expect(loading.locator('.yaydu-wordmark').first()).toBeVisible()
     await expect(loading.getByText('The Game of Sevens',{exact:true})).toBeVisible()
-    await expect(loading.getByRole('progressbar')).toHaveCount(0)
-    const pixels = await loading.locator('.loading-logo-gold img').evaluate(async (element) => {
+    await expect(loading.getByRole('progressbar')).toHaveCount(1)
+    const pixels = await loading.locator('.loading-logo .brand-filled img').evaluate(async (element) => {
       const image = element as HTMLImageElement
       await image.decode()
       const canvas = document.createElement('canvas')
@@ -57,7 +57,7 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
       const main=await page.locator('main').elementHandle()
       await page.setViewportSize({width:390,height:844})
       const guard=page.getByRole('dialog',{name:'Rotate Your Phone'})
-      await expect(guard.getByRole('img',{name:'YAYDU'})).toBeVisible()
+      await expect(guard.getByRole('img',{name:'YAYDU',exact:true})).toBeVisible()
       await expect(guard).toContainText('YAYDU is designed to be played in landscape mode.')
       await expect(page.locator('.orientation-content')).toBeHidden()
       await fits('.orientation-guard')

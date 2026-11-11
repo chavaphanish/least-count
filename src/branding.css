@@ -1,0 +1,36 @@
+/* Shared presentation for boot, major navigation and the portrait guard. */
+.yaydu-wordmark, .brand-wordmark { font-family: 'DM Sans',sans-serif; font-weight: 700; font-style: normal; }
+.brand > span:last-child { font-weight: 700; }
+.access-story h1.brand-wordmark, .hero h1 .brand-wordmark { font-family: 'DM Sans',sans-serif; font-weight: 700; }
+.startup-screen.studio-loading { position: fixed; inset: 0; z-index: 20; width: 100dvw; height: 100dvh; min-height: 0; background: #0c2e26; padding: max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(52px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left)); gap: 24px; }
+.studio-loading[data-exiting] { opacity: 1; transition: none; }
+.dual-brand { display: grid; grid-template-columns: minmax(0,1fr) 1px minmax(0,1.3fr); align-items: center; gap: clamp(12px,3vw,30px); width: min(620px,88vw,150dvh); flex-shrink: 0; text-align: center; }
+.dual-yaydu, .dual-studio { min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.dual-yaydu .loading-logo { width: 65%; aspect-ratio: 1; }
+.dual-brand .studio-logo, [data-mobile-device] .dual-brand .studio-logo { display: block; width: 100%; height: auto; }
+.dual-brand .brand-fill { position: relative; display: block; width: 100%; color: var(--gold); }
+.brand-fill > .brand-unfilled, .brand-fill > .brand-static { display: block; }
+.brand-unfilled { filter: brightness(0) invert(1); }
+.brand-filled { position: absolute; inset: 0; display: block; will-change: clip-path; }
+.yaydu-wordmark { display: block; font-size: clamp(23px,4vw,38px); line-height: 1.1; letter-spacing: .08em; }
+.dual-brand .brand-tagline { margin: 6px 0 0; white-space: nowrap; font-size: clamp(10px,2vw,14px); line-height: 1.4; }
+.brand-separator { display: block; width: 1px; height: 75%; min-height: 80px; background: var(--border); }
+.dual-studio .powered-by { margin: 0 0 10px; color: var(--muted); font-size: clamp(11px,2vw,13px); letter-spacing: .08em; line-height: 1.3; }
+.chavium-logo { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+.brand-progress { width: min(240px,55vw); height: 3px; background: #bdd2b52b; overflow: hidden; flex-shrink: 0; }
+.brand-progress > span { display: block; width: 100%; height: 100%; transform-origin: left; background: var(--gold); }
+.brand-copyright { position: absolute; left: max(12px,env(safe-area-inset-left)); right: max(12px,env(safe-area-inset-right)); bottom: max(16px,env(safe-area-inset-bottom)); color: var(--muted); text-align: center; font: 400 11px/1.4 'DM Sans',sans-serif; }
+.orientation-guard[open] { gap: 20px; padding-bottom: max(52px,env(safe-area-inset-bottom)); }
+.orientation-guard .dual-brand p { max-width: none; }
+.orientation-guard .dual-brand .brand-tagline { font-size: clamp(10px,2vw,14px); }
+[data-mobile-device] .startup-screen.studio-loading { gap: 18px; padding: max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(44px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+@media (max-height: 600px) {
+  .orientation-guard[open] { gap: 12px; }
+  .orientation-guard .dual-brand { width: min(420px,80vw); }
+  .orientation-guard h1 { font-size: 28px; }
+  .orientation-guard > p { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .brand-filled { will-change: auto; } }
+/* Leave room for the existing retry/offline actions on a short landscape screen. */
+.startup-screen.studio-loading:has([role=alert]) { gap: 12px; }
+.studio-loading:has([role=alert]) .dual-brand { width: min(440px,80vw,100dvh); }

@@ -1,3 +1,4 @@
+import { useNavigationLoading } from '../components/NavigationLoading'
 import { IdentityEditor } from '../auth/IdentityEditor'
 import { ScreenPages } from '../components/ScreenPages'
 import { useMobileLandscape } from '../components/MobileOrientation'
@@ -12,6 +13,7 @@ import {
   displayName,
 } from '../shared/multiplayer'
 export function ProfilePage() {
+  const navigation = useNavigationLoading()
   const mobile = useMobileLandscape()
   const auth = useAuth()
   const [section, setSection] = useState(() =>
@@ -277,13 +279,13 @@ export function ProfilePage() {
         navigation="on-detail"
         label="Profile views"
         value={section}
-        onChange={setSection}
+        onChange={(value) => { if (value !== section) navigation.start(); setSection(value) }}
         pages={[
           {
             label: 'Career',
             content: (
               <CareerProfile
-                onEdit={mobile ? () => setSection(1) : undefined}
+                onEdit={mobile ? () => { navigation.start(); setSection(1) } : undefined}
               />
             ),
           },
