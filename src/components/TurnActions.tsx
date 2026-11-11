@@ -118,13 +118,13 @@ export function TurnActions({
               {!mobile && <h3>Eligible open cards · Drop Pile</h3>}
               <div className="pickup-cards">
                 {pickups.slice(0,mobile?1:pickups.length).map(card => (
-                  <button className="pickup-button eligible-pickup" data-pickup-card={card.id} key={card.id} disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={() => onPickup(card.id)}>
-                    <PlayingCard card={card} />
+                  <button className="button button-primary pickup-button eligible-pickup" data-pickup-card={card.id} key={card.id} disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={() => onPickup(card.id)}>
+                    <span className="pickup-preview"><PlayingCard card={card} /></span>
                     <span>Pick Up {card.rank === 'PJ' ? 'Joker' : `${card.rank}${suits[card.suit]}`}</span>
                   </button>
                 ))}
                 {mobile && pickups.length > 1 && <TableOverlay label="Choose an open card" trigger={`All ${pickups.length} open cards`}>
-                  <div className="overlay-pickups">{pickups.map(card=><button key={card.id} data-pickup-card={card.id} className="pickup-button eligible-pickup" disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={event=>{onPickup(card.id);event.currentTarget.closest('dialog')?.close()}}><PlayingCard card={card}/><span>Pick Up {card.rank === 'PJ' ? 'Joker' : `${card.rank}${suits[card.suit]}`}</span></button>)}</div>
+                  <div className="overlay-pickups">{pickups.map(card=><button key={card.id} data-pickup-card={card.id} className="button button-primary pickup-button eligible-pickup" disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={event=>{onPickup(card.id);event.currentTarget.closest('dialog')?.close()}}><span className="pickup-preview"><PlayingCard card={card}/></span><span>Pick Up {card.rank === 'PJ' ? 'Joker' : `${card.rank}${suits[card.suit]}`}</span></button>)}</div>
                 </TableOverlay>}
               </div>
             </div>
