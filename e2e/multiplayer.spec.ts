@@ -129,10 +129,8 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
       await expect(table.locator('.hand-player')).toContainText(name)
       await expect(table.locator('.hand-player .profile-avatar')).toHaveText(initials)
       await expect(table.locator('.player-hand .card-value')).toHaveCount(0)
-      // An opening 7 can automatically grow a seven-card desktop hand to nine.
-      await expect(table.locator('.player-hand .hand-row')).toHaveCount(
-        Math.ceil((await table.locator('.player-hand .hand-card').count()) / 7),
-      )
+      // Both desktop and mobile now share the existing adaptive single-row hand.
+      await expect(table.locator('.adaptive-hand')).toHaveAttribute('data-rows','1')
       await expect(table.locator('.joker-indicator')).toContainText('Round Joker')
     }
     const hostView = await (await page.request.get(`/api/rooms/${code}`)).json()

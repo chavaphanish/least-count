@@ -1,3 +1,4 @@
+import { useFeedback } from '../feedback/FeedbackProvider'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cardRect, handCardRect } from '../components/TurnAnimation'
 import type {
@@ -29,6 +30,7 @@ export function useRoomCardMotion(
   error: string,
   send: (action: ClientGameAction) => boolean,
 ) {
+  const feedback=useFeedback()
   const [motion, setMotion] = useState<TurnMotion | null>(null)
   const pending = useRef<PendingMotion | null>(null)
   const finishMotion = useCallback(() => setMotion(null), [])
@@ -55,7 +57,10 @@ export function useRoomCardMotion(
       return
     }
     pending.current = null
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      feedback.sound(incoming ? p.source==='discard'?'card_pickup':'card_draw' : 'card_drop',`confirmed:${room!.id}:${room!.revision}`)
+      return
+    }
     setMotion({
       outgoing,
       incoming:
@@ -63,7 +68,7 @@ export function useRoomCardMotion(
           ? { card: incoming, from: p.from, faceDown: p.source === 'pile' }
           : undefined,
     })
-  }, [room, busy, error])
+  }, [room, busy, error, feedback])
   const move = useCallback(
     (action: ClientGameAction) => {
       const g = room?.game

@@ -1,0 +1,14 @@
+.sound-haptics { border: 0; padding: 0; margin: 12px 0; min-width: 0; width: 100%; }
+.sound-haptics legend { font-weight: 600; color: var(--gold); margin-bottom: 6px; }
+.feedback-options { display: flex; gap: 12px; flex-wrap: wrap; }
+.feedback-options label { display: flex; gap: 8px; font-size: 13px; min-height: 44px; cursor: pointer; }
+.sound-haptics small { display: block; font-size: 11px; color: var(--muted); line-height: 1.4; }
+.account-menu:has(.sound-haptics) { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.account-menu:has(.sound-haptics) > h2, .account-menu:has(.sound-haptics) > p { width: 100%; }
+[data-mobile-device] .account-menu:has(.sound-haptics) { display: grid; grid-template-columns: 1fr 1.4fr; align-items: center; gap: 6px 16px; padding: 8px; }
+[data-mobile-device] .account-menu:has(.sound-haptics) > :not(.sound-haptics) { grid-column: 1; }
+[data-mobile-device] .account-menu .sound-haptics { grid-column: 2; grid-row: 1 / span 5; margin: 0; }
+[data-mobile-device] .feedback-options { flex-direction: column; gap: 0; }
+[data-mobile-device] .account-menu:has(.sound-haptics) > h2 { font-size: 20px; }
+[data-mobile-device] .account-menu:has(.sound-haptics) > p { font-size: 12px; }
+[data-mobile-device] .sound-haptics .checkbox-label { min-height: 44px; }

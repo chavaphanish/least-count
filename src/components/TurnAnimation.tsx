@@ -1,4 +1,5 @@
-import { useLayoutEffect, useState } from 'react'
+import { useFeedback } from '../feedback/FeedbackProvider'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { PlayingCard } from './PlayingCard'
@@ -69,6 +70,7 @@ export function TurnAnimation({
   motion: TurnMotion
   onComplete: () => void
 }) {
+  const feedback=useFeedback()
   const [flights, setFlights] = useState<Flight[]>([])
   const [stage, setStage] = useState('outgoing')
   const sequential =
@@ -156,6 +158,7 @@ export function TurnAnimation({
       reduced.removeEventListener('change', onComplete)
     }
   }, [motion, onComplete])
+  useEffect(()=>{if(flights.some(f=>f.direction===stage))feedback.motion(motion,stage)},[feedback,motion,stage,flights])
   return createPortal(
     <div
       className="turn-animation"

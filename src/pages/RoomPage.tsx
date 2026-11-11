@@ -1,3 +1,4 @@
+import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
 import { ResultScores } from '../components/ResultScores'
 import { MobileGameBar } from '../components/MobileGameBar'
@@ -32,6 +33,7 @@ export function RoomPage({
   const local = useRoom(code)
   const { room, connection, error, busy, now, send, command } = local
   useGameplayLoading(!!room?.game)
+  useGameFeedback(room?.game ? {scope:`room:${room.id}`,revision:room.revision,round:room.game.round,phase:room.game.phase,dropIds:room.game.latestDiscard.map(c=>c.id).join(','),localId:auth.user!.player.id,currentId:room.game.currentPlayerId,players:room.game.players,events:room.game.events,deadline:room.game.deadline,now,connected:connection==='live',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
   useActiveSeat(room?.game?.currentPlayerId)
   const id = auth.user!.player.id
   const {

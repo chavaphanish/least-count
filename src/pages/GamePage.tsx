@@ -1,3 +1,4 @@
+import { useFeedback, useGameFeedback } from '../feedback/FeedbackProvider'
 import { playerIdentity, withPlayerNames } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
 import { MobileGameBar } from '../components/MobileGameBar'
@@ -36,9 +37,11 @@ export function GamePage({
 }: {
   local: ReturnType<typeof useLocalGame>
 }) {
+  const feedback=useFeedback()
   const auth = useAuth()
   const { game, now, error, canSave, send, start, reset } = local
   useActiveSeat(game?.current)
+  useGameFeedback(game ? {scope:'local',round:game.round,phase:game.phase,dropIds:game.discards.at(-1)?.map(c=>c.id).join(','),localId:game.players[0].id,currentId:game.players[game.current].id,players:game.players,events:gameEvents(game),deadline:game.deadline,now,connected:true,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
   const [count, setCount] = useState(4)
   const [selected, setSelected] = useState<string[]>([])
   const [motion, setMotion] = useState<
@@ -235,6 +238,8 @@ export function GamePage({
               }
             : undefined,
       })
+    } else if(discarded.length || incoming) {
+      feedback.sound(incoming ? source==='discard'?'card_pickup':'card_draw' : 'card_drop',`confirmed:local:${next.eventSequence}:${now}`)
     }
   }
   const discardSelected = () => {
