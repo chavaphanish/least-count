@@ -619,12 +619,12 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .live-opponent > .player-identity { max-width: 100%; font-size: 12px; }
 .player-identity .profile-avatar { flex-shrink: 0; }
 
-/* Studio artwork keeps its original 3:2 canvas and transparent background. */
+/* YAYDU artwork uses a square canvas and transparent background. */
 .studio-logo { display: block; width: min(320px, 75vw); height: auto; object-fit: contain; flex-shrink: 0; }
 .startup-screen.studio-loading { gap: 12px; padding: 24px 16px; }
 .startup-screen.studio-loading > p { margin: 0; }
 
-.loading-logo { position: relative; aspect-ratio: 3 / 2; display: grid; place-items: center; }
+.loading-logo { position: relative; aspect-ratio: 1; display: grid; place-items: center; }
 .loading-logo-white { display: block; width: 100%; filter: brightness(0) invert(1); }
 .loading-logo .studio-logo { width: 100%; height: auto; }
 .loading-logo-gold { position: absolute; inset: 0; will-change: clip-path; }
@@ -634,3 +634,9 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 
 .startup-content { display: contents; }
 .startup-content[hidden] { display: none; }
+
+/* Brand-only changes; gameplay and application layouts retain their existing rules. */
+.brand-mark .studio-logo { width: 38px; height: 38px; }
+.brand-caption { letter-spacing: .8px; }
+.studio-loading .startup-brand-name { margin: 0; font: 400 32px/1.1 'Libre Caslon Display',Georgia,serif; letter-spacing: 4px; color: var(--gold); }
+.brand-tagline { font: italic 16px/1.4 'Libre Caslon Display',Georgia,serif; color: var(--muted); }

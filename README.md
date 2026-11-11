@@ -1,6 +1,10 @@
-# Least Count
+# YAYDU
 
-Least Count is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
+*The Game of Sevens*
+
+The player-facing brand is **YAYDU**; the `least-count` repository, Worker, API paths, environment variables and native application identifiers remain unchanged. The supplied artwork and regeneration details are in [assets/branding](assets/branding/README.md). Existing installed PWAs may need to be reinstalled if the OS retains an old name or icon.
+
+YAYDU is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
 
 **Accounts and multiplayer:** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
 
@@ -157,7 +161,7 @@ npm run mobile:open:android  # Open the generated project in Android Studio
 
 `npm run mobile:build` builds the web assets without synchronizing. Run synchronization after web changes or installing/updating Capacitor plugins. The existing `npm run build` and Cloudflare deployment remain independent of native tooling.
 
-**Development identity:** `capacitor.config.ts` sets the name **Least Count** and reads `CAPACITOR_APP_ID`, defaulting to the temporary **`com.example.leastcount`** identifier. This is not the production/store bundle ID. An override must also match the native projects: Android's `applicationId`/`namespace` in `android/app/build.gradle`, the MainActivity Java package/path and package/scheme strings, and the iOS target's Bundle Identifier in Xcode. Capacitor synchronization copies web/config/plugin files; it does **not** rename those native identifiers. Choose and align the production identifiers in a later release-preparation step; do not use the placeholder for store submission. No signing credentials are included.
+**Development identity:** `capacitor.config.ts` sets the name **YAYDU** and reads `CAPACITOR_APP_ID`, defaulting to the temporary **`com.example.leastcount`** identifier. This is not the production/store bundle ID. An override must also match the native projects: Android's `applicationId`/`namespace` in `android/app/build.gradle`, the MainActivity Java package/path and package/scheme strings, and the iOS target's Bundle Identifier in Xcode. Capacitor synchronization copies web/config/plugin files; it does **not** rename those native identifiers. Choose and align the production identifiers in a later release-preparation step; do not use the placeholder for store submission. No signing credentials are included.
 
 **Native tools:** iOS compilation requires macOS and a Capacitor-8-compatible Xcode with the iOS SDK. The iOS project uses Swift Package Manager, so CocoaPods is not required. Android compilation requires Android Studio, JDK 21, and Android SDK 36 (the generated project targets API 36, minimum API 24). Open the projects above to resolve native dependencies, select a simulator/device, and build. Linux in this task has JDK 21 but no Xcode/iOS SDK or configured Android SDK: native projects can be generated and synchronized here, but native compilation/device execution is not validated.
 
@@ -187,7 +191,7 @@ The conservative engine supply bound is **104 cards** (two decks plus Printed Jo
 
 Native iOS permits Landscape Left and Landscape Right on both iPhone and iPad. `UIRequiresFullScreen` allows the iPad landscape-only configuration and opts out of iPad multitasking. Android retains `sensorLandscape`, supporting both landscape directions subject to OS/multi-window policy. These are native orientation settings, not a promise that a PWA can override device lock. Native compilation and device orientation behavior require Xcode/Android SDK and physical testing; this Linux environment validates configuration and Capacitor synchronization only.
 
-**Install on iPhone:** open [Least Count](https://least-count.chavaphanish.workers.dev/) in Safari, choose **Share → Add to Home Screen**, then launch the icon. Rotate left/right with system rotation enabled. Sign in again if the Home Screen session is separate from Safari. Preview email verification/recovery links require the preview origin in the Supabase redirect allowlist. Production uses the existing API/WebSocket/auth configuration.
+**Install on iPhone:** open [YAYDU](https://least-count.chavaphanish.workers.dev/) in Safari, choose **Share → Add to Home Screen**, then launch the icon. Rotate left/right with system rotation enabled. Sign in again if the Home Screen session is separate from Safari. Preview email verification/recovery links require the preview origin in the Supabase redirect allowlist. Production uses the existing API/WebSocket/auth configuration.
 
 **Update an installation:** finish live play, close and reopen the app with connectivity, or use the existing update notice. Entry HTML/manifest/icons revalidate; fingerprinted assets are immutable. The network-only service worker does not queue offline game actions. Server timers continue during backgrounding, network loss and orientation changes. An already-open document retains its loaded code until refreshed. Remove/re-add an old Home Screen icon only if its cached manifest remains stale.
 
@@ -209,14 +213,14 @@ Check both landscape directions, cutouts, real keyboard open/close, accessibilit
 
 ### Android PWA Installation and Testing
 
-Use the existing HTTPS [Least Count website](https://least-count.chavaphanish.workers.dev/) in a recent **Chrome on Android**. No APK, Google Play account, paid service, or native build is required.
+Use the existing HTTPS [YAYDU website](https://least-count.chavaphanish.workers.dev/) in a recent **Chrome on Android**. No APK, Google Play account, paid service, or native build is required.
 
 1. Open the deployed URL in Chrome (not an embedded social/email browser).
 2. Open the **three-dot menu → Install App** or **Add to Home Screen**, and confirm installation. Chrome may offer an installation dialog or a shortcut depending on browser/device policy and support.
-3. Launch **Least Count** from the Home Screen. A supported PWA installation opens in standalone mode without the ordinary address bar.
+3. Launch **YAYDU** from the Home Screen. A supported PWA installation opens in standalone mode without the ordinary address bar.
 4. Rotate to landscape, sign in with a verified email or continue as guest, then create or join a room. Android, iPhone and desktop all use the same server and rules.
 
-The existing manifest retains the Least Count name/short name, root start URL/scope, `standalone` display, both landscape directions, and 192px/512px icons. The existing 512px spade icon also has maskable purpose: its artwork fits inside the central 80%-diameter safe circle on an opaque background. Installation requires HTTPS (localhost is only a development exception), valid manifest/icons and browser support. Chrome's install prompt also depends on user engagement, existing installations and browser/administrator policy; an eligible manifest does not guarantee an automatic prompt. Use the menu and avoid private/incognito mode for installation.
+The existing manifest retains the YAYDU name/short name, root start URL/scope, `standalone` display, both landscape directions, and 192px/512px icons. The supplied spade-and-7 icon also has maskable purpose: its artwork fits inside the central 80%-diameter safe circle on an opaque background. Installation requires HTTPS (localhost is only a development exception), valid manifest/icons and browser support. Chrome's install prompt also depends on user engagement, existing installations and browser/administrator policy; an eligible manifest does not guarantee an automatic prompt. Use the menu and avoid private/incognito mode for installation.
 
 **Orientation and lifecycle:** Android uses the same fixed mobile shell and supported installed-PWA landscape request described above. Browser tabs, split-screen and device policies may ignore orientation preferences. Portrait displays the shared rotation screen; orientation changes do not pause server deadlines. Foregrounding or network recovery obtains a fresh authoritative room snapshot and reconnects its socket. Pending actions are not replayed automatically and offline actions are not queued. Long absences can still cause timeout elimination or loss of a waiting-lobby reservation under existing rules.
 

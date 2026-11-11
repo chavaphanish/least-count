@@ -1,3 +1,4 @@
+import { StudioLogo } from './StudioLogo'
 import type { ReactNode } from 'react'
 import { useAppViewport } from './MobileOrientation'
 import { useAuth } from '../auth/AuthProvider'
@@ -25,12 +26,12 @@ export function Layout({
         Skip to content
       </a>
       <header className="site-header">
-        <a className="brand" href="#/" aria-label="Least Count home">
+        <a className="brand" href="#/" aria-label="YAYDU home">
           <span className="brand-mark" aria-hidden="true">
-            ♠
+            <StudioLogo />
           </span>
           <span>
-            LEAST COUNT<span className="brand-caption">THE CARD TABLE</span>
+            YAYDU<span className="brand-caption">The Game of Sevens</span>
           </span>
         </a>
         <nav aria-label="Main navigation">
@@ -71,7 +72,7 @@ export function Layout({
           ♠ <i>♥</i> ♣ <i>♦</i>
         </span>
         <span>
-          Least Count <span className="footer-dot">/</span> Your card table
+          YAYDU <span className="footer-dot">/</span> The Game of Sevens
         </span>
       </footer>
     </div>

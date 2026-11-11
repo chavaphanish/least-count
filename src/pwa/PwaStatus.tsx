@@ -61,7 +61,7 @@ export function PwaStatus({ atTable }: { atTable: boolean }) {
   if (!waiting || atTable) return null
   return (
     <aside className="pwa-status" role="status">
-      <span>A new Least Count version is ready. Reload when you’ve finished playing.</span>
+      <span>A new YAYDU version is ready. Reload when you’ve finished playing.</span>
       <button className="text-button" disabled={updating} onClick={() => {
         reloadRequested.current = true
         setUpdating(true)

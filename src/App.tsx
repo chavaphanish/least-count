@@ -80,7 +80,7 @@ export function App() {
     return () => removeEventListener('hashchange', navigate)
   }, [])
   useEffect(() => {
-    document.title = `Least Count — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
+    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
     if (previous.current !== current.page) {
       document.getElementById('main')?.focus()
       scrollTo(0, 0)

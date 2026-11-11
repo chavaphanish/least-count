@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Least Count</string>
-    <string name="title_activity_main">Least Count</string>
+    <string name="app_name">YAYDU</string>
+    <string name="title_activity_main">YAYDU</string>
     <string name="package_name">com.example.leastcount</string>
     <string name="custom_url_scheme">com.example.leastcount</string>
 </resources>
