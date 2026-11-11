@@ -1,3 +1,4 @@
+import { SoundSettings } from '../feedback/SoundSettings'
 import { useNavigationLoading } from '../components/NavigationLoading'
 import { CareerGlance } from '../career/CareerGlance'
 import { Buddies } from '../career/Buddies'
@@ -109,7 +110,7 @@ export function DashboardPage() {
           )}
         </div>
       )}
-      {mobile && ['ranking', 'buddies', 'settings'].includes(mode) ? (
+      {['ranking', 'buddies', 'settings'].includes(mode) ? (
         <div className="dashboard-focused">
           <button className="text-button" onClick={() => go('home')}>
             ← Back to Lounge
@@ -128,6 +129,7 @@ export function DashboardPage() {
           ) : (
             <div className="account-menu">
               <h2>Settings</h2>
+              <SoundSettings />
               <p>
                 <PlayerIdentity player={player} compact /> ·{' '}
                 {player.accountType === 'guest'
@@ -193,6 +195,7 @@ export function DashboardPage() {
             </div>
           )}
           <div className="dashboard-links">
+            {!mobile && <button className="text-button" onClick={() => go('settings')}>Settings</button>}
             <a className="button button-secondary" href="#/rules">
               How to Play
             </a>

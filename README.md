@@ -18,6 +18,12 @@ Registered profiles now include Overview, Statistics, Game History, and Buddies,
 
 Career results come from accepted Worker game transitions, with durable retries and a transactional XP ledger. Defaults are +10 XP per completed round, +25 for a finalized game, and +75 for victory. Levels follow `50 × (level − 1) × level`. Finalized wins/losses, round participation, Least/Power Card metrics, card actions, server-recorded time, and score/timeout eliminations are tracked without exposing hidden cards. Detailed history and frequent opponents remain private; public rankings show XP, levels and win performance. These metagame features do not change the card rules.
 
+## Sound & Haptics
+
+Lounge → **Settings** has independent **Sound Effects**, **Vibration**, and **Turn Notifications** controls. Preferences are saved on this browser/device and synchronized between tabs; they do not change account or game data. Sound unlocks after a permitted tap/key interaction. Card cues follow confirmed actions/visible animation stages; the authoritative turn countdown drives the final 15-second warning. Round/game results use 3/5-second applause and supported mobile vibration patterns. Reconnects, refreshes, hidden tabs and navigation do not replay old alerts.
+
+Vibration is disabled with an explanation when unsupported (including most iPhone browsers); desktop devices never vibrate. Autoplay blocks, missing assets or unavailable hardware leave gameplay functional. Original audio assets and regeneration instructions are in [public/audio](public/audio/README.md). Native device loudness/haptics still require physical-device QA.
+
 ## Playing
 
 - Continue as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh.
