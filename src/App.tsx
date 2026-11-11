@@ -58,6 +58,12 @@ export function App() {
   const local = useLocalGame()
   const auth = useAuth()
   const [current, setCurrent] = useState(route)
+  const [startupDone, setStartupDone] = useState(() => ['game', 'rules'].includes(route().page))
+  const finishStartup = useCallback(() => setStartupDone(true), [])
+  useEffect(() => {
+    // Offline practice/rules remain immediately accessible, including after a boot error.
+    if (['game', 'rules'].includes(current.page)) setStartupDone(true)
+  }, [current.page])
   const [invite, setInvite] = useState(invitation)
   const previous = useRef(current.page)
   const clearInvite = useCallback(() => {
@@ -99,15 +105,7 @@ export function App() {
   let content
   if (current.page === 'game') content = <GamePage local={local} />
   else if (current.page === 'rules') content = <RulesPage />
-  else if (auth.status !== 'ready')
-    content = (
-      <LoadingScreen
-        step={auth.step}
-        message={auth.message}
-        error={auth.status === 'error' ? auth.error : ''}
-        retry={() => void auth.retry()}
-      />
-    )
+  else if (auth.status !== 'ready') content = null
   else if (!auth.user) content = <AccessPage invitation={invite} />
   else if (recovery) content = <RecoveryPage />
   else if (current.page === 'player')
@@ -134,5 +132,29 @@ export function App() {
       )
     }
   } else content = <DashboardPage />
-  return <MobileOrientation><Layout page={current.page}>{content}</Layout></MobileOrientation>
+  const showStartup = !['game', 'rules'].includes(current.page) && (auth.status !== 'ready' || !startupDone)
+  return (
+    <MobileOrientation>
+      <Layout page={current.page}>
+        <div
+          className="startup-content"
+          hidden={showStartup}
+          inert={showStartup}
+          aria-hidden={showStartup || undefined}
+        >
+          {content}
+        </div>
+        {showStartup && (
+          <LoadingScreen
+            ready={auth.status === 'ready'}
+            onComplete={finishStartup}
+            step={auth.step}
+            message={auth.message}
+            error={auth.status === 'error' ? auth.error : ''}
+            retry={() => void auth.retry()}
+          />
+        )}
+      </Layout>
+    </MobileOrientation>
+  )
 }

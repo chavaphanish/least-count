@@ -1,5 +1,5 @@
 /** The approved artwork, recolored from its original alpha without redrawing. */
-export function StudioLogo() {
+export function StudioLogo({ onError }: { onError?: () => void }) {
   return (
     <img
       className="studio-logo"
@@ -8,6 +8,7 @@ export function StudioLogo() {
       width="1536"
       height="1024"
       fetchPriority="high"
+      onError={onError}
     />
   )
 }

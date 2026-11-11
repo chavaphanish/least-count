@@ -621,3 +621,14 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .studio-logo { display: block; width: min(320px, 75vw); height: auto; object-fit: contain; flex-shrink: 0; }
 .startup-screen.studio-loading { gap: 12px; padding: 24px 16px; }
 .startup-screen.studio-loading > p { margin: 0; }
+
+.loading-logo { position: relative; aspect-ratio: 3 / 2; display: grid; place-items: center; }
+.loading-logo-white { display: block; width: 100%; filter: brightness(0) invert(1); }
+.loading-logo .studio-logo { width: 100%; height: auto; }
+.loading-logo-gold { position: absolute; inset: 0; will-change: clip-path; }
+.studio-logo-fallback { color: var(--gold); font-size: clamp(20px,4vw,30px); }
+.studio-loading[data-exiting] { opacity: 0; transition: opacity 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .studio-loading[data-exiting] { transition: none; } }
+
+.startup-content { display: contents; }
+.startup-content[hidden] { display: none; }
