@@ -1,3 +1,4 @@
+import { useGameplayLoading } from '../components/NavigationLoading'
 import { ResultScores } from '../components/ResultScores'
 import { MobileGameBar } from '../components/MobileGameBar'
 import { OpponentSeat } from '../components/OpponentSeat'
@@ -30,6 +31,7 @@ export function RoomPage({
   const auth = useAuth()
   const local = useRoom(code)
   const { room, connection, error, busy, now, send, command } = local
+  useGameplayLoading(!!room?.game)
   useActiveSeat(room?.game?.currentPlayerId)
   const id = auth.user!.player.id
   const {

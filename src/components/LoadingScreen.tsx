@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { StudioLogo } from './StudioLogo'
+import { DualBrand, BrandCopyright } from './DualBrand'
 
 const MINIMUM_MS = 3000
 const FINISH_MS = 350
 const HOLD_MS = 120
 const EXIT_MS = 180
-// Horizontal artwork bounds in the square 1024px canvas. Transparent
-// margins must not count as progress or make a slow load look complete early.
-const ARTWORK_LEFT = 140
-const ARTWORK_WIDTH = 753
-const LOGO_WIDTH = 1024
-
 export function LoadingScreen({
   step,
   message,
@@ -18,6 +12,7 @@ export function LoadingScreen({
   retry,
   ready,
   onComplete,
+  navigation = false,
 }: {
   step: number
   message: string
@@ -25,10 +20,11 @@ export function LoadingScreen({
   retry: () => void
   ready: boolean
   onComplete: () => void
+  navigation?: boolean
 }) {
+  const [attempt, setAttempt] = useState(0)
   const timing = useRef({ start: -1, last: -1, progress: 0, finish: -1, from: 0 })
   const [view, setView] = useState({ progress: 0, exiting: false })
-  const [assetFailed, setAssetFailed] = useState(false)
   const [reducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
 
   useEffect(() => {
@@ -40,7 +36,7 @@ export function LoadingScreen({
       const elapsed = now - t.start
       if (ready) {
         if (t.finish < 0) {
-          t.finish = Math.max(t.start + MINIMUM_MS, now + FINISH_MS)
+          t.finish = Math.max(t.start + (navigation ? 800 : MINIMUM_MS), now + FINISH_MS)
           t.from = t.progress
           t.last = now
         }
@@ -64,42 +60,28 @@ export function LoadingScreen({
     }
     frame = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(frame)
-  }, [ready, step, error, onComplete, reducedMotion])
+  }, [ready, step, error, onComplete, reducedMotion, navigation])
 
   function restart() {
     timing.current = { start: -1, last: -1, progress: 0, finish: -1, from: 0 }
     setView({ progress: 0, exiting: false })
-    setAssetFailed(false)
+    setAttempt(value => value + 1)
     retry()
   }
   return (
     <section
-      className="startup-screen studio-loading"
+      className={`startup-screen studio-loading ${navigation ? 'navigation-loading' : ''}`}
       aria-labelledby="startup-title"
       data-ready={ready || undefined}
       data-exiting={(view.exiting && !error) || undefined}
     >
-      <div className="studio-logo loading-logo" role="img" aria-label="YAYDU" data-fill={view.progress}>
-        {assetFailed ? (
-          <span className="studio-logo-fallback">YAYDU</span>
-        ) : (
-          <>
-            <span className="loading-logo-white" aria-hidden="true">
-              <StudioLogo onError={() => setAssetFailed(true)} />
-            </span>
-            <span
-              className="loading-logo-gold"
-              aria-hidden="true"
-              style={{ clipPath: `inset(0 ${100 - (ARTWORK_LEFT + ARTWORK_WIDTH * view.progress) / LOGO_WIDTH * 100}% 0 0)` }}
-            >
-              <StudioLogo onError={() => setAssetFailed(true)} />
-            </span>
-          </>
-        )}
+      <h1 id="startup-title" className="visually-hidden">YAYDU</h1>
+      <DualBrand key={attempt} progress={view.progress} />
+      <div className="brand-progress" role="progressbar" aria-label="Loading application" aria-valuetext={ready ? 'Finishing' : 'Preparing your table'}>
+        <span style={{ transform: `scaleX(${view.progress})` }} />
       </div>
-      <h1 id="startup-title" className="startup-brand-name">YAYDU</h1>
-      <p className="brand-tagline">The Game of Sevens</p>
       <p role={error ? 'alert' : 'status'} className={error ? undefined : 'visually-hidden'}>{error || message}</p>
+      <BrandCopyright />
       {error && (
         <div className="auth-actions">
           <button className="button button-primary" onClick={restart}>Retry initialization</button>

@@ -1,4 +1,4 @@
-import { StudioLogo } from './StudioLogo'
+import { DualBrand, BrandCopyright } from './DualBrand'
 import {
   createContext,
   useContext,
@@ -147,7 +147,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           aria-describedby="orientation-description"
           onCancel={(event) => event.preventDefault()}
         >
-          <StudioLogo />
+          <DualBrand />
           <svg
             viewBox="0 0 80 80"
             width="80"
@@ -171,6 +171,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           <p id="orientation-description">
             YAYDU is designed to be played in landscape mode.
           </p>
+          <BrandCopyright />
         </dialog>
       </div>
     </ViewportContext.Provider>

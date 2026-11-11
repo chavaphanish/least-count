@@ -12,14 +12,14 @@ async function config(page: Page) {
 async function session(page: Page) {
   await page.route('**/api/session', r=>r.fulfill({json:{user:null,room:null}}))
 }
-const fill = (page: Page) => page.locator('.loading-logo').getAttribute('data-fill').then(Number)
+const fill = (page: Page) => page.locator('.startup-screen .loading-logo').getAttribute('data-fill').then(Number)
 // Count actual artwork pixels inside the rendered clipping boundary, ignoring
 // the transparent canvas margins. This catches a visually complete slow load.
 async function visibleGold(page: Page) {
-  return page.locator('.loading-logo').evaluate(async element => {
+  return page.locator('.startup-screen .loading-logo').evaluate(async element => {
     const image = element.querySelector('img')!
     await image.decode()
-    const clip = getComputedStyle(element.querySelector('.loading-logo-gold')!).clipPath
+    const clip = getComputedStyle(element.querySelector('.brand-filled')!).clipPath
     const right = Number(clip.match(/([\d.]+)%/)![1])
     const edge = image.naturalWidth * (1 - right / 100)
     const canvas = document.createElement('canvas')
@@ -44,12 +44,12 @@ for (const mobile of [false,true]) test.describe(mobile?'mobile animated splash'
     const loading=page.locator('.startup-screen')
     await expect(loading).toHaveAttribute('data-ready','true')
     expect(await fill(page)).toBe(0)
-    await expect(page.locator('.loading-logo-white')).toHaveCSS('filter','brightness(0) invert(1)')
+    await expect(page.locator('.startup-screen .loading-logo .brand-unfilled')).toHaveCSS('filter','brightness(0) invert(1)')
     expect((await visibleGold(page)).gold).toBe(0)
-    await expect(page.getByRole('progressbar')).toHaveCount(0)
+    await expect(page.getByRole('progressbar')).toHaveCount(1)
     await expect(page.locator('.loading-spinner,.startup-progress')).toHaveCount(0)
     await expect(loading).not.toContainText('%')
-    const layers=await page.locator('.loading-logo img').evaluateAll(images=>images.map(image=>{const b=image.getBoundingClientRect();return [b.x,b.y,b.width,b.height]}))
+    const layers=await page.locator('.startup-screen .loading-logo img').evaluateAll(images=>images.map(image=>{const b=image.getBoundingClientRect();return [b.x,b.y,b.width,b.height]}))
     expect(layers[0]).toEqual(layers[1])
     await page.clock.runFor(1000)
     const first=await fill(page)
@@ -82,8 +82,8 @@ test.describe('slow and interrupted splash',()=>{
     expect(before).toBeGreaterThan(.5);expect(before).toBeLessThan(1)
     await page.setViewportSize({width:390,height:844})
     const portrait=page.getByRole('dialog',{name:'Rotate Your Phone'})
-    await expect(portrait.getByRole('img',{name:'YAYDU'})).toBeVisible()
-    await expect(portrait.locator('.loading-logo')).toHaveCount(0)
+    await expect(portrait.getByRole('img',{name:'YAYDU',exact:true})).toBeVisible()
+    await expect(portrait.locator('.brand-filled')).toHaveCount(0)
     await page.evaluate(()=>{window.dispatchEvent(new Event('pageshow'));document.dispatchEvent(new Event('visibilitychange'))})
     await page.clock.runFor(5000)
     await page.setViewportSize({width:844,height:390})
@@ -104,10 +104,14 @@ test.describe('slow and interrupted splash',()=>{
   })
   test('failure exposes retry immediately and retry uses a fresh minimum without delaying initialization',async({page})=>{
     await clock(page)
+    await page.setViewportSize({width:667,height:320})
     let failed=true
     await page.route('**/api/config',r=>r.fulfill(failed?{status:503,json:{error:'Service unavailable'}}:{json:{service:'least-count',supabase:null}}))
     await session(page);await page.goto('/')
     await expect(page.getByRole('alert')).toContainText('Service unavailable')
+    const retry=await page.getByRole('button',{name:'Retry initialization'}).boundingBox()
+    expect(retry!.y).toBeGreaterThanOrEqual(0)
+    expect(retry!.y+retry!.height).toBeLessThanOrEqual(320)
     failed=false
     await page.getByRole('button',{name:'Retry initialization'}).click()
     await expect(page.locator('.startup-screen')).toHaveAttribute('data-ready','true')
@@ -122,7 +126,7 @@ test('missing artwork falls back to studio text without blocking readiness',asyn
   await clock(page);await config(page);await session(page)
   await page.route('**/branding/yaydu-gold.png',r=>r.fulfill({status:404,body:''}))
   await page.goto('/')
-  await expect(page.locator('.studio-logo-fallback')).toHaveText('YAYDU')
+  await expect(page.locator('.studio-logo-fallback').first()).toHaveText('YAYDU')
   await page.clock.runFor(3500)
   await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
 })

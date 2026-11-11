@@ -5,7 +5,7 @@ mask=Path(tempfile.gettempdir())/'least-count-yaydu-mask.png'
 r=Path(__file__).resolve().parents[1]
 def mag(*args):subprocess.run(['magick',*map(str,args)],check=True)
 # Ignore only the external image frame; symbol pixels and its alignment are untouched.
-mag(r/'assets/branding/yaydu-original.png','-colorspace','Gray','-threshold','50%','-fill','black','-draw','rectangle 0,0 291,8 rectangle 0,0 5,339 rectangle 286,0 291,339 rectangle 0,337 291,339','-background','black','-gravity','center','-extent','340x340','-resize','1024x1024',mask)
+mag(r/'assets/branding/yaydu-original.png','-colorspace','Gray','-level','5%,95%','-fill','black','-draw','rectangle 0,0 291,8 rectangle 0,0 5,339 rectangle 286,0 291,339 rectangle 0,337 291,339','-background','black','-gravity','center','-extent','340x340','-resize','1024x1024',mask)
 mag('-size','1024x1024','xc:#e9cd91',mask,'-alpha','off','-compose','CopyOpacity','-composite',r/'public/branding/yaydu-gold.png')
 def icon(path,size,fraction=.68,transparent=False):
  path.parent.mkdir(parents=True,exist_ok=True)
