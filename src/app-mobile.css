@@ -487,3 +487,7 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] .active-game .hand-player-name { display: block; max-width: 120px; font-size: 9px; line-height: 1.05; }
 [data-mobile-device] .identity-compact .identity-username { margin-top: 1px; font-size: 9px; }
 [data-mobile-device] .active-game .hand-player:has(.identity-username) h2 { display: none; }
+
+[data-mobile-device] .startup-screen.studio-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; text-align: center; }
+[data-mobile-device] .studio-loading .studio-logo { width: min(280px, 62vw, calc(var(--app-height) * .58)); }
+[data-mobile-device] .studio-loading .loading-spinner { display: block; width: 20px; height: 20px; flex-shrink: 0; }
