@@ -692,7 +692,7 @@ test('guided actions support matching groups, legal declaration choices, and rel
   await bar.getByRole('button', { name: 'Select All Matching' }).click()
   await expect(page.locator('.hand-card[aria-pressed="true"]')).toHaveCount(2)
   await bar.getByRole('button', { name: 'Drop 2 Queens' }).click()
-  await expect(bar.getByText('CHOOSE YOUR REPLACEMENT CARD', { exact: true })).toBeVisible()
+  await expect(bar.getByText('Choose your replacement card', { exact: true })).toBeVisible()
   await expect(bar.getByRole('button', { name: 'Declare Least' })).toHaveCount(0)
   await expect(bar.locator('[data-plan-discard]')).toHaveCount(0)
   await expect(bar.getByRole('button', { name: 'Draw New Card' })).toBeEnabled()

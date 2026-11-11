@@ -4,7 +4,6 @@ import { cardLabel } from '../game/deck'
 import { dropLabel } from '../lib/handSelection'
 import { PlayingCard } from './PlayingCard'
 import { useMobileLandscape } from './MobileOrientation'
-import { TableOverlay } from './TableOverlay'
 
 const suits = { clubs: '♣', diamonds: '♦', hearts: '♥', spades: '♠' }
 
@@ -55,6 +54,8 @@ export function TurnActions({
   const actionable = yours && playing && !moving
   const replacing = phase === 'draw'
   const responding = phase === 'penalty'
+  const replacementArea = replacing && yours
+  const pickup = pickups[0]
   const hasSeven = hand.some(card => card.rank === '7')
   const legal = selected.length > 0 && selected.every(card =>
     hand.some(own => own.id === card.id) && card.rank === selected[0].rank && (!responding || card.rank === '7'),
@@ -86,8 +87,8 @@ export function TurnActions({
       : legal ? label : 'Select cards to drop'
   }
   return (
-    <section className="turn-panel" aria-label="Turn actions" aria-busy={busy}>
-      {!mobile && <p className="action-stage">{title}</p>}
+    <section className={`turn-panel${replacementArea ? ' replacement-panel' : ''}`} aria-label="Turn actions" aria-busy={busy}>
+      {!mobile && !replacementArea && <p className="action-stage">{title}</p>}
       <p className="turn-message" role="status">{instruction}</p>
       {feedback && !mobile && <p className="action-hint" role="status">{feedback}</p>}
       {error && <p className="game-alert" role="alert">{error}</p>}
@@ -103,6 +104,12 @@ export function TurnActions({
               <button className="button button-secondary" disabled={busy} onClick={onDeclare}>Declare Least</button>
             )}
             {replacing && <button className="button button-primary" data-primary-draw disabled={busy} onClick={onDraw}>Draw New Card</button>}
+            {replacing && pickup && (
+              <button className="button button-primary pickup-button eligible-pickup" data-pickup-card={pickup.id} disabled={busy} aria-label={`Pick up ${cardLabel(pickup)}`} onClick={() => onPickup(pickup.id)}>
+                <span className="pickup-preview"><PlayingCard card={pickup} /></span>
+                <span>Pick Up {pickup.rank === 'PJ' ? 'Joker' : `${pickup.rank}${suits[pickup.suit]}`}</span>
+              </button>
+            )}
             {responding && hasSeven && <button className="button button-secondary" disabled={busy} onClick={onPenalty}>Draw {penalty} Penalty Cards</button>}
           </div>
           {!replacing && selected.length > 0 && (
@@ -113,22 +120,6 @@ export function TurnActions({
             </div>
           )}
           {!mobile && !replacing && !responding && canDeclare && !!hand.length && <p className="action-hint">You can Declare Least, or continue with a Drop.</p>}
-          {replacing && !!pickups.length && (
-            <div className="pickup-panel">
-              {!mobile && <h3>Eligible open cards · Drop Pile</h3>}
-              <div className="pickup-cards">
-                {pickups.slice(0,mobile?1:pickups.length).map(card => (
-                  <button className="button button-primary pickup-button eligible-pickup" data-pickup-card={card.id} key={card.id} disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={() => onPickup(card.id)}>
-                    <span className="pickup-preview"><PlayingCard card={card} /></span>
-                    <span>Pick Up {card.rank === 'PJ' ? 'Joker' : `${card.rank}${suits[card.suit]}`}</span>
-                  </button>
-                ))}
-                {mobile && pickups.length > 1 && <TableOverlay label="Choose an open card" trigger={`All ${pickups.length} open cards`}>
-                  <div className="overlay-pickups">{pickups.map(card=><button key={card.id} data-pickup-card={card.id} className="button button-primary pickup-button eligible-pickup" disabled={busy} aria-label={`Pick up ${cardLabel(card)}`} onClick={event=>{onPickup(card.id);event.currentTarget.closest('dialog')?.close()}}><span className="pickup-preview"><PlayingCard card={card}/></span><span>Pick Up {card.rank === 'PJ' ? 'Joker' : `${card.rank}${suits[card.suit]}`}</span></button>)}</div>
-                </TableOverlay>}
-              </div>
-            </div>
-          )}
         </>
       )}
     </section>
