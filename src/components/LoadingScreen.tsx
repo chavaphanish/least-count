@@ -5,6 +5,11 @@ const MINIMUM_MS = 3000
 const FINISH_MS = 350
 const HOLD_MS = 120
 const EXIT_MS = 180
+// Exact horizontal alpha bounds in the approved 1536px canvas. Transparent
+// margins must not count as progress or make a slow load look complete early.
+const ARTWORK_LEFT = 176
+const ARTWORK_WIDTH = 1184
+const LOGO_WIDTH = 1536
 
 export function LoadingScreen({
   step,
@@ -85,7 +90,7 @@ export function LoadingScreen({
             <span
               className="loading-logo-gold"
               aria-hidden="true"
-              style={{ clipPath: `inset(0 ${(1 - view.progress) * 100}% 0 0)` }}
+              style={{ clipPath: `inset(0 ${100 - (ARTWORK_LEFT + ARTWORK_WIDTH * view.progress) / LOGO_WIDTH * 100}% 0 0)` }}
             >
               <StudioLogo onError={() => setAssetFailed(true)} />
             </span>
