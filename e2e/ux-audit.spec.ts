@@ -106,7 +106,8 @@ test('visual audit of all existing mobile surfaces', async ({
       ).toBeVisible()
       await shot('buddy-search')
     }
-    await page.getByRole('button', { name: 'Back to Lounge' }).click()
+    if (mode === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+    else await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
   await page.goto('/#/profile')
   await expect(

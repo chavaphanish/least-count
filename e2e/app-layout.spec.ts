@@ -110,7 +110,8 @@ for (const size of sizes)
         await page.getByRole('button', { name: 'Buddies Ranking' }).click()
       }
       await fits(page)
-      await page.getByRole('button', { name: 'Back to Lounge' }).click()
+      if (mode === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      else await page.getByRole('button', { name: 'Back to Lounge' }).click()
     }
     await page.goto('/#/profile')
     await expect(
@@ -412,7 +413,7 @@ test('ranking pages retain reachable players after viewport height changes', asy
   ).toBeDisabled()
   await page.setViewportSize(sizes[5])
   await expect(page.locator('.ranking-list li')).toHaveCount(1)
-  await expect(page.locator('.ranking-list')).toContainText('Rank Player 10')
+  await expect(page.locator('.ranking-list')).toContainText('@lc_rank_10')
   await fits(page)
   await page
     .getByRole('button', { name: 'Previous players', exact: true })

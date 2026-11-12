@@ -68,7 +68,8 @@ test('one guard covers routes and dashboard screens without replacing mounted co
     ).toBeVisible()
     await expect(page.locator('main')).toBeHidden()
     await page.setViewportSize(landscape)
-    await page.getByRole('button', { name: 'Back to Lounge' }).click()
+    if (name === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+    else await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
 })
 test('portrait guard covers initial loading and unauthenticated entry', async ({

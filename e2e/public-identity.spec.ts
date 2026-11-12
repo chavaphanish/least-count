@@ -17,7 +17,7 @@ for (const mobile of [false,true]) test.describe(mobile ? 'mobile landscape iden
     await page.goto('/')
     await expect(page.locator('.dashboard-heading .identity-primary').first()).toHaveText('John Smith')
     await expect(page.locator('.dashboard-heading .identity-username').first()).toHaveText('@cardmaster99')
-    if(mobile) await page.getByRole('button',{name:'Leaderboards',exact:true}).click()
+    await page.getByRole('button',{name:'Leaderboards',exact:true}).click()
     await expect(page.locator('.ranking-list .player-identity').first()).toContainText('Élodie O’Neill')
     await expect(page.locator('.ranking-list .player-identity').first()).toContainText('@otherplayer99')
     await page.goto('/#/profile')

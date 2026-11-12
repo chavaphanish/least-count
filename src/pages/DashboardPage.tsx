@@ -4,7 +4,6 @@ import { CareerGlance } from '../career/CareerGlance'
 import { Buddies } from '../career/Buddies'
 import { useMobileLandscape } from '../components/MobileOrientation'
 import { CompactForm } from '../components/CompactForm'
-import { Leaderboard } from '../career/Leaderboard'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { playerIdentity } from '../shared/playerIdentity'
@@ -22,7 +21,7 @@ export function DashboardPage() {
   const auth = useAuth()
   const player = auth.user!.player
   const [mode, setMode] = useState<
-    'home' | 'create' | 'join' | 'ranking' | 'buddies' | 'settings'
+    'home' | 'create' | 'join' | 'buddies' | 'settings'
   >('home')
   const [settings, setSettings] = useState<RoomSettings>({
     ...DEFAULT_ROOM_SETTINGS,
@@ -110,14 +109,12 @@ export function DashboardPage() {
           )}
         </div>
       )}
-      {['ranking', 'buddies', 'settings'].includes(mode) ? (
+      {['buddies', 'settings'].includes(mode) ? (
         <div className="dashboard-focused">
           <button className="text-button" onClick={() => go('home')}>
             ← Back to Lounge
           </button>
-          {mode === 'ranking' ? (
-            <Leaderboard />
-          ) : mode === 'buddies' ? (
+          {mode === 'buddies' ? (
             player.accountType === 'registered' ? (
               <Buddies />
             ) : (
@@ -184,7 +181,7 @@ export function DashboardPage() {
               </a>
               <button
                 className="button button-primary lounge-nav-button"
-                onClick={() => go('ranking')}
+                onClick={() => { location.hash = '#/leaderboards' }}
               >
                 Leaderboards
               </button>
@@ -207,6 +204,11 @@ export function DashboardPage() {
             <a className="button button-secondary" href="#/rules">
               How to Play
             </a>
+            {!mobile && (
+              <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
+                Leaderboards
+              </button>
+            )}
             {!mobile && player.accountType === 'registered' && (
               <a
                 className="button button-primary lounge-nav-button"
@@ -324,7 +326,6 @@ export function DashboardPage() {
       <button className="text-button" disabled={busy} onClick={logout}>
         {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
       </button>
-      {!mobile && mode === 'home' && <Leaderboard />}
     </section>
   )
 }
