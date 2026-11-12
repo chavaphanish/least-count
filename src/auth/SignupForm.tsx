@@ -110,15 +110,15 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
   <div className="signup-step"><button className="text-button" type="button" disabled={busy || step === 0} onClick={() => setStep(step - 1)}>Back</button><span aria-live="polite">Step {step + 1} of 3 · {['Personal Information', 'Account Information', 'Password'][step]}</span></div>
   <CompactForm key={`${step}:${reset}`} className="signup-form" noValidate onSubmit={submit}>
    {step === 0 && <>
-    <label>First Name<input required maxLength={80} autoComplete="given-name" placeholder="First name" value={identity.firstName} onChange={e => change('firstName', e.target.value)}/></label>
-    <label>Last Name<input required maxLength={80} autoComplete="family-name" placeholder="Last name" value={identity.lastName} onChange={e => change('lastName', e.target.value)}/></label>
+    <label><span className="visually-hidden">First Name</span><input required maxLength={80} autoComplete="given-name" placeholder="First name" value={identity.firstName} onChange={e => change('firstName', e.target.value)}/></label>
+    <label><span className="visually-hidden">Last Name</span><input required maxLength={80} autoComplete="family-name" placeholder="Last name" value={identity.lastName} onChange={e => change('lastName', e.target.value)}/></label>
     <p className="field-hint identity-feedback">Your name and @username will be visible to other players.</p>
    </>}
    {step === 1 && <>
-    <label>Username<input required autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="username" value={identity.username} onChange={e => change('username', e.target.value)}/></label>
-    <label>Email address<input required type="email" autoComplete="email" autoCapitalize="none" placeholder="yourmail@provider.com" value={email} onChange={e => onEmailChange(e.target.value)}/></label>
+    <label><span className="visually-hidden">Username</span><input required autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="username" value={identity.username} onChange={e => change('username', e.target.value)}/></label>
+    <label><span className="visually-hidden">Email address</span><input required type="email" autoComplete="email" autoCapitalize="none" placeholder="yourmail@provider.com" value={email} onChange={e => onEmailChange(e.target.value)}/></label>
    </>}
-   {step === 2 && <><PasswordField data-form-field label="Password" value={password} onChange={setPassword} error={passwordIssue}/><PasswordField data-form-field label="Confirm Password" value={confirmation} onChange={setConfirmation} error={mismatch}/></>}
+   {step === 2 && <><PasswordField data-form-field hideLabel label="Password" value={password} onChange={setPassword} error={passwordIssue}/><PasswordField data-form-field hideLabel label="Confirm Password" value={confirmation} onChange={setConfirmation} error={mismatch}/></>}
    {notice && <p className="form-notice signup-message" role="status">{notice}</p>}
    <button className="button button-primary" disabled={busy || !!notice || !auth.configured}>{busy ? (step === 1 ? 'Checking availability…' : 'Creating account…') : step === 2 ? 'Create account' : 'Next'}</button>
   </CompactForm>
