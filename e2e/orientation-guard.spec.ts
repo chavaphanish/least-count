@@ -55,8 +55,8 @@ test('one guard covers routes and dashboard screens without replacing mounted co
   }
   await page.goto('/')
   for (const name of [
-    'Create Game Room',
-    'Join Game Room',
+    'Set the Table',
+    'Take a Seat',
     'Leaderboards',
     'Buddies',
     'Settings',

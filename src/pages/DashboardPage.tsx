@@ -160,7 +160,7 @@ export function DashboardPage() {
                 className="button button-primary"
                 onClick={() => go('create')}
               >
-                Create Game Room
+                Set the Table
               </button>
             </div>
             <div className="dashboard-action">
@@ -170,7 +170,7 @@ export function DashboardPage() {
                 className="button button-primary"
                 onClick={() => go('join')}
               >
-                Join Game Room
+                Take a Seat
               </button>
             </div>
           </div>

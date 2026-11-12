@@ -8,6 +8,12 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.3 — 2026-11-12
+
+- **Lounge buttons:** the gold buttons in the Create Game Room and Join Game Room cards now have centered text, and their labels changed to **"Set the Table"** and **"Take a Seat"** (card headings stay "Create Game Room" / "Join Game Room"). All e2e specs that click these buttons by name were updated to the new labels.
+- **Documentation screenshots:** the auto-generated doc captures that show the Lounge (`docs/mobile-layout/*`, `docs/mobile-ux/after/*`) were refreshed by their generating audit specs so they reflect the new buttons; unlike previous unrelated churn, these were committed this time.
+- **Verification:** typecheck, 330 unit tests, production build, and the Lounge, orientation-guard, app-layout, and ux-audit e2e suites pass; the one ux-audit failure (`Other Player` heading on `/player/lc_other`) is pre-existing on clean `main`.
+
 ## 1.1.2 — 2026-11-12
 
 - **Update screen:** the gold **Update** button is now horizontally centered on the full-screen update view.

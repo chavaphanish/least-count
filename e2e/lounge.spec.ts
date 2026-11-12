@@ -32,7 +32,7 @@ for (const mobile of [false, true]) {
       await expect(page).toHaveTitle('YAYDU — Lounge')
       const before = (await (await page.request.get('/api/session')).json())
         .user.player.id
-      await page.getByRole('button', { name: 'Create Game Room' }).click()
+      await page.getByRole('button', { name: 'Set the Table' }).click()
       await page.getByRole('button', { name: 'Back to Lounge' }).click()
       await page.getByRole('link', { name: 'Rules', exact: true }).click()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()

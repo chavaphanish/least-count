@@ -260,7 +260,7 @@ test('complete guest room journey reaches results, then existing career screens'
   try {
     await guest(page, 'UX Host')
     await guest(peer, 'UX Buddy')
-    await page.getByRole('button', { name: 'Create Game Room' }).click()
+    await page.getByRole('button', { name: 'Set the Table' }).click()
     await page.getByLabel('Number of players').selectOption('2')
     await page.getByLabel('Elimination cutoff').fill('1')
     await page.getByLabel('Timed game').uncheck()
@@ -269,7 +269,7 @@ test('complete guest room journey reaches results, then existing career screens'
       page.getByRole('heading', { name: 'Waiting lobby' }),
     ).toBeVisible()
     const code = (await page.locator('.room-code-panel strong').textContent())!
-    await peer.getByRole('button', { name: 'Join Game Room' }).click()
+    await peer.getByRole('button', { name: 'Take a Seat' }).click()
     await peer.getByLabel('Room code', { exact: true }).fill(code)
     await peer.getByRole('button', { name: 'Join Room', exact: true }).click()
     await page.getByRole('button', { name: 'Start Game', exact: true }).click()

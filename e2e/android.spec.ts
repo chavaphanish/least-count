@@ -324,7 +324,7 @@ test('Android, iPhone and desktop share rounds, activity and authoritative resum
     for (const [i, p] of pages.entries())
       await guest(p, ['Android', 'iPhone', 'Desktop'][i])
     const host = pages[0]
-    await host.getByRole('button', { name: /Create Game Room/ }).click()
+    await host.getByRole('button', { name: /Set the Table/ }).click()
     await host.getByLabel('Number of players').selectOption('3')
     // This exercises cross-device rounds, not OS scheduling against a live clock.
     // Authoritative timed expiry is covered by mobile.spec.ts's real Worker test.
@@ -335,7 +335,7 @@ test('Android, iPhone and desktop share rounds, activity and authoritative resum
     ).toBeVisible()
     const code = (await host.locator('.room-code-panel strong').textContent())!
     for (const p of pages.slice(1)) {
-      await p.getByRole('button', { name: /Join Game Room/ }).click()
+      await p.getByRole('button', { name: /Take a Seat/ }).click()
       await p.getByLabel('Room code', { exact: true }).fill(code)
       await p.getByRole('button', { name: 'Join Room', exact: true }).click()
       await expect(
