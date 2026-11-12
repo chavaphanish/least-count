@@ -143,7 +143,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
                 <input
                   required
                   type={mode==='signin'?'text':'email'}
-                  placeholder={mode==='signin'?'Email or username':'yourmail@provider.com'}
+                  placeholder={mode==='signin'?'Email or username':'email'}
                   autoComplete={mode==='signin'?'username':'email'}
                   autoCapitalize="none"
                   value={email}
