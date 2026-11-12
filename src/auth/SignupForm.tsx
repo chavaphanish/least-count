@@ -116,7 +116,7 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
    </>}
    {step === 1 && <>
     <label><span className="visually-hidden">Username</span><input required autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="username" value={identity.username} onChange={e => change('username', e.target.value)}/></label>
-    <label><span className="visually-hidden">Email address</span><input required type="email" autoComplete="email" autoCapitalize="none" placeholder="yourmail@provider.com" value={email} onChange={e => onEmailChange(e.target.value)}/></label>
+    <label><span className="visually-hidden">Email address</span><input required type="email" autoComplete="email" autoCapitalize="none" placeholder="email" value={email} onChange={e => onEmailChange(e.target.value)}/></label>
    </>}
    {step === 2 && <><PasswordField data-form-field hideLabel label="Password" value={password} onChange={setPassword} error={passwordIssue}/><PasswordField data-form-field hideLabel label="Confirm Password" value={confirmation} onChange={setConfirmation} error={mismatch}/></>}
    {notice && <p className="form-notice signup-message" role="status">{notice}</p>}

@@ -52,7 +52,7 @@ test('each signup step contains only its own fields, with empty placeholders and
  await expect(page.getByPlaceholder('First name',{exact:true})).toHaveValue('');await expect(page.getByPlaceholder('Last name',{exact:true})).toHaveValue('')
  await personal(page)
  await expect(page.locator('.signup-form input')).toHaveCount(2)
- await expect(page.getByPlaceholder('username',{exact:true})).toHaveValue('');await expect(page.getByPlaceholder('yourmail@provider.com')).toHaveValue('')
+ await expect(page.getByPlaceholder('username',{exact:true})).toHaveValue('');await expect(page.getByPlaceholder('email',{exact:true})).toHaveValue('')
  await page.getByLabel('Username',{exact:true}).fill('CardMaster99');await page.getByLabel('Email address',{exact:true}).fill('Person@example.test');await page.getByRole('button',{name:'Next',exact:true}).click()
  await expect(page.locator('.signup-form input')).toHaveCount(2);await expect(page.getByPlaceholder('Password',{exact:true})).toHaveValue('')
  await page.getByRole('button',{name:'Back',exact:true}).click();await expect(page.getByLabel('Username',{exact:true})).toHaveValue('cardmaster99')
