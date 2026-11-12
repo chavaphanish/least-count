@@ -381,7 +381,7 @@ test('startup loading and retry screen fit', async ({ page }) => {
   await fits(page)
 })
 
-test('ranking pages retain reachable players after viewport height changes', async ({
+test('ranking scroll retains reachable players after viewport height changes', async ({
   page,
 }) => {
   await page.setViewportSize(sizes[0])
@@ -403,23 +403,19 @@ test('ranking pages retain reachable players after viewport height changes', asy
   )
   await page.goto('/')
   await page.getByRole('button', { name: 'Leaderboards', exact: true }).click()
-  await expect(page.locator('.ranking-list li')).toHaveCount(2)
-  for (let i = 0; i < 4; i++)
-    await page
-      .getByRole('button', { name: 'Next players', exact: true })
-      .click()
-  await expect(
-    page.getByRole('button', { name: 'Next players', exact: true }),
-  ).toBeDisabled()
+  const list = page.getByRole('list', { name: 'Player rankings', exact: true })
+  await expect(list.locator('li')).toHaveCount(10)
+  await list.evaluate(el => { el.scrollTop = el.scrollHeight })
+  await expect(list.locator('li').last()).toBeInViewport({ ratio: 1 })
   await page.setViewportSize(sizes[5])
-  await expect(page.locator('.ranking-list li')).toHaveCount(1)
-  await expect(page.locator('.ranking-list')).toContainText('@lc_rank_10')
-  await fits(page)
-  await page
-    .getByRole('button', { name: 'Previous players', exact: true })
-    .click()
-  await expect(page.locator('.ranking-list li')).toHaveCount(3)
-  await fits(page)
+  await expect(list.locator('li')).toHaveCount(10)
+  await expect(list).toContainText('@lc_rank_10')
+  await expect(list.locator('li').last()).toBeInViewport({ ratio: 1 })
+  await expect(list).toBeInViewport({ ratio: 1 })
+  await list.evaluate(el => { el.scrollTop = 0 })
+  await expect(list.locator('li').first()).toBeInViewport({ ratio: 1 })
+  await expect(page.getByRole('button', { name: /Previous players|Next players/ })).toHaveCount(0)
+
 })
 
 test('create, join, profile and recovery fields fit a keyboard-reduced viewport', async ({
