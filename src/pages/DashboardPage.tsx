@@ -153,18 +153,26 @@ export function DashboardPage() {
       ) : mode === 'home' ? (
         <>
           <div className="dashboard-actions">
-            <button className="dashboard-action" onClick={() => go('create')}>
-              <span aria-hidden="true">♠</span>
+            <div className="dashboard-action">
               <h2>Create Game Room</h2>
               <p>Set the table. Pick your settings. Invite your friends.</p>
-              <strong>Create a room →</strong>
-            </button>
-            <button className="dashboard-action" onClick={() => go('join')}>
-              <span aria-hidden="true">♣</span>
+              <button
+                className="button button-primary"
+                onClick={() => go('create')}
+              >
+                Create Game Room
+              </button>
+            </div>
+            <div className="dashboard-action">
               <h2>Join Game Room</h2>
               <p>Have a code? Your seat is waiting.</p>
-              <strong>Join your friends →</strong>
-            </button>
+              <button
+                className="button button-primary"
+                onClick={() => go('join')}
+              >
+                Join Game Room
+              </button>
+            </div>
           </div>
           {mobile && (
             <div className="mobile-main-menu">

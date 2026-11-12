@@ -8,6 +8,11 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.1 — 2026-11-12
+
+- **Lounge:** the Create Game Room and Join Game Room cards no longer show the ♠/♣ suit symbols or "Create a room →"/"Join your friends →" text links; each card now carries a regular gold primary button labeled "Create Game Room" / "Join Game Room". Desktop and mobile card layouts were cleaned of the dead symbol/link styles (`DashboardPage.tsx`, `styles.css`, `app-mobile.css`).
+- **Verification:** typecheck, 330 unit tests, production build, and the Lounge, orientation-guard, and app-layout e2e suites (27 passed) pass; the three failures in `lounge-navigation.spec.ts` "gold buttons share states and retain navigation" are pre-existing on clean `main` (mobile main-menu `boundingBox()` race, unrelated to this change).
+
 ## 1.1.0 — 2026-11-12
 
 First release under the `1.1.x` versioning scheme.
