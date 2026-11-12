@@ -16,3 +16,31 @@
 [data-mobile-device] .validation-dialog { width: min(520px,calc(var(--app-width) - 32px)); max-height: calc(var(--app-height) - 16px); }
 [data-keyboard] .validation-dialog .table-overlay-body { grid-template-columns: minmax(0,1fr) auto; align-items: center; overflow: auto; }
 [data-keyboard] .validation-dialog .button { min-height: 44px; padding: 10px 16px; }
+
+/* Authentication-only alignment; shared gameplay buttons remain untouched. */
+.access-page button, .validation-dialog button {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.access-card { container-type: inline-size; }
+.access-page form label { position: relative; min-width: 0; }
+.access-page input { text-overflow: ellipsis; }
+.access-page .signup-wizard:not([data-signup-step="3"]) .signup-form:not([data-form-steps]) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+  align-items: start;
+}
+.access-page .signup-form:not([data-form-steps]) > :is(p, .button, .form-submit) {
+  grid-column: 1 / -1;
+}
+/* CompactForm uses display:contents wrappers on mobile. */
+[data-mobile-device] .access-page .signup-wizard:not([data-signup-step="3"]) .signup-form:not([data-form-steps]) > .form-field > label {
+  grid-column: auto;
+}
+@container (max-width: 330px) {
+  .access-page .signup-wizard:not([data-signup-step="3"]) .signup-form:not([data-form-steps]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

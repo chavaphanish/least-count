@@ -7,6 +7,7 @@ export function PasswordField({
   disabled,
   autoComplete = 'new-password',
   minimumLength = 8,
+  hideLabel = false,
 }: {
   label: string
   value: string
@@ -15,13 +16,14 @@ export function PasswordField({
   disabled?: boolean
   autoComplete?: 'new-password' | 'current-password'
   minimumLength?: number
+  hideLabel?: boolean
   'data-form-field'?: boolean
 }) {
   const [shown, setShown] = useState(false)
   const errorId = useId()
   return (
     <label>
-      {label}
+      <span className={hideLabel ? 'visually-hidden' : undefined}>{label}</span>
       <span className="password-input">
         <input
           aria-label={label}

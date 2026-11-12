@@ -125,7 +125,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           <CompactForm shortSteps onSubmit={submit}>
             {mode === 'guest' && (
               <label>
-                Display name
+                <span className="visually-hidden">Display name</span>
                 <input
                   required
                   minLength={2}
@@ -139,7 +139,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             )}
             {mode !== 'guest' && (
               <label>
-                {mode==='signin'?'Email or Username':'Email address'}
+                <span className="visually-hidden">{mode==='signin'?'Email or Username':'Email address'}</span>
                 <input
                   required
                   type={mode==='signin'?'text':'email'}
@@ -151,7 +151,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
                 />
               </label>
             )}
-            {mode==='signin'&&<PasswordField data-form-field label="Password" value={password} onChange={setPassword} autoComplete="current-password" minimumLength={1} />}
+            {mode==='signin'&&<PasswordField data-form-field hideLabel label="Password" value={password} onChange={setPassword} autoComplete="current-password" minimumLength={1} />}
             {(error || auth.error) && (
               <p className="game-alert" role="alert">
                 {error || auth.error}

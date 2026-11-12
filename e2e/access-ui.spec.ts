@@ -21,6 +21,20 @@ for(const mobile of [false,true])test.describe(mobile?'mobile account access':'d
   await page.getByLabel('Email or Username',{exact:true}).fill('CardMaster99');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect.poll(()=>handleRequest).toMatchObject({identifier:'CardMaster99',password:'test-password'});await expect(page.getByRole('alert')).toHaveText('Invalid email/username or password.')
   await page.getByRole('button',{name:'Continue as Guest',exact:true}).click();await expect(page.getByPlaceholder('Enter guest name')).toHaveValue('');await expect(page.getByLabel('Display name',{exact:true})).toHaveValue('')
  })
+ test('placeholder-only labels, paired signup fields and centered authentication controls',async({page})=>{
+  await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:{url:'https://mock-project.supabase.co',publishableKey:'sb_publishable_test'}}}))
+  await page.route('**/api/session',r=>r.fulfill({json:{user:null,room:null}}))
+  await page.goto('/');await page.getByRole('button',{name:'Sign Up',exact:true}).click()
+  async function checkPair(){
+   const inputs=await page.locator('.signup-form input').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height}}))
+   expect(inputs).toHaveLength(2);expect(inputs[0].y).toBe(inputs[1].y);expect(inputs[0].width).toBeCloseTo(inputs[1].width,0);expect(inputs[0].height).toBe(inputs[1].height);expect(inputs[1].x).toBeGreaterThan(inputs[0].x+inputs[0].width)
+   const labels=await page.locator('.signup-form label > span.visually-hidden').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width))
+   expect(labels).toEqual([1,1])
+   const alignment=await page.locator('.access-page button').evaluateAll(nodes=>nodes.filter(n=>n.checkVisibility()).map(n=>{const s=getComputedStyle(n);return[s.justifyContent,s.textAlign]}))
+   expect(alignment.every(([justify,text])=>justify==='center'&&text==='center')).toBe(true)
+  }
+  await checkPair();await page.getByLabel('First Name',{exact:true}).fill('John');await page.getByLabel('Last Name',{exact:true}).fill('Smith');await page.getByRole('button',{name:'Next',exact:true}).click();await checkPair()
+ })
  for(const byUsername of [false,true])test(`successful ${byUsername?'username':'email'} sign-in restores the same verified account and SDK session`,async({page})=>{
   const id='11111111-1111-4111-8111-111111111111',now=Math.floor(Date.now()/1000)
   const token=[btoa(JSON.stringify({alg:'HS256',typ:'JWT'})),btoa(JSON.stringify({sub:id,aud:'authenticated',role:'authenticated',exp:now+3600,iat:now})),btoa('test-signature')].map(part=>part.replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_')).join('.')
