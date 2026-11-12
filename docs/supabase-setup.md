@@ -13,7 +13,7 @@ The supplied Supabase project is `ugyaoeckoqkhqaqezoqg`. Its public URL and publ
 
 1. Open **SQL Editor → New query**.
 2. Paste the complete contents of [`supabase/migrations/202611050001_profiles.sql`](../supabase/migrations/202611050001_profiles.sql) and run it **once** on this new project. This creates the profiles table, own-profile row policies, profile initialization function, public avatar bucket, and owner-only object write/delete policies.
-3. Check that `public.profiles` has Row Level Security enabled and the `avatars` Storage bucket exists with a 2 MB limit and JPG/PNG/WebP allowed MIME types.
+3. Check that `public.profiles` has Row Level Security enabled and the `avatars` Storage bucket exists with a 2 MB limit and JPG/PNG/WebP allowed MIME types. The later [`202611060001_avatar_limits.sql`](../supabase/migrations/202611060001_avatar_limits.sql) migration raises the same bucket to 5 MB (see Career features and larger avatar photos below).
 4. Keep the policies enabled. The app uses users' verified JWTs, never an administrative bypass key. Avatar images are public by design; do not upload private documents or sensitive images.
 
 ## 3. Enable email sign-in and verification

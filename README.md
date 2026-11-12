@@ -263,7 +263,7 @@ A single directory object reserves collision-checked six-character codes and tra
 
 The shared engine accepts validated room settings when the host starts. It retains the default cutoff/timer for old local saves. Untimed turns have a null deadline; scoring uses the configured cutoff. Other rule behavior and the original rulebook are preserved.
 
-Avatar uploads accept JPG/PNG/WebP up to 2 MB, validate signatures on both sides, and use server-generated paths in the owner's folder. The browser also decodes images and limits dimensions to 4096 × 4096. Storage policies enforce ownership. Profile images are public; email is not. Replacing/removing an avatar cleans up its old object. Career/history storage is described in [player careers](docs/player-careers.md); native packaging is described in Mobile Development above.
+Avatar uploads accept JPG/PNG/WebP up to 5 MB, validate signatures on both sides, and use server-generated paths in the owner's folder. The browser decodes, center-crops, and compresses uploads to 512 × 512 WebP before sending them. Storage policies enforce ownership. Profile images are public; email is not. Replacing/removing an avatar cleans up its old object. Career/history storage is described in [player careers](docs/player-careers.md); native packaging is described in Mobile Development above.
 
 ## Cloudflare deployment
 
