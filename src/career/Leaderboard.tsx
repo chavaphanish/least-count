@@ -1,14 +1,10 @@
-import { useAppViewport } from '../components/MobileOrientation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
 import { PlayerIdentity } from './PlayerIdentity'
 import { xpProgress } from './model'
 import type { Ranking } from './model'
 export function Leaderboard() {
-  const { mobile, height } = useAppViewport()
-  const pageSize = height < 400 ? 2 : 3
-  const [localPage, setLocalPage] = useState(0)
   const auth = useAuth()
   const [scope, setScope] = useState('global')
   const [offset, setOffset] = useState(0)
@@ -16,10 +12,20 @@ export function Leaderboard() {
     `/career?op=leaderboard&scope=${scope}&offset=${offset}`,
     true,
   )
-  const currentPage = Math.min(
-    localPage,
-    Math.max(0, Math.ceil((data?.players.length ?? 0) / pageSize) - 1),
-  )
+  const [pages, setPages] = useState<Record<number, Ranking>>({})
+  useEffect(() => {
+    if (data) setPages(previous => ({ ...previous, [offset]: data }))
+  }, [data, offset])
+  // Keep already loaded entries visible while the next server batch is fetched.
+  const seen = new Set<string>()
+  const loaded = data ? { ...pages, [offset]: data } : pages
+  const players = Object.values(loaded).flatMap(page => page.players)
+    .filter(player => {
+      if (seen.has(player.id)) return false
+      seen.add(player.id)
+      return true
+    })
+  const me = data?.me ?? pages[0]?.me
   const registered = auth.user?.player.accountType === 'registered'
   return (
     <section className="career-section leaderboard" aria-labelledby="leaderboards-title">
@@ -31,9 +37,10 @@ export function Leaderboard() {
               key={value}
               aria-pressed={scope === value}
               onClick={() => {
+                if (value === scope) return
                 setScope(value)
                 setOffset(0)
-                setLocalPage(0)
+                setPages({})
               }}
             >
               {value === 'global' ? 'Global Ranking' : 'Buddies Ranking'}
@@ -49,7 +56,7 @@ export function Leaderboard() {
           ) : (
             <>
               {registered && <BuddyInbox />}
-              {loading && !data && <p role="status">Loading rankings…</p>}
+              {loading && <p role="status">{players.length ? 'Loading more rankings…' : 'Loading rankings…'}</p>}
               {error && (
                 <p role="status">
                   {error}{' '}
@@ -58,37 +65,42 @@ export function Leaderboard() {
                   </button>
                 </p>
               )}
-              {data && (
+              {(data || players.length > 0) && (
                 <>
-                  {data.me && (
+                  {me && (
                     <p className="ranking-self">
                       Your {scope === 'global' ? 'Global' : 'Buddies'} Rank: #
-                      {data.me.rank} · {data.me.xp.toLocaleString()} XP · Level{' '}
-                      {xpProgress(data.me.xp, data.me.levelBase).level}
+                      {me.rank} · {me.xp.toLocaleString()} XP · Level{' '}
+                      {xpProgress(me.xp, me.levelBase).level}
                     </p>
                   )}
-                  {scope === 'buddies' && data.players.length <= 1 && (
+                  {scope === 'buddies' && players.length <= 1 && (
                     <p>
                       Add buddies to start competing with your friends.{' '}
                       <a href="#/profile">Add Buddies →</a>
                     </p>
                   )}
-                  {!data.players.length && (
+                  {!players.length && !loading && (
                     <p>No registered players in this ranking yet.</p>
                   )}
-                  <ol className="ranking-list" start={offset + 1}>
-                    {(mobile
-                      ? data.players.slice(
-                          currentPage * pageSize,
-                          (currentPage + 1) * pageSize,
-                        )
-                      : data.players
-                    ).map((p) => (
+                  <ol
+                    key={scope}
+                    className="ranking-list"
+                    aria-label="Player rankings"
+                    tabIndex={0}
+                    onScroll={({ currentTarget }) => {
+                      if (data?.more && !loading && !error && pages[offset] === data &&
+                        currentTarget.scrollHeight - currentTarget.scrollTop - currentTarget.clientHeight < 2)
+                        setOffset(value => value + 10)
+                    }}
+                  >
+                    {players.map((p) => (
                       <li
                         key={p.id}
                         className={
-                          p.rank !== null && p.rank <= 3 ? 'top-player' : ''
+                          [p.rank !== null && p.rank <= 3 ? 'top-player' : '', p.id === me?.id ? 'current-player' : ''].filter(Boolean).join(' ')
                         }
+                        aria-current={p.id === me?.id ? 'true' : undefined}
                       >
                         <strong className="rank-number">#{p.rank}</strong>
                         <PlayerIdentity player={p} />
@@ -105,43 +117,6 @@ export function Leaderboard() {
                       </li>
                     ))}
                   </ol>
-                  <div className="career-pagination">
-                    <button
-                      className="text-button"
-                      disabled={(offset === 0 && currentPage === 0) || loading}
-                      onClick={() => {
-                        if (mobile && currentPage > 0) setLocalPage(currentPage - 1)
-                        else {
-                          setOffset((n) => n - 10)
-                          setLocalPage(mobile ? Math.floor(9 / pageSize) : 0)
-                        }
-                      }}
-                    >
-                      Previous players
-                    </button>
-                    <button
-                      className="text-button"
-                      disabled={
-                        (!data.more &&
-                          (!mobile ||
-                            (currentPage + 1) * pageSize >= data.players.length)) ||
-                        loading
-                      }
-                      onClick={() => {
-                        if (
-                          mobile &&
-                          (currentPage + 1) * pageSize < data.players.length
-                        )
-                          setLocalPage(currentPage + 1)
-                        else {
-                          setOffset((n) => n + 10)
-                          setLocalPage(0)
-                        }
-                      }}
-                    >
-                      Next players
-                    </button>
-                  </div>
                 </>
               )}
             </>
