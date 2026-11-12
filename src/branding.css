@@ -33,5 +33,6 @@
 @media (prefers-reduced-motion: reduce) { .brand-filled { will-change: auto; } }
 /* Full-screen update confirmation shares the boot branding; the alert keeps the compact short-screen sizing. */
 .update-screen p[role=alert] { color: var(--cream); margin: 0; }
+.update-screen .auth-actions { width: 100%; justify-content: center; }
 .startup-screen.studio-loading:has([role=alert]) { gap: 12px; }
 .studio-loading:has([role=alert]) .dual-brand { width: min(440px,80vw,100dvh); }

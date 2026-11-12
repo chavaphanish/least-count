@@ -40,5 +40,5 @@ export function DualBrand({ progress }: { progress?: number }) {
 }
 
 export function BrandCopyright() {
-  return <small className="brand-copyright">© 2026 Chavium Games Pvt. Ltd.</small>
+  return <small className="brand-copyright">© 2026 Chavium Games Pvt. Ltd. | ver. {__APP_VERSION__}</small>
 }

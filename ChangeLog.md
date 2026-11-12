@@ -8,6 +8,12 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.2 — 2026-11-12
+
+- **Update screen:** the gold **Update** button is now horizontally centered on the full-screen update view.
+- **Copyright line:** the shared `BrandCopyright` footer (boot/loading, orientation guard, and update screens) now appends the current app version, e.g. "© 2026 Chavium Games Pvt. Ltd. | ver. 1.1.2". The version comes from `package.json` via a new `__APP_VERSION__` constant injected by the Vite build (`vite.config.ts`, `vite-env.d.ts`, `DualBrand.tsx`).
+- **Verification:** typecheck, 330 unit tests, production build, the real service-worker update e2e, and a visual screenshot review pass.
+
 ## 1.1.1 — 2026-11-12
 
 - **Lounge:** the Create Game Room and Join Game Room cards no longer show the ♠/♣ suit symbols or "Create a room →"/"Join your friends →" text links; each card now carries a regular gold primary button labeled "Create Game Room" / "Join Game Room". Desktop and mobile card layouts were cleaned of the dead symbol/link styles (`DashboardPage.tsx`, `styles.css`, `app-mobile.css`).
