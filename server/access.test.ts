@@ -1,11 +1,12 @@
-import {afterEach,describe,it,expect,vi} from 'vitest'
+import {afterEach,beforeEach,describe,it,expect,vi} from 'vitest'
 import {availability,login,register,accessLimit} from './access'
 import type {Env} from './types'
 const env={SUPABASE_URL:'https://test-project.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',SUPABASE_CAREER_KEY:'sb_secret_server_only'} as Env
 const input={email:' New@Example.test ',password:'private-password',data:{username:'CardMaster99',first_name:' John ',last_name:' Smith '},code_challenge:'x'.repeat(43),code_challenge_method:'s256'}
 const request=new Request('https://game.test/api/auth/register',{headers:{Origin:'https://game.test'}})
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}})
-afterEach(()=>vi.unstubAllGlobals())
+beforeEach(()=>vi.spyOn(console,'warn').mockImplementation(()=>{}))
+afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks()})
 describe('private access endpoints',()=>{
  it('normalizes availability, returns only booleans and fails closed without migration/service key',async()=>{
   const fetch=vi.fn(async(_url:RequestInfo|URL,_options?:RequestInit)=>json({usernameAvailable:true,emailAvailable:false,privateEmail:'never-return@example.test'}));vi.stubGlobal('fetch',fetch)
@@ -57,4 +58,44 @@ describe('private access endpoints',()=>{
 it('retains provider password policy feedback without exposing provider internals',async()=>{
  vi.stubGlobal('fetch',vi.fn(async(url)=>String(url).includes('/rpc/')?json({usernameAvailable:true,emailAvailable:true}):json({code:'weak_password',msg:'internal provider detail'},422)))
  await expect(register(request,env,input)).rejects.toMatchObject({status:400,message:'Password does not meet the account security requirements. Choose a stronger password.'})
+})
+
+
+describe('provider signup failure reporting',()=>{
+ it.each([
+  ['over_email_send_rate_limit',429,429,'SIGNUP_EMAIL_RATE_LIMIT','Verification emails are temporarily rate-limited'],
+  ['over_request_rate_limit',429,429,'SIGNUP_RATE_LIMIT','Registration is temporarily rate-limited'],
+  ['email_address_not_authorized',403,503,'SIGNUP_EMAIL_DELIVERY_UNAVAILABLE','Verification emails cannot currently be sent'],
+  ['signup_disabled',422,503,'SIGNUP_DISABLED','registration is currently disabled'],
+  ['email_provider_disabled',422,503,'SIGNUP_DISABLED','Email registration is currently unavailable'],
+  ['captcha_failed',422,400,'SIGNUP_CAPTCHA_FAILED','verification check failed'],
+  ['unknown_provider_error',429,429,'SIGNUP_RATE_LIMIT','Registration is temporarily rate-limited'],
+ ])('reports %s safely without another availability query',async(providerCode,providerStatus,status,code,message)=>{
+  const fetch=vi.fn(async(url)=>String(url).includes('/rpc/')?json({usernameAvailable:true,emailAvailable:true}):json({error_code:providerCode,msg:'private@example.test internal-secret'},providerStatus as number));vi.stubGlobal('fetch',fetch)
+  await expect(register(request,env,input)).rejects.toMatchObject({status,code,message:expect.stringContaining(message as string)})
+  expect(fetch).toHaveBeenCalledTimes(2)
+  expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toMatch(/private@example|internal-secret|private-password|CardMaster99|sb_secret/)
+ })
+ it('records a database/provider failure with a safe reference rather than blaming entered details',async()=>{
+  vi.stubGlobal('fetch',vi.fn(async(url)=>String(url).includes('/rpc/')?json({usernameAvailable:true,emailAvailable:true}):json({code:'unexpected_failure',msg:'Database error saving private@example.test, SQL secret'},500)))
+  let failure:unknown;try{await register(request,env,input)}catch(error){failure=error}
+  expect(failure).toMatchObject({status:503,code:'SIGNUP_PROVIDER_ERROR',message:expect.stringContaining('temporarily unavailable')})
+  const record=JSON.parse(vi.mocked(console.warn).mock.calls[0][0])
+  expect(record).toMatchObject({event:'signup_provider_failure',status:500,providerCode:'unexpected_failure'})
+  expect((failure as Error).message).toContain(record.reference)
+  expect(JSON.stringify(record)).not.toMatch(/private@example|SQL secret|private-password|sb_secret/)
+ })
+ it('preserves the original provider failure when its secondary availability recheck fails',async()=>{
+  let checks=0;vi.stubGlobal('fetch',vi.fn(async(url)=>String(url).includes('/rpc/')?++checks===1?json({usernameAvailable:true,emailAvailable:true}):json({code:'PGRST202'},404):json({code:'unexpected_failure'},500)))
+  await expect(register(request,env,input)).rejects.toMatchObject({status:503,code:'SIGNUP_PROVIDER_ERROR'})
+ })
+ it.each([new DOMException('private provider URL','TimeoutError'),new Error('sensitive network details')])('handles transport failures without retrying signup',async(reason)=>{
+  const fetch=vi.fn(async(url)=>{if(String(url).includes('/rpc/'))return json({usernameAvailable:true,emailAvailable:true});throw reason});vi.stubGlobal('fetch',fetch)
+  await expect(register(request,env,input)).rejects.toMatchObject({status:reason.name==='TimeoutError'?504:503,message:expect.not.stringMatching(/sensitive|private provider/)})
+  expect(fetch).toHaveBeenCalledTimes(2)
+ })
+ it.each([new Response('<html>private upstream failure</html>',{status:502}),json(null),json({})])('rejects malformed provider responses rather than claiming successful account creation',async(response)=>{
+  vi.stubGlobal('fetch',vi.fn(async(url)=>String(url).includes('/rpc/')?json({usernameAvailable:true,emailAvailable:true}):response.clone()))
+  await expect(register(request,env,input)).rejects.toMatchObject({status:503,code:'SIGNUP_PROVIDER_ERROR'})
+ })
 })

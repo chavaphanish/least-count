@@ -12,6 +12,7 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
     const auth = useAuth(), submitting = useRef(false);
     const [step, setStep] = useState(0), [identity, setIdentity] = useState({ username: '', firstName: '', lastName: '' });
     const [password, setPassword] = useState(''), [confirmation, setConfirmation] = useState(''), [busy, setBusy] = useState(false), [errors, setErrors] = useState<string[]>([]), [notice, setNotice] = useState(''), [reset, setReset] = useState(0);
+    const [errorHeading, setErrorHeading] = useState('Check your details');
     const passwordIssue = password ? passwordError(password) : '', mismatch = confirmation && confirmation !== password ? 'Passwords do not match.' : '';
     function dismiss() {
         if (step === 0)
@@ -32,6 +33,7 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
         event.preventDefault();
         if (submitting.current || notice)
             return;
+        setErrorHeading('Check your details');
         const issues: string[] = [];
         const validate = (action: () => unknown) => { try {
             action();
@@ -97,6 +99,11 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
                 setNotice('Check your email for the verification link before signing in.');
         }
         catch (reason) {
+            const status = reason && typeof reason === 'object' && 'status' in reason ? reason.status : undefined;
+            if (typeof status === 'number') {
+                if (status === 429) setErrorHeading('Please try again later');
+                else if (status >= 500) setErrorHeading('Registration unavailable');
+            }
             setErrors([reason instanceof Error ? reason.message : 'Registration could not complete. Please retry.']);
         }
         finally {
@@ -122,6 +129,6 @@ export function SignupForm({ onBusyChange, email, onEmailChange }: {
    {notice && <p className="form-notice signup-message" role="status">{notice}</p>}
    <button className="button button-primary" disabled={busy || !!notice || !auth.configured}>{busy ? (step === 1 ? 'Checking availability…' : 'Creating account…') : step === 2 ? 'Create account' : 'Next'}</button>
   </CompactForm>
-  <ValidationDialog errors={errors} onDismiss={dismiss}/>
+  <ValidationDialog heading={errorHeading} errors={errors} onDismiss={dismiss}/>
  </div>;
 }
