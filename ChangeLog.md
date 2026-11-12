@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.5 — 2026-11-12
+
+- **Docs:** added `TODOS.md` tracking the next planned items — dual-logo layout adjustments, player profile in the top-left header when signed in, quit/stand-up/exit-room flows, and simplified local practice (bot count + threshold).
+
 ## 1.1.4 — 2026-11-12
 
 - **Brand screens:** on the loading, rotation-guard, and update screens the tagline ("The Game of Sevens") now uses the same DM Sans 700 style and letter-spacing as the YAYDU wordmark, sized much smaller so it sits neatly beneath it.
