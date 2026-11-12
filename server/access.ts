@@ -88,20 +88,61 @@ export async function register(request: Request, env: Env, input: Record<string,
     const config = publicConfig(env).supabase!;
     if (input.code_challenge !== undefined && (typeof input.code_challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(input.code_challenge) || input.code_challenge_method !== 's256'))
         throw new ApiError(400, 'Invalid verification request. Reload and retry.');
-    const response = await fetch(`${config.url}/auth/v1/signup?redirect_to=${encodeURIComponent(`${origin}/auth/callback`)}`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: config.publishableKey }, body: JSON.stringify({ email, password: input.password, data: { username: handle, first_name: firstName, last_name: lastName }, ...(input.code_challenge ? { code_challenge: input.code_challenge, code_challenge_method: input.code_challenge_method } : {}), ...(input.gotrue_meta_security ? { gotrue_meta_security: input.gotrue_meta_security } : {}) }), signal: AbortSignal.timeout(8000) });
-    const data = await response.json() as Record<string, unknown>;
-    const identities = data.identities ?? (data.user as Record<string, unknown> | undefined)?.identities;
+    let response: Response;
+    try {
+        response = await fetch(`${config.url}/auth/v1/signup?redirect_to=${encodeURIComponent(`${origin}/auth/callback`)}`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: config.publishableKey }, body: JSON.stringify({ email, password: input.password, data: { username: handle, first_name: firstName, last_name: lastName }, ...(input.code_challenge ? { code_challenge: input.code_challenge, code_challenge_method: input.code_challenge_method } : {}), ...(input.gotrue_meta_security ? { gotrue_meta_security: input.gotrue_meta_security } : {}) }), signal: AbortSignal.timeout(8000) });
+    } catch (reason) {
+        const timeout = reason instanceof Error && ['TimeoutError', 'AbortError'].includes(reason.name);
+        throw signupFailure(0, timeout ? 'request_timeout' : 'connection_failed');
+    }
+    let data: Record<string, unknown>;
+    try {
+        const parsed: unknown = await response.json();
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
+        data = parsed as Record<string, unknown>;
+    } catch {
+        throw signupFailure(response.status, 'invalid_response');
+    }
+    const code = typeof data.error_code === 'string' ? data.error_code : typeof data.code === 'string' ? data.code : '';
+    const user = data.user && typeof data.user === 'object' ? data.user as Record<string, unknown> : undefined;
+    const identities = data.identities ?? user?.identities;
     if (!response.ok || Array.isArray(identities) && identities.length === 0) {
-        if (data.code === 'weak_password' || data.error_code === 'weak_password')
-            throw new ApiError(400, 'Password does not meet the account security requirements. Choose a stronger password.');
-        if (data.code === 'email_address_invalid' || data.error_code === 'email_address_invalid')
-            throw new ApiError(400, 'Please enter a valid email address.');
-        const recheck = await availability(env, { username: handle, email });
+        const failure = signupFailure(response.status, code);
+        if (Object.hasOwn(signupErrors, code) || response.status === 429) throw failure;
+        // Retain race detection without letting a failed secondary RPC conceal
+        // the original provider error. Never retry the account-creation request.
+        let recheck;
+        try { recheck = await availability(env, { username: handle, email }); }
+        catch { throw failure; }
         if (!recheck.usernameAvailable)
             throw new ApiError(409, 'This username is already taken. Please choose another.');
-        if (!recheck.emailAvailable || Array.isArray(identities) && identities.length === 0)
+        if (!recheck.emailAvailable || Array.isArray(identities) && identities.length === 0 || ['email_exists', 'user_already_exists'].includes(code))
             throw new ApiError(409, 'This email address is already registered.');
-        throw new ApiError(response.status === 429 ? 429 : 400, 'Registration could not complete. Check your details and retry.');
+        throw failure;
     }
+    if (typeof (user?.id ?? data.id) !== 'string') throw signupFailure(response.status, 'invalid_response');
     return data;
+}
+
+const signupErrors: Record<string, [number, string, string]> = {
+    weak_password: [400, 'Password does not meet the account security requirements. Choose a stronger password.', 'SIGNUP_WEAK_PASSWORD'],
+    email_address_invalid: [400, 'Please enter a valid email address.', 'SIGNUP_INVALID_EMAIL'],
+    over_email_send_rate_limit: [429, 'Verification emails are temporarily rate-limited. Please wait before trying again.', 'SIGNUP_EMAIL_RATE_LIMIT'],
+    over_request_rate_limit: [429, 'Registration is temporarily rate-limited. Please wait before trying again.', 'SIGNUP_RATE_LIMIT'],
+    email_address_not_authorized: [503, 'Verification emails cannot currently be sent to this address. Please contact support.', 'SIGNUP_EMAIL_DELIVERY_UNAVAILABLE'],
+    signup_disabled: [503, 'New account registration is currently disabled. Please contact support.', 'SIGNUP_DISABLED'],
+    email_provider_disabled: [503, 'Email registration is currently unavailable. Please contact support.', 'SIGNUP_DISABLED'],
+    captcha_failed: [400, 'The verification check failed. Reload the page and try again.', 'SIGNUP_CAPTCHA_FAILED'],
+    request_timeout: [504, 'Account creation timed out. Check your inbox before trying to register again.', 'SIGNUP_TIMEOUT'],
+    connection_failed: [503, 'The account service could not be reached. Please try again later.', 'SIGNUP_UNAVAILABLE'],
+};
+function signupFailure(status: number, providerCode: string) {
+    const reference = crypto.randomUUID();
+    const known = Object.hasOwn(signupErrors, providerCode) ? signupErrors[providerCode] : undefined;
+    // Only fixed error categories and a random reference are logged. Never log
+    // provider messages, request bodies, credentials, email addresses or metadata.
+    const code = known || ['unexpected_failure', 'email_exists', 'user_already_exists', 'invalid_response'].includes(providerCode) ? providerCode : 'unknown';
+    console.warn(JSON.stringify({ event: 'signup_provider_failure', reference, status, providerCode: code }));
+    const [httpStatus, message, appCode] = known ?? (status === 429 ? signupErrors.over_request_rate_limit : [503, 'Account creation is temporarily unavailable. Please try again later.', 'SIGNUP_PROVIDER_ERROR']);
+    return new ApiError(httpStatus, known && httpStatus === 400 ? message : `${message} Reference: ${reference}`, appCode);
 }

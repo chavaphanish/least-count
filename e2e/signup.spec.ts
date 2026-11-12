@@ -208,3 +208,21 @@ test('keyboard-height popup remains reachable and clears only the failing step',
  await setup(page);await page.getByLabel('First Name',{exact:true}).fill('John123');await keyboard(page,true);await page.getByRole('button',{name:'Next field'}).click();await page.getByRole('button',{name:'Next',exact:true}).click()
  await expect(popup(page)).toBeVisible();await bounds(page);await popup(page).getByRole('button',{name:'OK'}).click();await expect(page.getByLabel('First Name',{exact:true})).toHaveValue('');await keyboard(page,false)
 })
+
+
+for(const status of [429,503]) test(`provider ${status} displays actionable service feedback without retrying signup`,async({page})=>{
+ await setup(page);await passwordStep(page)
+ const message=status===429?'Verification emails are temporarily rate-limited. Please wait before trying again. Reference: test-reference':'Account creation is temporarily unavailable. Please try again later. Reference: test-reference'
+ let calls=0
+ await page.route('**/api/auth/register',route=>{
+  calls++
+  return route.fulfill(calls===1?{status,json:{error:message,code:status===429?'SIGNUP_EMAIL_RATE_LIMIT':'SIGNUP_PROVIDER_ERROR'}}:{json:{id:'new-id',email:'person+tag@example.com',identities:[{}]}})
+ })
+ await page.getByLabel('Password',{exact:true}).fill('valid password');await page.getByLabel('Confirm Password',{exact:true}).fill('valid password');await page.getByRole('button',{name:'Create account'}).click()
+ const dialog=page.getByRole('alertdialog',{name:status===429?'Please try again later':'Registration unavailable',exact:true})
+ await expect(dialog).toBeVisible();await expect(dialog).toContainText(message);await expect(page.getByRole('status')).toHaveCount(0);expect(calls).toBe(1);await bounds(page)
+ await dialog.getByRole('button',{name:'OK',exact:true}).click();await expect(page.locator('.signup-wizard')).toHaveAttribute('data-signup-step','3');await expect(page.getByLabel('Password',{exact:true})).toHaveValue('')
+ await page.getByRole('button',{name:'Back',exact:true}).click();await expect(page.getByLabel('Username',{exact:true})).toHaveValue('cardmaster99');await expect(page.getByLabel('Email address',{exact:true})).toHaveValue('person+tag@example.com');await page.getByRole('button',{name:'Next',exact:true}).click()
+ await page.getByLabel('Password',{exact:true}).fill('valid password');await page.getByLabel('Confirm Password',{exact:true}).fill('valid password');await page.getByRole('button',{name:'Create account'}).click()
+ await expect(page.getByRole('status')).toContainText('verification link');expect(calls).toBe(2)
+})
