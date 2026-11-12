@@ -1,3 +1,4 @@
+import { Leaderboard } from './career/Leaderboard'
 import { NavigationLoadingProvider, useNavigationLoading } from './components/NavigationLoading'
 import { CareerProfile, GameHistoryReport } from './career/CareerProfile'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -30,9 +31,11 @@ function route() {
             ? 'game'
             : hash === '#/rules'
               ? 'rules'
-              : hash === '#/profile'
-                ? 'profile'
-                : 'home',
+              : hash === '#/leaderboards'
+                ? 'leaderboards'
+                : hash === '#/profile'
+                  ? 'profile'
+                  : 'home',
     code: room?.[1] ?? null,
     username: player?.[1],
     gameId: history?.[1],
@@ -89,7 +92,7 @@ function Application() {
     return () => removeEventListener('hashchange', navigate)
   }, [current, navigation.start])
   useEffect(() => {
-    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
+    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'leaderboards' ? 'Leaderboards' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
     if (previous.current !== current.page) {
       document.getElementById('main')?.focus()
       scrollTo(0, 0)
@@ -123,6 +126,7 @@ function Application() {
     )
   else if (current.page === 'history' && current.gameId)
     content = <GameHistoryReport key={current.gameId} id={current.gameId} />
+  else if (current.page === 'leaderboards') content = <Leaderboard />
   else if (current.page === 'profile') content = <ProfilePage />
   else if (current.page === 'room' && current.code) {
     try {

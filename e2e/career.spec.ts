@@ -7,9 +7,9 @@ for (const width of [320, 1440])
   }) => {
     await page.setViewportSize({ width, height: 1000 })
     await mock(page)
-    await page.goto('/')
+    await page.goto('/#/leaderboards')
     await expect(
-      page.getByRole('heading', { name: 'XP Ranking' }),
+      page.getByRole('heading', { name: 'Leaderboards' }),
     ).toBeVisible()
     await expect(page.getByText(/Your Global Rank: #124/)).toBeVisible()
     await page

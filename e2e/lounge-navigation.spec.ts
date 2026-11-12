@@ -47,6 +47,7 @@ for (const viewport of [
         'Buddies',
         'Settings',
       ])
+      await expect(group).toBeVisible()
       const base = await appearance(buttons.first())
       expect(base[0]).toBe(
         await page.locator('html').evaluate((el) => {
@@ -106,7 +107,8 @@ for (const viewport of [
       ]) {
         await group.getByRole('button', { name, exact: true }).click()
         await expect(page.locator(target)).toBeVisible()
-        await page.getByRole('button', { name: 'Back to Lounge' }).click()
+        if (name === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+        else await page.getByRole('button', { name: 'Back to Lounge' }).click()
       }
       expect(
         await page.locator('.dashboard-action.lounge-nav-button').count(),
@@ -128,7 +130,7 @@ test('desktop retains its existing layout and profile navigation', async ({
   await expect(page.locator('.mobile-main-menu')).toHaveCount(0)
   const profile = page.getByRole('link', { name: 'My Profile', exact: true })
   await expect(profile).toHaveClass(/button-primary lounge-nav-button/)
-  await expect(page.locator('.leaderboard')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Leaderboards', exact: true })).toBeVisible()
   await profile.click()
   await expect(
     page.getByRole('region', { name: 'Player career' }),

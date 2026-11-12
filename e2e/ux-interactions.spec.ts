@@ -370,7 +370,7 @@ test('complete guest room journey reaches results, then existing career screens'
     await page
       .getByRole('button', { name: 'Buddies Ranking', exact: true })
       .click()
-    await page.getByRole('button', { name: 'Back to Lounge' }).click()
+    await page.getByRole('link', { name: 'Lounge', exact: true }).click()
     await expect(
       page.getByRole('heading', { name: 'Welcome, Career Tester.' }),
     ).toBeVisible()
