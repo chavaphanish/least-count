@@ -269,19 +269,19 @@ test('worker updates wait safely during play and reload only the tab that accept
     )
     .toBe(true)
   await expect(
-    page.getByRole('button', { name: 'Update and reload' }),
+    page.getByRole('button', { name: 'Update', exact: true }),
   ).toHaveCount(0)
   expect(await saved(page)).toEqual(before)
   await page.getByRole('link', { name: 'Lounge', exact: true }).click()
   await expect(
-    page.getByRole('button', { name: 'Update and reload' }),
+    page.getByRole('button', { name: 'Update', exact: true }),
   ).toBeVisible()
   await Promise.all([
     page.waitForEvent('load'),
-    page.getByRole('button', { name: 'Update and reload' }).click(),
+    page.getByRole('button', { name: 'Update', exact: true }).click(),
   ])
   await expect(
-    page.getByRole('button', { name: 'Update and reload' }),
+    page.getByRole('button', { name: 'Update', exact: true }),
   ).toHaveCount(0)
   expect(await saved(page)).toEqual(before)
   expect(await saved(other)).toEqual(otherBefore)

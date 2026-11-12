@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { useEffect, useRef, useState } from 'react'
+import { BrandCopyright, DualBrand } from '../components/DualBrand'
 
 /** Updates never reload a live game, including other tabs controlled by this worker. */
 export function PwaStatus({ atTable }: { atTable: boolean }) {
@@ -60,13 +61,32 @@ export function PwaStatus({ atTable }: { atTable: boolean }) {
   if (offline) return <aside className="pwa-status" role="status">You’re offline. Online games need a connection; server timers continue. Reconnecting when available.</aside>
   if (!waiting || atTable) return null
   return (
-    <aside className="pwa-status" role="status">
-      <span>A new YAYDU version is ready. Reload when you’ve finished playing.</span>
-      <button className="text-button" disabled={updating} onClick={() => {
-        reloadRequested.current = true
-        setUpdating(true)
-        waiting.postMessage({ type: 'ACTIVATE_UPDATE' })
-      }}>{updating ? 'Updating…' : 'Update and reload'}</button>
-    </aside>
+    <section
+      className="startup-screen studio-loading update-screen"
+      aria-labelledby="update-title"
+    >
+      <h1 id="update-title" className="visually-hidden">
+        A new YAYDU version is ready
+      </h1>
+      <DualBrand />
+      <p role="alert">
+        A new YAYDU version is ready. Reload when you’ve finished playing.
+      </p>
+      <div className="auth-actions">
+        <button
+          className="button button-primary"
+          autoFocus
+          disabled={updating}
+          onClick={() => {
+            reloadRequested.current = true
+            setUpdating(true)
+            waiting.postMessage({ type: 'ACTIVATE_UPDATE' })
+          }}
+        >
+          {updating ? 'Updating…' : 'Update'}
+        </button>
+      </div>
+      <BrandCopyright />
+    </section>
   )
 }
