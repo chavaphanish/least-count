@@ -7,4 +7,5 @@
 - [ ] Clicking on profile picture to show a short player overview
 - [ ] Top Bar Modifications: Player Profile | Notifications |
 - [ ] Noitify Friend requests and messagebox. 
-- [ ] Round/Game Completion notification. 
+- [ ] Round/Game Completion notification.
+- [ ] Cramped layout for keyboard inputs, check input layouts 
