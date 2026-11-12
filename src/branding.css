@@ -35,5 +35,6 @@
 /* Full-screen update confirmation shares the boot branding; the alert keeps the compact short-screen sizing. */
 .update-screen p[role=alert] { color: var(--cream); margin: 0; }
 .update-screen .auth-actions { width: 100%; justify-content: center; }
+.update-screen .button-primary { min-width: min(320px, 80vw); justify-content: center; }
 .startup-screen.studio-loading:has([role=alert]) { gap: 12px; }
 .studio-loading:has([role=alert]) .dual-brand { width: min(440px,80vw,100dvh); }

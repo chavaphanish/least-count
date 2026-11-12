@@ -8,6 +8,11 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.6 — 2026-11-12
+
+- **Update screen:** the update button is wider (min 320px), centered, no longer autofocuses (removing the golden focus frame), and its label reads **"Update to latest version"** (`PwaStatus.tsx`, `branding.css`); the e2e was updated to the new accessible name.
+- **Verification:** typecheck, 330 unit tests, production build, the real service-worker update lifecycle e2e, and a visual screenshot review pass.
+
 ## 1.1.5 — 2026-11-12
 
 - **Docs:** added `TODOS.md` tracking the next planned items — dual-logo layout adjustments, player profile in the top-left header when signed in, quit/stand-up/exit-room flows, and simplified local practice (bot count + threshold).

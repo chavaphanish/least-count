@@ -75,7 +75,6 @@ export function PwaStatus({ atTable }: { atTable: boolean }) {
       <div className="auth-actions">
         <button
           className="button button-primary"
-          autoFocus
           disabled={updating}
           onClick={() => {
             reloadRequested.current = true
@@ -83,7 +82,7 @@ export function PwaStatus({ atTable }: { atTable: boolean }) {
             waiting.postMessage({ type: 'ACTIVATE_UPDATE' })
           }}
         >
-          {updating ? 'Updating…' : 'Update'}
+          {updating ? 'Updating…' : 'Update to latest version'}
         </button>
       </div>
       <BrandCopyright />
