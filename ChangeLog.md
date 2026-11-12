@@ -8,6 +8,14 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.4 — 2026-11-12
+
+- **Brand screens:** on the loading, rotation-guard, and update screens the tagline ("The Game of Sevens") now uses the same DM Sans 700 style and letter-spacing as the YAYDU wordmark, sized much smaller so it sits neatly beneath it.
+- **Brand alignment:** the whole YAYDU stack (logo + wordmark + tagline) now stretches to exactly the same height as the "Powered by" + Chavium Games block, with top and bottom edges aligned; the square YAYDU logo flexes to fill the leftover vertical space (`branding.css`).
+- **Test fix:** `dual-brand.spec.ts` now matches the copyright line by pattern instead of exact text, fixing a failure introduced when 1.1.2 appended the version to it.
+- **Verification:** typecheck, 330 unit tests, the dual-brand, orientation-guard, and Lounge e2e suites, and visual screenshot review of all three screens pass. The remaining e2e failures (`dual-brand` route-cover flow, `android` touch play ×4 and resume, `app-layout` keyboard signup and ranking pages, `ux-audit` public profile, `lounge-navigation` ×3) were each confirmed failing on clean `main` and are pre-existing.
+- **Documentation screenshots:** `docs/mobile-layout/*` refreshed by the app-layout audit with the new brand presentation.
+
 ## 1.1.3 — 2026-11-12
 
 - **Lounge buttons:** the gold buttons in the Create Game Room and Join Game Room cards now have centered text, and their labels changed to **"Set the Table"** and **"Take a Seat"** (card headings stay "Create Game Room" / "Join Game Room"). All e2e specs that click these buttons by name were updated to the new labels.

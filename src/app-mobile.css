@@ -495,4 +495,4 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 [data-mobile-device] .active-game .eligible-pickup.button { height: 44px; }
 
 [data-mobile-device] .startup-brand-name { font-size: 24px; }
-[data-mobile-device] .studio-loading .brand-tagline { font-size: 14px; }
+[data-mobile-device] .studio-loading .brand-tagline { font-size: 12px; }
