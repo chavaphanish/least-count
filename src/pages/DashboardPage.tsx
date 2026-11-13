@@ -292,7 +292,7 @@ export function DashboardPage() {
                 <p className="field-hint">
                   {settings.timedGame
                     ? 'The server enforces the deadline, including power-card decisions.'
-                    : 'No turn countdown or timeout elimination. Reconnection grace applies only to waiting-lobby seats.'}
+                    : 'No turn countdown or timeout forfeits. Reconnection grace applies only to waiting-lobby seats.'}
                 </p>
               </>
             ) : (

@@ -215,13 +215,13 @@ describe('server game integration and privacy', () => {
     expect(r.game!.players[1].eliminated).toBe(true)
     expect(r.game!.phase).toBe('game-over')
   })
-  it('runs timeout elimination from server sweep without a client timeout action', () => {
+  it('runs timeout forfeiture from server sweep without a client timeout action', () => {
     const r = full()
     start(r, r.hostId, 0, () => 0.6)
     const current = r.game!.current
     sweep(r, 60_000)
-    expect(r.game!.players[current].eliminationReason).toBe('timeout')
-    expect(r.game!.phase).toBe('game-over')
+    expect(r.game!.players[current]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
+    expect(r.game!.phase).toBe('round-over')
   })
 })
 describe('avatar input validation', () => {
@@ -379,8 +379,9 @@ describe('eliminated host handover', () => {
     r.game!.phase = 'turn'; r.game!.sevens = null; r.game!.current = 0; r.game!.deadline = 1000
     r.game!.discards = [[{ ...createCard('clubs', '4'), id: 'previous-four' }]]
     r.game!.players[1].hand = [{ ...createCard('hearts', '4'), id: 'next-four' }, { ...createCard('clubs', '5'), id: 'next-five' }]
+    r.game!.players[0].score = 60
     sweep(r, 1000)
-    expect(r.game!.players[0].eliminationReason).toBe('timeout')
+    expect(r.game!.players[0].eliminationReason).toBe('score')
     const pending = { ...r.hostTransfer! }
     expect(r.game!.current).toBe(1); expect(r.game!.deadline).toBe(61000)
     gameAction(r, r.members[1].id, { type: 'discard', cardIds: ['next-four'] }, 2000)

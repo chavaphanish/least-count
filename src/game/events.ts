@@ -29,17 +29,19 @@ export type GameEventData =
       next: EventPlayer
       opening?: boolean
     }
+  | { type: 'PLAYER_FORFEITED'; player: EventPlayer; penalty: 40; score: number }
   | { type: 'SHOW_DECLARED'; player: EventPlayer; total: number }
   | { type: 'SHOW_RESOLVED'; player: EventPlayer; successful: boolean }
   | {
       type: 'ROUND_COMPLETED'
-      reason: 'show' | 'exhaustion'
+      reason: 'show' | 'exhaustion' | 'last-player'
       scores: {
         id: string
         name: string
         total: number
         penalty: number
         score: number
+        forfeited?: boolean
       }[]
     }
   | {
@@ -131,6 +133,8 @@ export function formatGameEvent(event: GameEvent): string {
       return `${event.player.name}'s Least ${event.successful ? 'succeeded (zero-point ties allowed).' : 'failed. A 40-point penalty was applied.'}`
     case 'ROUND_COMPLETED':
       return `Round ${event.roundNumber} completed${event.reason === 'exhaustion' ? ' by draw-pile exhaustion' : ''}. Scores: ${event.scores.map((p) => `${p.name} +${p.penalty} (${p.score} total)`).join('; ')}.`
+    case 'PLAYER_FORFEITED':
+      return `${event.player.name} forfeited the round (timeout, +40 points).`
     case 'PLAYER_ELIMINATED':
       return event.reason === 'timeout'
         ? `${event.player.name} failed to complete the turn within 60 seconds and was eliminated.`

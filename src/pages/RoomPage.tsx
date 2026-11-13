@@ -1,3 +1,4 @@
+import { GameNotices } from '../components/GameNotices'
 import { HostTransferDialog } from '../components/HostTransferDialog'
 import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
@@ -118,6 +119,7 @@ export function RoomPage({
     !!g &&
     g.currentPlayerId === id &&
     !own?.eliminated &&
+    !own?.forfeited &&
     ['turn', 'draw', 'penalty'].includes(g.phase) &&
     connection === 'live' &&
     !animation
@@ -149,9 +151,7 @@ export function RoomPage({
       className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       {room.hostTransfer?.fromId === id && <HostTransferDialog key={room.hostTransfer.id} room={room} now={now} busy={busy} live={connection === 'live'} error={error} send={send} />}
-      {room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 && room.members.some(member => member.id === room.hostChange!.playerId) && (
-        <p className="host-transfer-notice" role="status">{playerIdentity(room.members.find(member => member.id === room.hostChange!.playerId)!).primary} is now the host.</p>
-      )}
+      <GameNotices events={g?.events ?? []} now={now} hostName={room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 ? room.members.find(member => member.id === room.hostId) && playerIdentity(room.members.find(member => member.id === room.hostId)!).primary : undefined} />
       <div className="room-heading">
         <div>
           <p className="eyebrow">
@@ -182,6 +182,7 @@ export function RoomPage({
             name: playerIdentity(p).label,
             score: p.score,
             eliminated: p.eliminated,
+            forfeited: p.forfeited,
           }))}
         >
           <p>
@@ -257,7 +258,7 @@ export function RoomPage({
         <span>
           {room.settings.timedGame
             ? 'Timed · 60 seconds'
-            : 'Untimed · no timeout elimination'}
+            : 'Untimed · no timeout forfeits'}
         </span>
       </div>
       {!g ? (
@@ -372,6 +373,7 @@ export function RoomPage({
                     score={p.score}
                     active={p.id === g.currentPlayerId && !final}
                     eliminated={p.eliminated}
+                    forfeited={p.forfeited}
                     status={p.id === room.hostId ? 'Host' : p.accountType === 'guest' ? 'Guest' : 'Registered'}
                     timer={
                       !final && p.id === g.currentPlayerId ? (
@@ -422,7 +424,9 @@ export function RoomPage({
                 ) : null
               }
               empty={
-                own?.eliminated
+                own?.forfeited && !own.eliminated
+                  ? 'You forfeited this round. You can play again next round.'
+                  : own?.eliminated
                   ? 'Your hand was removed from play.'
                   : 'An empty hand is worth zero.'
               }
@@ -559,7 +563,7 @@ export function RoomPage({
                   <li key={p.id}>
                     <PlayerIdentity player={p} compact />
                     <strong>{p.score}</strong>
-                    <small>{p.eliminated ? 'Eliminated' : 'Active'}</small>
+                    <small>{p.forfeited ? (p.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : p.eliminated ? 'Eliminated' : 'Active'}</small>
                   </li>
                 ))}
               </ul>
@@ -607,7 +611,7 @@ export function RoomPage({
         <p className="field-hint">
           Leaving this screen does not pause an online turn. In untimed games,
           disconnected seats remain and there is no automatic timeout
-          elimination.
+          forfeit.
         </p>
       )}
     </section>

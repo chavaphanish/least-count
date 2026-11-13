@@ -18,7 +18,7 @@ This document records rule decisions. See the [README](../README.md) for the cur
 
 **Confirmed — timeout:** A player's timeout also clears the previous drop group's pickup eligibility. The next player's required replacement draw must come from the draw pile.
 
-**Example:** A drops a 9 and completes their turn. B times out without dropping and is eliminated. C drops a King and must draw from the draw pile. C cannot take A's 9.
+**Example:** A drops a 9 and completes their turn. B times out without dropping and forfeits the round (+40 points). C drops a King and must draw from the draw pile. C cannot take A's 9.
 
 These transitions do not make older drop groups available again. They do not add a draw to a Match and Drop turn, which still requires no replacement draw.
 
@@ -38,7 +38,7 @@ When a zero-point Least is tied by other zero-point hands, the caller and all ot
 
 **Reference:** Sections 8 and 10.1–10.4.
 
-**Confirmed:** There is no special tiebreaker round. Cumulative scores continue across ordinary rounds, and the elimination threshold remains in effect. A score of 100 or more eliminates a player under the default cutoff; a score below 100 does not. Continue ordinary rounds until elimination leaves the match winner. The existing timeout-elimination rule is unchanged.
+**Confirmed:** There is no special tiebreaker round. Cumulative scores continue across ordinary rounds, and the elimination threshold remains in effect. A score of 100 or more eliminates a player under the default cutoff; a score below 100 does not. Continue ordinary rounds until elimination leaves the match winner. A timeout forfeits only the current round and immediately adds 40 points. Permanent elimination occurs only at the cumulative score cutoff.
 
 **Example:** Only A and B remain, each with 99 cumulative points. A calls Least with zero, and B also has zero. Both receive zero round penalty points and remain at 99. Neither is eliminated and neither wins the match at this point. Start another ordinary round, retaining the scores and the 100-point cutoff. Continue until one player is eliminated.
 

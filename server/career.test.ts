@@ -106,9 +106,9 @@ describe('authoritative career observer', () => {
   it('counts timeouts but not automatic actions as deliberate moves', () => {
     const r = fixture()
     sweep(r, 60001)
-    expect(r.career!.players[0].stats.timeoutEliminations).toBe(1)
+    expect(r.career!.players[0].stats).toMatchObject({ timedOutTurns: 1, roundForfeits: 1, roundPenalties: 40 })
     expect(r.career!.players[0].stats.completedTurns).toBeUndefined()
-    expect(r.career!.players[0].stats.gamesLost).toBe(1)
+    expect(r.career!.players[0].stats.gamesLost).toBeUndefined()
   })
   it('marks intentional leaving as abandonment without changing game rules', () => {
     const r = fixture()
@@ -292,4 +292,27 @@ it.each([39, 40, 41])('records only the failed declarer penalty when another opp
     expect(projection.result!.scores.map(score => score.penalty)).toEqual([40, 0, 0])
     expect(projection.players[2]).toMatchObject({ score: 99, eliminated: false })
   }
+})
+
+it('records an immediate forfeit once across sweeps, round completion, snapshots and reactivation', () => {
+  const r = fixture(3)
+  sweep(r, 60000)
+  expect(r.career!.players[0].stats).toMatchObject({ timedOutTurns: 1, roundForfeits: 1, roundPenalties: 40 })
+  expect(r.career!.players[0].score).toBe(40)
+  // Concurrent expiry/heartbeat work is serialized; repeating the same sweep cannot charge again.
+  sweep(r, 60000)
+  r.members[0].connected = false
+  sweep(r, 60001)
+  for (const id of ids) expect(view(r, id, 60001).game!.players[0]).toMatchObject({ forfeited: true, score: 40, eliminated: false, cardCount: 0 })
+  expect(r.hostId).toBe(ids[0])
+  expect(r.hostTransfer).toBeUndefined()
+  r.members.forEach(m => { m.connected = true; m.lastSeen = 60001 })
+  r.game!.players[1].hand = [card('A')]
+  gameAction(r, ids[1], { type: 'show' }, 60002)
+  expect(r.career!.players[0].stats.roundPenalties).toBe(40)
+  expect(r.career!.rounds[0].scores[0]).toMatchObject({ forfeited: true, penalty: 40, score: 40 })
+  gameAction(r, ids[0], { type: 'next-round' }, 60003)
+  expect(r.game!.players[0]).toMatchObject({ eliminated: false, score: 40 })
+  expect(r.game!.players[0].forfeited).toBeUndefined()
+  expect(r.game!.players[0].hand.length).toBeGreaterThanOrEqual(7)
 })

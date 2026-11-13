@@ -17,6 +17,8 @@ export type Player = {
   hand: GameCard[]
   score: number
   eliminated: boolean
+  forfeited?: boolean
+  forfeitTotal?: number
   eliminationReason?: 'score' | 'timeout'
 }
 export type RoundScore = {
@@ -26,6 +28,7 @@ export type RoundScore = {
   penalty: number
   score: number
   eliminated: boolean
+  forfeited?: boolean
 }
 export type RoundResult = {
   reason: 'show' | 'exhaustion' | 'last-player'
@@ -81,7 +84,8 @@ export type Action =
   | { type: 'next-round' }
 
 export class RuleError extends Error {}
-const active = (s: GameState) => s.players.filter((p) => !p.eliminated)
+const survivors = (s: GameState) => s.players.filter(p => !p.eliminated)
+const active = (s: GameState) => s.players.filter(p => !p.eliminated && !p.forfeited)
 export const latestGroup = (s: GameState): GameCard[] => s.discards.at(-1) ?? []
 // Rank 7 is never a face-up pickup, including in saves with stale eligible IDs.
 export const pickupCards = (s: GameState): GameCard[] =>
@@ -93,6 +97,7 @@ export const canShow = (s: GameState, playerId: string) =>
   !s.legacyOpeningDrawn &&
   s.players[s.current].id === playerId &&
   !s.players[s.current].eliminated &&
+  !s.players[s.current].forfeited &&
   handTotal(s.players[s.current].hand, s.indicator.rank) <= 5
 
 export function discardOutcome(
@@ -115,7 +120,7 @@ export function inspectDiscard(
   cardIds: string[],
 ) {
   const player = s.players[s.current]
-  if (player.id !== playerId || player.eliminated)
+  if (player.id !== playerId || player.eliminated || player.forfeited)
     throw new RuleError('Wait for your turn.')
   if (s.phase !== 'turn' && s.phase !== 'penalty')
     throw new RuleError('Draw your replacement card first.')
@@ -174,56 +179,62 @@ function emit(s: GameState, data: GameEventData, now: number) {
 function nextActive(s: GameState, after: number): number {
   for (let step = 1; step <= s.players.length; step++) {
     const index = (after + step) % s.players.length
-    if (!s.players[index].eliminated) return index
+    if (!s.players[index].eliminated && !s.players[index].forfeited) return index
   }
   throw new RuleError('No active player remains.')
 }
 
 function lastPlayerWins(s: GameState, now: number): boolean {
-  const survivors = active(s)
-  if (survivors.length !== 1) return false
+  if (active(s).length <= 1 && s.players.some(p => p.forfeited)) {
+    settle(s, 'last-player', undefined, now)
+    return true
+  }
+  const remaining = survivors(s)
+  if (remaining.length !== 1) return false
   s.phase = 'game-over'
   s.deadline = null
   s.sevens = null
-  s.result = { reason: 'last-player', winners: [survivors[0].id], scores: [] }
-  emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(survivors[0]) }, now)
+  s.result = { reason: 'last-player', winners: [remaining[0].id], scores: [] }
+  emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(remaining[0]) }, now)
   return true
 }
 
 function settle(
   s: GameState,
-  reason: 'show' | 'exhaustion',
+  reason: 'show' | 'exhaustion' | 'last-player',
   callerId?: string,
   now = Date.now(),
 ) {
-  const players = active(s)
-  const totals = players.map((p) => handTotal(p.hand, s.indicator.rank))
+  const players = s.players.filter(p => !p.eliminated || p.forfeited)
+  const totals = players.map(p => p.forfeited ? p.forfeitTotal ?? 0 : handTotal(p.hand, s.indicator.rank))
   const callerIndex = players.findIndex((p) => p.id === callerId)
-  const minimum = Math.min(...totals)
+  const minimum = Math.min(...totals.filter((_, index) => !players[index].forfeited))
   const successful =
     callerIndex >= 0 &&
     (totals[callerIndex] === 0 ||
       totals.every(
-        (total, index) => index === callerIndex || total > totals[callerIndex],
+        (total, index) => index === callerIndex || players[index].forfeited || total > totals[callerIndex],
       ))
   const opponentMinimum = Math.min(
-    ...totals.filter((_, index) => index !== callerIndex),
+    ...totals.filter((_, index) => index !== callerIndex && !players[index].forfeited),
   )
   const winners: string[] = []
   const scores = players.map((player, index) => {
     let penalty: number
-    if (reason === 'exhaustion')
+    if (player.forfeited) penalty = 40
+    else if (reason === 'last-player') penalty = 0
+    else if (reason === 'exhaustion')
       penalty = totals[index] === minimum ? 0 : totals[index]
     else if (successful)
       penalty = index === callerIndex ? 0 : Math.min(totals[index], 40)
     else penalty = index === callerIndex ? 40 : 0
     // A failed declaration waives every opponent's penalty, but does not
     // change which lowest-hand opponents won the round.
-    const won = reason === 'show' && !successful
+    const won = !player.forfeited && (reason === 'show' && !successful
       ? index !== callerIndex && totals[index] === opponentMinimum
-      : penalty === 0
+      : penalty === 0)
     if (won) winners.push(player.id)
-    player.score += penalty
+    if (!player.forfeited) player.score += penalty
     if (player.score >= gameSettings(s).eliminationThreshold) {
       player.eliminated = true
       player.eliminationReason = 'score'
@@ -236,6 +247,7 @@ function settle(
       penalty,
       score: player.score,
       eliminated: player.eliminated,
+      ...(player.forfeited ? { forfeited: true } : {}),
     }
   })
   s.result = {
@@ -245,7 +257,7 @@ function settle(
     winners,
     scores,
   }
-  s.phase = active(s).length === 1 ? 'game-over' : 'round-over'
+  s.phase = survivors(s).length <= 1 ? 'game-over' : 'round-over'
   s.deadline = null
   s.sevens = null
   s.discardedRank = null
@@ -264,18 +276,19 @@ function settle(
     {
       type: 'ROUND_COMPLETED',
       reason,
-      scores: scores.map(({ id, name, total, penalty, score }) => ({
+      scores: scores.map(({ id, name, total, penalty, score, forfeited }) => ({
         id,
         name,
         total,
         penalty,
         score,
+        ...(forfeited ? { forfeited: true } : {}),
       })),
     },
     now,
   )
   for (const score of scores)
-    if (score.eliminated)
+    if (score.eliminated && !score.forfeited)
       emit(
         s,
         {
@@ -286,8 +299,8 @@ function settle(
         },
         now,
       )
-  if (s.phase === 'game-over')
-    emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(active(s)[0]) }, now)
+  if (s.phase === 'game-over' && survivors(s).length === 1)
+    emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(survivors(s)[0]) }, now)
 }
 
 /** Draw only from the closed pile; protect the current group and pending open pickup. */
@@ -382,7 +395,7 @@ function finishNormalTurn(s: GameState, now: number, random: () => number) {
 }
 
 function startRound(s: GameState, now: number, random: () => number) {
-  const { cards, indicator } = prepareDeck(active(s).length, random)
+  const { cards, indicator } = prepareDeck(survivors(s).length, random)
   s.indicator = indicator
   s.drawPile = cards
   for (const player of s.players) {
@@ -490,6 +503,7 @@ export function applyAction(
   if (action.type === 'next-round') {
     if (s.phase !== 'round-over')
       throw new RuleError('The round has not finished, or the match is over.')
+    for (const player of s.players) { delete player.forfeited; delete player.forfeitTotal }
     s.starter = nextActive(s, s.starter)
     s.round++
     startRound(s, now, random)
@@ -499,28 +513,27 @@ export function applyAction(
   // A late click cannot evade a deadline, including after a page reload.
   if (s.deadline !== null && now >= s.deadline) {
     const player = s.players[s.current]
-    player.eliminated = true
-    player.eliminationReason = 'timeout'
+    if (player.forfeited) throw new RuleError('This player already forfeited the round.')
+    player.forfeitTotal = handTotal(player.hand, s.indicator.rank)
+    player.forfeited = true
+    player.score += 40
     player.hand = []
     s.eligible = []
     s.sevens = null
-    emit(
-      s,
-      {
-        type: 'PLAYER_ELIMINATED',
-        player: publicPlayer(player),
-        reason: 'timeout',
-        cutoff: gameSettings(s).eliminationThreshold,
-      },
-      now,
-    )
-    beginTurn(s, nextActive(s, s.current), now, random)
+    s.discardedRank = null
+    emit(s, { type: 'PLAYER_FORFEITED', player: publicPlayer(player), penalty: 40, score: player.score }, now)
+    if (player.score >= gameSettings(s).eliminationThreshold) {
+      player.eliminated = true
+      player.eliminationReason = 'score'
+      emit(s, { type: 'PLAYER_ELIMINATED', player: publicPlayer(player), reason: 'score', cutoff: gameSettings(s).eliminationThreshold }, now)
+    }
+    if (!lastPlayerWins(s, now)) beginTurn(s, nextActive(s, s.current), now, random)
     return s
   }
   if (action.type === 'timeout')
     throw new RuleError('The turn deadline has not expired.')
   const player = s.players[s.current]
-  if (action.playerId !== player.id || player.eliminated)
+  if (action.playerId !== player.id || player.eliminated || player.forfeited)
     throw new RuleError('Wait for your turn.')
   if (action.type === 'play-turn') {
     if (s.phase !== 'turn')

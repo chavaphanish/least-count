@@ -13,7 +13,6 @@
 .host-transfer-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .host-transfer-footer > small { font-size: 11px; color: var(--muted); }
 .host-transfer-dialog .button { min-height: 44px; padding: 6px 10px; }
-.host-transfer-notice { position: fixed; top: max(48px, calc(env(safe-area-inset-top) + 44px)); left: 50%; transform: translateX(-50%); z-index: 950; max-width: calc(100dvw - 32px); padding: 8px 14px; border: 1px solid var(--gold); border-radius: 8px; background: #103e32; color: var(--gold); font-size: 13px; text-align: center; pointer-events: none; }
 @media (max-width: 480px) { .host-transfer-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 [data-mobile-device] .host-transfer-dialog .table-overlay-shell { max-height: none; }
 [data-mobile-device] .host-transfer-dialog .table-overlay-body { padding: 8px; }

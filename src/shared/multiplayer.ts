@@ -91,6 +91,7 @@ export type PublicGamePlayer = PublicPlayer & {
   cardCount: number
   score: number
   eliminated: boolean
+  forfeited?: boolean
   eliminationReason?: 'score' | 'timeout'
 }
 export type GameView = {

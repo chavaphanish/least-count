@@ -20,7 +20,7 @@ export function MobileGameBar({
   seconds: number | null
   joker: Pick<GameCard, 'rank' | 'suit'>
   penalty: number
-  players: { id: string; name: string; score: number; eliminated: boolean }[]
+  players: { id: string; name: string; score: number; eliminated: boolean; forfeited?: boolean }[]
   children: ReactNode
 }) {
   const mobile = useMobileLandscape()
@@ -72,7 +72,7 @@ export function MobileGameBar({
                       <li key={p.id}>
                         <span>{p.name}</span>
                         <strong>{p.score}</strong>
-                        <small>{p.eliminated ? 'Eliminated' : 'Active'}</small>
+                        <small>{p.forfeited ? (p.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : p.eliminated ? 'Eliminated' : 'Active'}</small>
                       </li>
                     ))}
                   </PagedItems>

@@ -38,7 +38,7 @@ const rules = [
   },
   {
     title: 'Finish within 60 seconds',
-    text: 'The same timer covers your drop and required replacement draw. Invalid moves do not restart it. Running out of time eliminates you immediately and clears any 7 penalty. Accepting a penalty or timing out clears the previous group’s pickup eligibility. Refreshing does not renew the deadline.',
+    text: 'The same timer covers your drop and required replacement draw. Invalid moves do not restart it. Running out of time forfeits this round, immediately adds 40 points, and clears any 7 penalty. You return next round unless your score reaches the elimination cutoff. Accepting a penalty or timing out clears the previous group’s pickup eligibility. Refreshing does not renew the deadline.',
   },
 ]
 

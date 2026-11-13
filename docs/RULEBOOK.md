@@ -102,3 +102,9 @@ The countdown appears beside the active player's profile, with a warning at 15 s
 A failed Least declaration gives only the declarer **40 penalty points**. Every other active player receives **0**, regardless of hand value. A successful Least declaration gives the declarer **0**; each other active player receives **min(hand value, 40)**. Add these penalties to cumulative scores and apply the existing elimination cutoff. Hand values themselves remain unchanged in round reports and statistics.
 
 Declaration eligibility, success conditions, zero-point ties, round winners, exhaustion scoring, and all other mechanics remain unchanged. Zero penalty points alone do not make an opponent a round winner after a failed declaration.
+
+## Round timeout forfeits
+
+A timed turn expiring forfeits only the current round and immediately adds **40 points exactly once**, independent of hand value. The player's hand is removed from round play, their turn ends, and remaining eligible players continue. Forfeited players cannot act or participate in Least comparisons. When only one eligible player remains, that player wins the round with no additional penalty. Round results retain the forfeit penalty; no additional hand-value penalty is charged.
+
+Forfeited players spectate and rejoin the next round with a normal deal if their cumulative score remains below the configured cutoff. Reaching or exceeding the cutoff applies permanent score elimination immediately. A timeout still clears any pending 7 penalty and previous pickup eligibility. Disconnections do not reset deadlines; untimed games have no timeout forfeit. This amendment supersedes the archived draft's time-based elimination rules.

@@ -54,6 +54,8 @@ export function isSavedGame(value: unknown): value is GameState {
           Number.isInteger(p.score) &&
           p.score >= 0 &&
           typeof p.eliminated === 'boolean' &&
+          (p.forfeited === undefined || typeof p.forfeited === 'boolean') &&
+          (!p.forfeited || (p.hand.length === 0 && typeof p.forfeitTotal === 'number' && Number.isFinite(p.forfeitTotal) && p.forfeitTotal >= 0)) &&
           Array.isArray(p.hand) &&
           p.hand.every(validCard) &&
           (!p.eliminated || p.hand.length === 0),
@@ -129,7 +131,8 @@ export function isSavedGame(value: unknown): value is GameState {
           ? typeof s.deadline !== 'number' || !Number.isFinite(s.deadline)
           : s.deadline !== null) ||
         s.players[s.current].eliminated ||
-        activeCount < 2 ||
+        s.players[s.current].forfeited ||
+        s.players.filter(p => !p.eliminated && !p.forfeited).length < 2 ||
         s.result !== null
       )
         return false

@@ -112,7 +112,7 @@ export function eligibleHosts(r: RoomRecord, now: number) {
   if (!r.game) return []
   const index = r.game.players.findIndex(p => p.id === r.hostId)
   const ordered = [...r.game.players.slice(index + 1), ...r.game.players.slice(0, index + 1)]
-  return ordered.filter(p => !p.eliminated && r.members.some(m => m.id === p.id &&
+  return ordered.filter(p => !p.eliminated && !p.forfeited && r.members.some(m => m.id === p.id &&
     m.connected && !m.left && m.authExpiresAt > now && now - m.lastSeen < HEARTBEAT_MS))
 }
 function assignHost(r: RoomRecord, id: string, now: number) {
@@ -123,7 +123,7 @@ function assignHost(r: RoomRecord, id: string, now: number) {
 /** Room administration only: never alters the game, scores, ordering or deadlines. */
 export function reconcileHost(r: RoomRecord, now: number) {
   if (!r.game || r.status === 'closed') return
-  const active = r.game.players.filter(p => !p.eliminated)
+  const active = r.game.players.filter(p => !p.eliminated && !p.forfeited)
   const host = r.game.players.find(p => p.id === r.hostId)
   const seat = r.members.find(m => m.id === r.hostId)
   if (host && !host.eliminated && seat && !seat.left) return
@@ -329,6 +329,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
             cardCount: p.hand.length,
             score: p.score,
             eliminated: p.eliminated,
+            forfeited: p.forfeited === true,
             eliminationReason: p.eliminationReason,
           })),
           hand: g.players.find((p) => p.id === id)?.hand ?? [],

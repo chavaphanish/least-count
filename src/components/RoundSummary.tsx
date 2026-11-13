@@ -25,7 +25,9 @@ export function RoundSummary({
         <h2 id="round-result" tabIndex={-1}>
           {matchOver
             ? `${winner?.name} ${winner?.id === 'p0' ? 'win' : 'wins'} the match!`
-            : result.reason === 'exhaustion'
+            : result.reason === 'last-player'
+              ? 'Round complete. One eligible player remains.'
+              : result.reason === 'exhaustion'
               ? 'The draw pile is exhausted.'
               : result.successful
                 ? 'Least successful! Lowest hand wins the round.'
@@ -33,7 +35,7 @@ export function RoundSummary({
         </h2>
         <p>
           {result.reason === 'last-player'
-            ? 'Only one active player remains.'
+            ? 'Only one eligible player remains in the round.'
             : result.reason === 'exhaustion'
               ? 'The lowest hand totals receive zero; other players score their hand totals.'
               : `${caller?.name} declared Least. ${result.successful ? 'Zero-point ties share the round win.' : 'The caller receives 40 penalty points.'}`}{' '}
