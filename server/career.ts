@@ -72,7 +72,7 @@ export function observeCareer(
   if (!c || !c.eligible || c.completedAt) return
   const fresh = gameEvents(next).filter((e) => e.sequenceNumber > c.seq)
   if (before && isPlaying(before)) {
-    for (const p of before.players.filter((p) => !p.eliminated)) {
+    for (const p of before.players.filter((p) => !p.eliminated && !p.forfeited)) {
       const m = r.members.find((m) => m.id === p.id)
       const stats = c.players.find((v) => v.id === p.id)!.stats
       if (
@@ -176,6 +176,10 @@ export function observeCareer(
       if (event.successful) add(stats, 'roundsWon')
       else add(stats, 'failedDeclarationPenalty', 40)
     }
+    if (event.type === 'PLAYER_FORFEITED' && stats) {
+      add(stats, 'timedOutTurns'); add(stats, 'roundForfeits'); add(stats, 'roundPenalties', event.penalty)
+      c.players.find(p => p.id === event.player.id)!.score = event.score
+    }
     if (event.type === 'PLAYER_ELIMINATED' && stats) {
       const eliminated = c.players.find((p) => p.id === event.player.id)!
       eliminated.elimination = event.reason
@@ -224,7 +228,9 @@ export function observeCareer(
         const p = c.players.find((p) => p.id === score.id)!
         if (p.outcome === 'abandoned') continue
         add(p.stats, 'roundsCompleted')
-        add(p.stats, 'roundPenalties', score.penalty)
+        if (!score.forfeited) add(p.stats, 'roundPenalties', score.penalty)
+        p.score = score.score
+        if (event.reason === 'last-player' && next.result?.winners.includes(score.id)) add(p.stats, 'roundsWon')
         minimum(p.stats, 'lowestHand', score.total)
         p.stats.highestHand = Math.max(p.stats.highestHand ?? 0, score.total)
       }

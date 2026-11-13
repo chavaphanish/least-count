@@ -6,7 +6,7 @@ import type { Env } from './types'
 import { HOST_TRANSFER_MS } from '../src/shared/multiplayer'
 
 afterEach(() => vi.restoreAllMocks())
-async function harness() {
+async function harness(activeHost = false) {
   const now = Date.now(), ids = ['Alex', 'Ben', 'Cora', 'Drew']
   const identity = (id: string) => ({ id, displayName: id, avatarUrl: null, accountType: 'guest' as const, expiresAt: now + 3600000 })
   const r = createRoom('test-room', 'ABC234', identity(ids[0]), { maxPlayers: 4, eliminationThreshold: 100, timedGame: false }, now)
@@ -14,7 +14,8 @@ async function harness() {
   r.members.forEach(m => { m.connected = true; m.lastSeen = now; m.disconnectedAt = null })
   start(r, ids[0], now, () => .6)
   r.game!.phase = 'turn'; r.game!.sevens = null; r.game!.current = 1
-  r.game!.players[0].eliminated = true; r.game!.players[0].hand = []
+  if (!activeHost) { r.game!.players[0].eliminated = true; r.game!.players[0].hand = [] }
+  else { r.game!.settings!.timedGame = true; r.game!.current = 0; r.game!.deadline = now + 60000 }
   reconcileHost(r, now)
   const storage = new Map<string, unknown>([['room', r], ['seen', []]])
   const messages = new Map<string, Record<string, unknown>[]>(ids.map(id => [id, []]))
@@ -89,4 +90,23 @@ describe('durable host handover', () => {
     await h.room.webSocketClose(second)
     expect((h.storage.get('room') as RoomRecord).hostChange).toEqual(saved.hostChange)
   })
+})
+
+
+it('persists and broadcasts one round forfeit across overlapping alarms, disconnects and restart', async () => {
+  const h = await harness(true)
+  vi.spyOn(Date, 'now').mockReturnValue(h.now + 60000)
+  await Promise.all([h.room.alarm(), h.room.alarm()])
+  h.ws.close(); await h.room.webSocketClose(h.ws)
+  const restarted = await h.restart(); await restarted.alarm()
+  const saved = h.storage.get('room') as RoomRecord
+  expect(saved.game!.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40, hand: [] })
+  expect(saved.game!.current).toBe(1)
+  expect(saved.game!.deadline).toBe(h.now + 120000)
+  expect(saved.game!.events.filter(e => e.type === 'PLAYER_FORFEITED')).toHaveLength(1)
+  expect(saved.hostId).toBe('Alex'); expect(saved.hostTransfer).toBeUndefined()
+  for (const records of h.messages.values()) {
+    const state = records.filter(m => m.type === 'state').at(-1)!.room as { game: { players: { forfeited?: boolean; score: number }[] } }
+    expect(state.game.players[0]).toMatchObject({ forfeited: true, score: 40 })
+  }
 })

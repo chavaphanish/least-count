@@ -77,3 +77,13 @@ describe('local session', () => {
     expect(loadSession(store)).toEqual(game)
   })
 })
+
+it('restores round forfeits without resetting their penalty or next turn deadline', () => {
+  const store = memoryStore()
+  const game = createGame(['You', 'Alex', 'Ben'], 1000, () => .6)
+  game.phase = 'turn'; game.sevens = null; game.current = 0
+  const forfeited = applyAction(game, { type: 'timeout' }, game.deadline!)
+  saveSession(store, forfeited)
+  expect(loadSession(store)).toEqual(forfeited)
+  expect(loadSession(store)!.players[0]).toMatchObject({ forfeited: true, score: 40, hand: [] })
+})

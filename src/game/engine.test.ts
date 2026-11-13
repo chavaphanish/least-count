@@ -336,7 +336,7 @@ describe('combined normal turns', () => {
     expect(next.sevens!.amount).toBe(2)
   })
 
-  it('accepts a final choice before the deadline and eliminates instead if the choice is late', () => {
+  it('accepts a final choice before the deadline and forfeits instead if the choice is late', () => {
     const game = fixture()
     const action: Action = {
       type: 'play-turn',
@@ -348,7 +348,7 @@ describe('combined normal turns', () => {
     expect(early.players[0].eliminated).toBe(false)
     expect(early.deadline).toBe(2 * TURN_MS - 1)
     const late = act(game, action, TURN_MS)
-    expect(late.players[0].eliminationReason).toBe('timeout')
+    expect(late.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
     expect(late.discards).toEqual(game.discards)
     expect(late.eligible).toEqual([])
   })
@@ -585,15 +585,16 @@ describe('7 sequences and timeout', () => {
     expect(s.sevens).toBeNull()
   })
 
-  it('eliminates on the exact deadline, including a late action, without resetting scores', () => {
+  it('forfeits on the exact deadline, including a late action, and adds exactly 40', () => {
     const s = fixture()
     s.eligible = latestGroup(s).map((c) => c.id)
     s.players[0].score = 12
     expect(() => act(s, { type: 'timeout' }, TURN_MS - 1)).toThrow()
     const next = discard(s, [s.players[0].hand[0].id], TURN_MS)
-    expect(next.players[0].eliminated).toBe(true)
+    expect(next.players[0].eliminated).toBe(false)
+    expect(next.players[0].forfeited).toBe(true)
     expect(next.players[0].hand).toEqual([])
-    expect(next.players[0].score).toBe(12)
+    expect(next.players[0].score).toBe(52)
     expect(next.eligible).toEqual([])
     expect(next.current).toBe(1)
     expect(next.phase).toBe('turn')
@@ -606,19 +607,23 @@ describe('7 sequences and timeout', () => {
     s.players[1].hand = [card('7')]
     s = discard(s, [s.players[0].hand[0].id])
     s = act(s, { type: 'timeout' }, s.deadline!)
-    expect(s.players[1].eliminationReason).toBe('timeout')
+    expect(s.players[1]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
     expect(s.current).toBe(2)
     expect(s.sevens).toBeNull()
     expect(s.phase).toBe('turn')
     expect(s.eligible).toEqual([])
   })
 
-  it('ends the match when a timeout leaves just one active player', () => {
+  it('ends only the round when a forfeit leaves one eligible player', () => {
     const s = act(fixture(2), { type: 'timeout' }, TURN_MS)
-    expect(s.phase).toBe('game-over')
+    expect(s.phase).toBe('round-over')
     expect(s.result!.winners).toEqual(['p1'])
+    expect(s.result!.scores.map(p => p.penalty)).toEqual([40, 0])
     expect(s.deadline).toBeNull()
-    expect(() => act(s, { type: 'next-round' })).toThrow()
+    const next = act(s, { type: 'next-round' }, TURN_MS + 1)
+    expect(next.players[0].forfeited).toBeUndefined()
+    expect(next.players[0].hand).toHaveLength(7)
+    expect(next.players[0].score).toBe(40)
   })
 })
 
@@ -818,5 +823,95 @@ describe('Power Card 7 pickup exclusion', () => {
     expect(new Set(ids(recycled)).size).toBe(ids(recycled).length)
     expect(recycled.events!.some(e=>e.type==='PILE_RECYCLED')).toBe(true)
     expect(pickupCards(recycled)).toEqual([outgoing])
+  })
+})
+
+describe('round timeout forfeits', () => {
+  it('charges immediately once, removes the hand, rejects round actions and skips forfeited seats', () => {
+    const initial = fixture(4)
+    let s = act(initial, { type: 'timeout' }, TURN_MS)
+    expect(initial.players[0].score).toBe(0)
+    expect(s.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40, hand: [], forfeitTotal: 15 })
+    expect(s.current).toBe(1)
+    for (const action of [
+      { type: 'timeout' } as Action,
+      { type: 'show', playerId: s.players[0].id } as Action,
+      { type: 'draw', playerId: s.players[0].id, source: 'pile' } as Action,
+      { type: 'discard', playerId: s.players[0].id, cardIds: [initial.players[0].hand[0].id] } as Action,
+    ]) expect(() => act(s, action, TURN_MS + 1)).toThrow()
+    s = act(s, { type: 'timeout' }, s.deadline!)
+    expect(s.current).toBe(2)
+    s = discard(s, [s.players[2].hand[0].id], s.deadline! - 100)
+    expect(s.current).toBe(3)
+    // The next normal turn must skip both forfeited seats.
+    s = discard(s, [s.players[3].hand[0].id], s.deadline! - 100)
+    expect(s.current).toBe(2)
+    expect(s.players.slice(0, 2).map(p => p.score)).toEqual([40, 40])
+    expect(s.events!.filter(e => e.type === 'PLAYER_FORFEITED')).toHaveLength(2)
+  })
+
+  it.each([true, false])('excludes forfeits from Least comparisons and preserves their charged penalty (success=%s)', success => {
+    let s = fixture()
+    s.players[0].hand = [card('2')]
+    s.players[1].hand = [card('4')]
+    s.players[2].hand = [card(success ? '5' : '3')]
+    s = act(s, { type: 'timeout' }, TURN_MS)
+    s = act(s, { type: 'show', playerId: s.players[1].id }, TURN_MS + 1)
+    expect(s.result!.successful).toBe(success)
+    expect(s.result!.scores.map(p => p.penalty)).toEqual(success ? [40, 0, 5] : [40, 40, 0])
+    expect(s.result!.scores[0]).toMatchObject({ total: 2, penalty: 40, score: 40, forfeited: true })
+    expect(s.result!.winners).not.toContain(s.players[0].id)
+    expect(s.phase).toBe('round-over')
+  })
+
+  it('settles exhaustion without charging the forfeit twice', () => {
+    let s = act(fixture(), { type: 'timeout' }, TURN_MS)
+    s.drawPile = []; s.discards = [[card('K')]]; s.eligible = s.discards[0].map(c => c.id)
+    s.phase = 'draw'; s.discardedRank = 'K'
+    s = act(s, { type: 'draw', playerId: s.players[1].id, source: 'pile' }, TURN_MS + 1)
+    expect(s.result!.reason).toBe('exhaustion')
+    expect(s.result!.scores[0]).toMatchObject({ penalty: 40, score: 40, forfeited: true })
+  })
+
+  it.each([2, 5, 8])('restores round participants and rotating starter in a %i-player deal', count => {
+    let s = fixture(count)
+    while (s.phase === 'turn') s = act(s, { type: 'timeout' }, s.deadline!)
+    expect(s.phase).toBe('round-over')
+    expect(s.result!.scores.map(p => p.penalty)).toEqual([...Array(count - 1).fill(40), 0])
+    s = act(s, { type: 'next-round' }, 1_000_000)
+    expect(s.round).toBe(2)
+    expect(s.starter).toBe(1)
+    expect(s.players.every(p => !p.forfeited && !p.eliminated && p.hand.length >= 7)).toBe(true)
+    expect(s.deadline).toBe(1_000_000 + TURN_MS)
+  })
+
+  it.each([[59, 100, false], [60, 100, true], [80, 100, true], [160, 200, true]])('applies score elimination at %i + 40, cutoff %i', (score, cutoff, eliminated) => {
+    let s = fixture(2)
+    s.settings = { timedGame: true, eliminationThreshold: cutoff as number }
+    s.players[0].score = score as number
+    s = act(s, { type: 'timeout' }, TURN_MS)
+    expect(s.players[0]).toMatchObject({ score: Number(score) + 40, forfeited: true, eliminated })
+    expect(s.players[0].eliminationReason).toBe(eliminated ? 'score' : undefined)
+    expect(s.phase).toBe(eliminated ? 'game-over' : 'round-over')
+    expect(s.events!.filter(e => e.type === 'PLAYER_ELIMINATED')).toHaveLength(eliminated ? 1 : 0)
+  })
+
+  it('accumulates one forfeit per round until score elimination', () => {
+    let s = fixture(2)
+    for (let round = 1; round <= 3; round++) {
+      s.current = 0; s.phase = 'turn'; s.sevens = null; s.deadline = round * 100000
+      s = act(s, { type: 'timeout' }, s.deadline!)
+      expect(s.players[0].score).toBe(round * 40)
+      expect(s.events!.filter(e => e.type === 'PLAYER_FORFEITED')).toHaveLength(round)
+      if (round < 3) s = act(s, { type: 'next-round' }, round * 100000 + 1)
+    }
+    expect(s.phase).toBe('game-over')
+    expect(s.players[0].eliminationReason).toBe('score')
+  })
+
+  it('never forfeits an untimed turn', () => {
+    const s = fixture(); s.settings = { timedGame: false, eliminationThreshold: 100 }; s.deadline = null
+    expect(() => act(s, { type: 'timeout' }, 1e9)).toThrow()
+    expect(s.players[0].score).toBe(0)
   })
 })

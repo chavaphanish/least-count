@@ -475,7 +475,7 @@ export function GameHistoryReport({ id }: { id: string }) {
                     {round.scores.map((score) => (
                       <li key={score.id}>
                         <Identity player={{ ...score, displayName: score.name }} compact />: hand {score.total}, +{score.penalty}{' '}
-                        penalty, {score.score} cumulative
+                        penalty, {score.score} cumulative{score.forfeited ? ' · Forfeited' : ''}
                       </li>
                     ))}
                   </PagedItems>

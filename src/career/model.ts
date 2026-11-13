@@ -68,6 +68,7 @@ export type GameReport = {
       lastName?: string
       total: number
       penalty: number
+      forfeited?: boolean
       score: number
     }[]
   }[]
@@ -134,7 +135,8 @@ export const METRIC_GROUPS: Record<string, Record<string, string>> = {
     lowestHand: 'Lowest completed-round hand',
     highestHand: 'Highest completed-round hand',
     scoreEliminations: 'Score eliminations',
-    timeoutEliminations: 'Timeout eliminations',
+    timeoutEliminations: 'Legacy timeout eliminations',
+    roundForfeits: 'Round timeout forfeits',
   },
   'Playing time': {
     playingMs: 'Connected active playing time',

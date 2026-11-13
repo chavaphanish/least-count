@@ -254,22 +254,22 @@ test('plays a responding 7 and cancels a full cycle', async ({ page }) => {
   expect(next.log.some((line) => line.includes('Full cycle'))).toBe(true)
 })
 
-test('enforces the original deadline after reload and records a timeout match winner', async ({
+test('enforces the original deadline after reload and records a timeout round forfeit', async ({
   page,
 }) => {
   const game = fixture(2)
   game.deadline = Date.now() - 1
   await load(page, game)
   await expect(
-    page.getByRole('heading', { name: 'Bot 1 wins the match!' }),
+    page.getByRole('heading', { name: 'Round complete. One eligible player remains.' }),
   ).toBeVisible()
   const next = await saved(page)
-  expect(next.players[0].eliminationReason).toBe('timeout')
+  expect(next.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
   expect(next.players[0].hand).toEqual([])
-  expect(next.phase).toBe('game-over')
+  expect(next.phase).toBe('round-over')
 })
 
-test('the live timer eliminates on expiry without a refresh', async ({
+test('the live timer forfeits on expiry and restores the player next round', async ({
   page,
 }) => {
   const now = Date.now()
@@ -279,8 +279,15 @@ test('the live timer eliminates on expiry without a refresh', async ({
   await load(page, game)
   await page.clock.fastForward(60_000)
   await expect(
-    page.getByRole('heading', { name: 'Bot 1 wins the match!' }),
+    page.getByRole('heading', { name: 'Round complete. One eligible player remains.' }),
   ).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'You forfeited the round (timeout, +40 points).' })).toBeVisible()
+  const forfeited = await saved(page)
+  expect(forfeited.result!.scores[0]).toMatchObject({ penalty: 40, score: 40, forfeited: true })
+  await page.getByRole('button', { name: 'Start round 2' }).click()
+  const restored = await saved(page)
+  expect(restored.players[0].forfeited).toBeUndefined()
+  expect(restored.players[0].hand.length).toBeGreaterThanOrEqual(7)
 })
 
 test('rules, downloads, and keyboard skip navigation work on a phone', async ({
@@ -506,10 +513,10 @@ test('keeps the deadline running while the draw source is being chosen', async (
   await page.getByRole('button', { name: 'Drop 1 Card' }).click()
   await page.clock.fastForward(60_000)
   await expect(
-    page.getByRole('heading', { name: 'Bot 1 wins the match!' }),
+    page.getByRole('heading', { name: 'Round complete. One eligible player remains.' }),
   ).toBeVisible()
   const next = await saved(page)
-  expect(next.players[0].eliminationReason).toBe('timeout')
+  expect(next.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
   expect(next.discards.at(-1)![0].rank).toBe('K')
   await expect(page.getByTestId('turn-animation')).toHaveCount(0)
 })

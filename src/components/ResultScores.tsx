@@ -41,7 +41,7 @@ export function ResultScores({
               <td>{score.total}</td>
               <td>+{score.penalty}</td>
               <td>{score.score}</td>
-              <td>{score.eliminated ? 'Eliminated' : 'Active'}</td>
+              <td>{score.forfeited ? (score.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : score.eliminated ? 'Eliminated' : 'Active'}</td>
             </tr>
           ))}
         </tbody>

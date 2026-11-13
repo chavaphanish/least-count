@@ -1,3 +1,4 @@
+import { GameNotices } from '../components/GameNotices'
 import { useFeedback, useGameFeedback } from '../feedback/FeedbackProvider'
 import { playerIdentity, withPlayerNames } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
@@ -165,7 +166,7 @@ export function GamePage({
   const displayGame = auth.user ? withPlayerNames(game, [{ ...auth.user.player, id: human.id }]) : game
   const current = displayGame.players[game.current]
   const playing = isPlaying(game)
-  const yours = playing && game.current === 0 && !human.eliminated && !animation
+  const yours = playing && game.current === 0 && !human.eliminated && !human.forfeited && !animation
   const canSelect =
     yours && !choosing && (game.phase === 'turn' || game.phase === 'penalty')
   const readyToDraw = yours && (choosing || game.phase === 'draw')
@@ -266,6 +267,7 @@ export function GamePage({
       aria-labelledby="game-title"
     >
       {header}
+      <GameNotices events={displayGame.events ?? []} now={now} />
       <MobileGameBar
         round={game.round}
         activeName={current.name}
@@ -298,7 +300,7 @@ export function GamePage({
         <div>
           <strong>Round {game.round}</strong>
           <span>
-            {game.players.filter((p) => !p.eliminated).length} active · cutoff
+            {game.players.filter((p) => !p.eliminated && !p.forfeited).length} active · cutoff
             100
           </span>
         </div>
@@ -329,6 +331,7 @@ export function GamePage({
               score={player.score}
               active={game.current === index + 1 && playing}
               eliminated={player.eliminated}
+              forfeited={player.forfeited}
               status={
                 player.eliminated
                   ? `Out · ${player.eliminationReason}`
@@ -413,7 +416,9 @@ export function GamePage({
             ) : null
           }
           empty={
-            human.eliminated
+            human.forfeited && !human.eliminated
+              ? 'You forfeited this round. You can play again next round.'
+              : human.eliminated
               ? 'Your cards have been removed from play.'
               : 'An empty hand is worth zero.'
           }
@@ -493,7 +498,7 @@ export function GamePage({
                 <span>{auth.user && player.id === human.id ? <PlayerIdentity player={auth.user.player} compact /> : player.name}</span>
                 <strong>{player.score}</strong>
                 <small>
-                  {player.eliminated
+                  {player.forfeited ? (player.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : player.eliminated
                     ? `Out · ${player.eliminationReason}`
                     : 'Active'}
                 </small>

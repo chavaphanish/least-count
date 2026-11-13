@@ -2,7 +2,7 @@ import type { GameEvent } from '../game/events'
 import type { Sound } from './audio'
 export type FeedbackSnapshot = {
   scope:string; round:number; phase:string; localId:string; currentId:string
-  players:{id:string;eliminated:boolean}[]; events:GameEvent[]
+  players:{id:string;eliminated:boolean;forfeited?:boolean}[]; events:GameEvent[]
   deadline:number|null; revision?:number; dropIds?:string; now:number; connected:boolean; reducedMotion:boolean
 }
 export interface FeedbackSink {
@@ -15,7 +15,7 @@ export interface FeedbackSink {
 }
 type Cursor={sequence:number;timestamp:number;turn:string;round:number;participant:boolean}
 type Entry=Cursor & {baseline:boolean;seconds:number|null;connected:boolean;active:boolean;revision?:number;dropIds?:string}
-const boundaries=new Set(['ROUND_STARTED','TURN_COMPLETED','POWER_SEVEN_PLAYED','POWER_SEVEN_PENALTY_DRAWN','POWER_SEVEN_CYCLE_COMPLETED','PLAYER_ELIMINATED'])
+const boundaries=new Set(['ROUND_STARTED','TURN_COMPLETED','POWER_SEVEN_PLAYED','POWER_SEVEN_PENALTY_DRAWN','POWER_SEVEN_CYCLE_COMPLETED','PLAYER_ELIMINATED','PLAYER_FORFEITED'])
 
 /** Pure confirmed-state observer. It never dispatches game actions or owns a turn timer. */
 export class FeedbackTracker {
@@ -28,7 +28,7 @@ export class FeedbackTracker {
     const timestamp=Math.max(0,...s.events.map(e=>e.timestamp))
     const seconds=s.deadline===null?null:Math.max(0,Math.ceil((s.deadline-s.now)/1000))
     const member=s.players.find(p=>p.id===s.localId)
-    const active=!!member&&!member.eliminated&&s.currentId===s.localId&&['turn','draw','penalty'].includes(s.phase)&&s.connected
+    const active=!!member&&!member.eliminated&&!member.forfeited&&s.currentId===s.localId&&['turn','draw','penalty'].includes(s.phase)&&s.connected
     const boundary=s.events.filter(e=>boundaries.has(e.type)).at(-1)?.sequenceNumber??0
     const turn=`${s.round}:${s.currentId}:${s.deadline??'untimed'}:${boundary}`
     let previous=this.entries.get(s.scope)

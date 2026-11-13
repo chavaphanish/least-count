@@ -5,7 +5,7 @@ import type { RoomRecord } from '../server/room'
 import { createCard } from '../src/game/cards'
 import { png } from './career-fixture'
 const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'
-function setupRoom() {
+function setupRoom(hostScore = 60) {
   const now = Date.now(), names = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
   const people = names.map((name, i) => ({ id: `user:00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`, displayName: `Player ${name}`, username: `player000${i + 1}`, firstName: 'Player', lastName: name, avatarUrl: '/host-player.png', accountType: 'registered' as const, expiresAt: now + 3600000 }))
   const room = createRoom('host-room', 'ABC234', people[0], { maxPlayers: 8, timedGame: true, eliminationThreshold: 100 }, now)
@@ -16,8 +16,9 @@ function setupRoom() {
   g.phase = 'turn'; g.sevens = null; g.current = 0; g.deadline = now - 1
   g.discards = [[{ ...createCard('clubs', '4'), id: 'old-four' }]]; g.eligible = []
   g.players[1].hand = [{ ...createCard('hearts', '4'), id: 'new-four' }, { ...createCard('hearts', '5'), id: 'remaining-five' }]
+  g.players[0].score = hostScore
   sweep(room, now)
-  expect(room.hostTransfer).toBeTruthy()
+  expect(!!room.hostTransfer).toBe(hostScore >= 60)
   return room
 }
 async function connect(page: Page, room: RoomRecord, index: number, sockets: {id:string;socket:WebSocketRoute}[]) {
@@ -116,4 +117,26 @@ test('automatic reassignment closes the eliminated host popup and announces the 
   await expect(page.getByRole('dialog', { name: 'Transfer Host Role' })).toHaveCount(0)
   await expect(page.getByRole('status').filter({ hasText: 'Player Two is now the host.' })).toBeVisible()
   expect(room.game).toEqual(game)
+})
+
+
+for (const mobile of [false, true]) test(`round forfeits synchronize without eliminating the host (${mobile ? 'mobile landscape' : 'desktop'})`, async ({ browser }) => {
+  const context = await browser.newContext({ viewport: mobile ? { width: 667, height: 375 } : { width: 1280, height: 800 }, ...(mobile ? { isMobile: true, hasTouch: true, userAgent: iphone } : {}) })
+  try {
+    const room = setupRoom(0), sockets: {id:string;socket:WebSocketRoute}[] = []
+    const host = await context.newPage(), peer = await context.newPage()
+    await connect(host, room, 0, sockets); await connect(peer, room, 1, sockets)
+    for (const page of [host, peer]) {
+      await expect(page.getByRole('status').filter({ hasText: 'Player One (@player0001) forfeited the round (timeout, +40 points).' })).toBeVisible()
+      await expect(page.getByRole('dialog', { name: 'Transfer Host Role' })).toHaveCount(0)
+    }
+    await expect(host.getByText('You forfeited this round. You can play again next round.', { exact: true })).toBeVisible()
+    await expect(peer.locator('.opponent-row .forfeited-seat')).toBeVisible()
+    await expect(peer.locator('.opponent-row .forfeited-seat')).toContainText('Forfeited')
+    await peer.getByRole('button', { name: /^4 of hearts/ }).click()
+    await peer.getByRole('button', { name: /^(Drop 1 Card|Drop Selected Cards)$/ }).click()
+    await expect.poll(() => room.game!.current).toBe(2)
+    expect(room.game!.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
+    expect(room.hostId).toBe(room.members[0].id)
+  } finally { await context.close() }
 })

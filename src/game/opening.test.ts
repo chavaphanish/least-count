@@ -207,7 +207,7 @@ describe('standard discard-first opening', () => {
       if (timed)
         for (const state of [s, waiting]) {
           const done = applyAction(state, { type: 'timeout' }, 60100)
-          expect(done.players[s.current].eliminationReason).toBe('timeout')
+          expect(done.players[s.current]).toMatchObject({ forfeited: true, eliminated: false, score: 40 })
         }
     },
   )
