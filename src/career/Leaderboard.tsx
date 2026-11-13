@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
 import { PlayerIdentity } from './PlayerIdentity'
@@ -27,59 +27,25 @@ export function Leaderboard() {
     })
   const me = data?.me ?? pages[0]?.me
   const registered = auth.user?.player.accountType === 'registered'
-  const listRef = useRef<HTMLOListElement>(null)
-  // A tall screen can fit every fetched player and leave nothing to scroll, so the
-  // next server batch is pulled whenever the loaded list fits its visible container.
-  // ResizeObserver re-checks when the screen becomes visible or changes size.
-  const attempted = useRef<number | null>(null)
-  useEffect(() => {
-    const list = listRef.current
-    if (!list) return
-    const load = () => {
-      if (!list.clientHeight) return
-      if (!data?.more || loading || error || pages[offset] !== data) return
-      if (list.scrollHeight > list.clientHeight) {
-        attempted.current = null
-        return
-      }
-      if (attempted.current === offset) return
-      attempted.current = offset
-      setOffset(value => value + 10)
-    }
-    load()
-    const observer = new ResizeObserver(load)
-    observer.observe(list)
-    return () => observer.disconnect()
-  }, [data, loading, error, pages, offset])
   return (
     <section className="career-section leaderboard" aria-labelledby="leaderboards-title">
       <h1 id="leaderboards-title">Leaderboards</h1>
       <div className="leaderboard-layout">
-        <div className="leaderboard-side">
-          <div className="career-tabs" role="group" aria-label="Leaderboard scope">
-            {['global', 'buddies'].map((value) => (
-              <button
-                key={value}
-                aria-pressed={scope === value}
-                onClick={() => {
-                  if (value === scope) return
-                  setScope(value)
-                  setOffset(0)
-                  setPages({})
-                  attempted.current = null
-                }}
-              >
-                {value === 'global' ? 'Global Ranking' : 'Buddies Ranking'}
-              </button>
-            ))}
-          </div>
-          {me && (scope === 'global' || registered) && (
-            <p className="ranking-self">
-              Your {scope === 'global' ? 'Global' : 'Buddies'} Rank: #{me.rank} ·{' '}
-              {me.xp.toLocaleString()} XP · Level{' '}
-              {xpProgress(me.xp, me.levelBase).level}
-            </p>
-          )}
+        <div className="career-tabs" role="group" aria-label="Leaderboard scope">
+          {['global', 'buddies'].map((value) => (
+            <button
+              key={value}
+              aria-pressed={scope === value}
+              onClick={() => {
+                if (value === scope) return
+                setScope(value)
+                setOffset(0)
+                setPages({})
+              }}
+            >
+              {value === 'global' ? 'Global Ranking' : 'Buddies Ranking'}
+            </button>
+          ))}
         </div>
         <div className="leaderboard-results" aria-label="Player rankings">
           {scope === 'buddies' && !registered ? (
@@ -101,6 +67,13 @@ export function Leaderboard() {
               )}
               {(data || players.length > 0) && (
                 <>
+                  {me && (
+                    <p className="ranking-self">
+                      Your {scope === 'global' ? 'Global' : 'Buddies'} Rank: #
+                      {me.rank} · {me.xp.toLocaleString()} XP · Level{' '}
+                      {xpProgress(me.xp, me.levelBase).level}
+                    </p>
+                  )}
                   {scope === 'buddies' && players.length <= 1 && (
                     <p>
                       Add buddies to start competing with your friends.{' '}
@@ -112,7 +85,6 @@ export function Leaderboard() {
                   )}
                   <ol
                     key={scope}
-                    ref={listRef}
                     className="ranking-list"
                     aria-label="Player rankings"
                     tabIndex={0}

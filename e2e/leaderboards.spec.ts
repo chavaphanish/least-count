@@ -25,7 +25,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       await expect(page.locator('.ranking-list')).toContainText('18 wins')
       const first = (await global.boundingBox())!, second = (await buddies.boundingBox())!, results = (await page.locator('.leaderboard-results').boundingBox())!
       expect(first.width).toBeCloseTo(second.width, 0); expect(first.height).toBe(second.height)
-      if (!mobile) {
+      if (width > 700) {
         expect(second.y).toBeGreaterThan(first.y + first.height)
         expect(results.x).toBeGreaterThan(first.x + first.width)
         expect(results.width / first.width).toBeCloseTo(3, 0)
@@ -53,7 +53,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       await page.reload()
       await expect(page.getByRole('heading', { name: 'Leaderboards', exact: true })).toBeVisible()
     })
-    test('compact avatar-height rows fill the available height and scroll through every server batch', async ({ page }) => {
+    test('five compact avatar-height rows scroll through every server batch', async ({ page }) => {
       const fixture = await mock(page)
       const { me, friend } = fixture
       if (width === 667) fixture.setRelationship('incoming')
@@ -74,27 +74,21 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       })
       await page.goto('/#/leaderboards')
       const list = page.getByRole('list', { name: 'Player rankings', exact: true })
-      await expect(list.locator('li').first()).toBeVisible()
+      await expect(list.locator('li')).toHaveCount(10)
+      await expect(list).toBeVisible()
       await expect(page.getByRole('button', { name: /Previous players|Next players/ })).toHaveCount(0)
-      // Tall screens pull further batches eagerly; short ones load them by scrolling.
-      await expect(page.getByText(/Loading (more )?rankings/)).toHaveCount(0)
-      const initial = await list.locator('li').count()
-      expect(initial).toBeGreaterThanOrEqual(10)
-      await page.evaluate(() => document.fonts.ready)
       const layout = await list.evaluate(el => {
         const frame = el.getBoundingClientRect(), rows = [...el.querySelectorAll('li')].map(li => {
           const r = li.getBoundingClientRect(), avatar = li.querySelector('.profile-avatar')!.getBoundingClientRect()
           return { top: r.top, bottom: r.bottom, height: r.height, avatar: avatar.height }
         })
-        return { frame: { top: frame.top, bottom: frame.bottom, height: el.clientHeight, width: el.clientWidth }, rows, width: el.scrollWidth, viewportHeight: innerHeight, scrollHeight: el.scrollHeight, clientHeight: el.clientHeight }
+        return { frame: { top: frame.top, bottom: frame.bottom, height: el.clientHeight, width: el.clientWidth }, rows, width: el.scrollWidth, viewportHeight: innerHeight }
       })
-      const rowHeight = layout.rows[0].height
-      const visible = Math.floor(layout.frame.height / rowHeight)
-      expect(visible).toBeGreaterThanOrEqual(4)
+      expect(layout.frame.height).toBeCloseTo(layout.rows[0].height * 5, 0)
       expect(layout.rows[0].height - layout.rows[0].avatar).toBeGreaterThanOrEqual(0)
       expect(layout.rows[0].height - layout.rows[0].avatar).toBeLessThanOrEqual(6)
       expect(layout.width).toBe(layout.frame.width)
-      for (const row of layout.rows.slice(0, visible)) {
+      for (const row of layout.rows.slice(0, 5)) {
         expect(row.top).toBeGreaterThanOrEqual(layout.frame.top)
         expect(row.bottom).toBeLessThanOrEqual(layout.frame.bottom + 0.5)
       }
@@ -107,30 +101,20 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       const identity = list.locator('li').first().getByRole('link')
       await expect(identity).toHaveAccessibleName(`${'A'.repeat(80)} Player1 (@${longHandle})`)
       await expect(identity.locator('.identity-primary')).toHaveCSS('text-overflow', 'ellipsis')
-      if (layout.scrollHeight > layout.clientHeight) {
-        await list.evaluate(el => { el.scrollTop = el.scrollHeight })
-        await expect(list.locator('li')).toHaveCount(15)
-        await expect(list.locator('li').first()).not.toBeInViewport()
-      } else {
-        await expect(list.locator('li')).toHaveCount(15)
-      }
+      await list.evaluate(el => { el.scrollTop = el.scrollHeight })
+      await expect(list.locator('li')).toHaveCount(15)
+      await expect(list.locator('li').first()).not.toBeInViewport()
       await list.focus(); await page.keyboard.press('End')
-      await expect(list.locator('li').last()).toBeInViewport()
-      const revealed = await list.evaluate(el => {
-        const last = el.lastElementChild as HTMLElement
-        return Math.abs(el.scrollTop - (el.scrollHeight - el.clientHeight)) < 2 &&
-          last.getBoundingClientRect().bottom <= el.getBoundingClientRect().bottom + 0.5
-      })
-      expect(revealed).toBe(true)
+      await expect(list.locator('li').last()).toBeInViewport({ ratio: 1 })
       if (width === 1280 || width === 667) await page.screenshot({ path: `/tmp/yaydu-compact-rankings-${width}.png` })
       await page.getByRole('button', { name: 'Buddies Ranking', exact: true }).click()
       await expect(list.locator('li')).toHaveCount(1)
       await expect(list).toContainText('@buddyplayer')
       expect(await list.evaluate(el => el.scrollTop)).toBe(0)
       await page.getByRole('button', { name: 'Global Ranking', exact: true }).click()
-      await expect(list.locator('li')).toHaveCount(initial)
+      await expect(list.locator('li')).toHaveCount(10)
       await page.getByRole('button', { name: 'Global Ranking', exact: true }).click()
-      await expect(list.locator('li')).toHaveCount(initial)
+      await expect(list.locator('li')).toHaveCount(10)
     })
 
   })

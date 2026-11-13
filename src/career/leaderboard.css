@@ -1,37 +1,27 @@
 /* Scoped to rankings so other career screens retain their existing layout. */
 .leaderboard.career-section { display: flex; flex-direction: column; gap: 16px; }
 .leaderboard > h1 { margin: 0; font-family: 'Libre Caslon Display', Georgia, serif; font-size: clamp(26px, 4vw, 38px); font-weight: 400; }
-.leaderboard .leaderboard-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 20px; min-width: 0; min-height: 0; flex: 1 1 auto; }
-.leaderboard .leaderboard-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; align-self: start; }
-.leaderboard .career-tabs { flex-direction: column; flex-wrap: nowrap; gap: 12px; margin: 0; }
+.leaderboard .leaderboard-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 20px; min-width: 0; min-height: 0; }
+.leaderboard .career-tabs { flex-direction: column; flex-wrap: nowrap; gap: 12px; margin: 0; align-self: start; }
 .leaderboard .career-tabs button { flex: none; width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; font-size: 13px; }
 .leaderboard .leaderboard-results { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 .leaderboard-results > p { margin: 0; font-size: 13px; line-height: 1.5; }
 .leaderboard .ranking-list { margin: 0; }
-/* Mobile: controls and personal rank sit above the list, which takes the rest. */
 [data-mobile-device] .leaderboard.career-section { gap: 8px; }
-[data-mobile-device] .leaderboard .leaderboard-layout { flex: 1; gap: 10px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-[data-mobile-device] .leaderboard .leaderboard-side { gap: 6px; }
-[data-mobile-device] .leaderboard .career-tabs { flex-direction: row; }
-[data-mobile-device] .leaderboard .career-tabs button { flex: 1 1 0; width: auto; min-width: 0; }
+[data-mobile-device] .leaderboard .leaderboard-layout { flex: 1; gap: 12px; }
 [data-mobile-device] .leaderboard .leaderboard-results { gap: 4px; }
-[data-mobile-device] .leaderboard .ranking-list { flex: 1 1 0; min-height: 0; }
+[data-mobile-device] .leaderboard .ranking-list { flex: none; }
 [data-mobile-device] .leaderboard .ranking-self { font-size: 11px; }
 @media (max-width: 700px) {
-  .leaderboard .leaderboard-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .leaderboard .leaderboard-layout { grid-template-columns: minmax(0, 1fr); align-content: start; }
   .leaderboard .career-tabs { flex-direction: row; gap: 8px; }
   .leaderboard .career-tabs button { flex: 1; min-width: 0; }
 }
 
-/* Dedicated route: the screen fills the space between the header and the footer. */
-.mobile-shell:not([data-mobile-device]) .app-shell:has(> main > .startup-content > .leaderboard) { display: flex; flex-direction: column; min-height: 100dvh; }
-.mobile-shell:not([data-mobile-device]) .app-shell:has(> main > .startup-content > .leaderboard) > main { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.mobile-shell:not([data-mobile-device]) main:has(> .startup-content > .leaderboard) .leaderboard.career-section { flex: 1 1 auto; min-height: 0; margin: 18px 0 22px; }
-
-/* The list fills the remaining height; additional server batches are reached by scrolling. */
+/* Five avatar-height rows, with additional server batches reached by scrolling. */
 .leaderboard { --ranking-avatar: 48px; --ranking-row: calc(var(--ranking-avatar) + 4px); }
 .leaderboard .ranking-list {
-  flex: 1 1 0; min-height: 0; overflow-y: auto;
+  flex: none; max-height: calc(5 * var(--ranking-row)); overflow-y: auto;
   overscroll-behavior: contain; scrollbar-gutter: stable; padding: 0;
 }
 .leaderboard .ranking-list:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
