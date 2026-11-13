@@ -10,6 +10,7 @@ import {
   member,
   start,
   sweep,
+  reconcileHost,
   view,
 } from './room'
 import type { RoomRecord } from './room'
@@ -217,10 +218,14 @@ export class GameRoom {
   }
   private async persist(broadcast = true) {
     const r = this.record!
+    const hostBefore = JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id])
+    reconcileHost(r, Date.now())
+    if (hostBefore !== JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id])) broadcast = true
     if (broadcast) r.revision++
     await this.ctx.storage.put({ room: r, seen: this.seen })
     const now = Date.now()
     const deadlines: number[] = []
+    if (r.hostTransfer) deadlines.push(r.hostTransfer.deadline)
     const pendingCareer = r.career?.eligible && r.career.revision !== r.career.syncedRevision
     if (pendingCareer) deadlines.push(now + 60_000)
     if (r.game?.deadline !== null && r.game?.deadline !== undefined)
@@ -429,6 +434,7 @@ export class GameRoom {
         }
         const m = member(r, auth.playerId)
         if (m.left) throw new ApiError(403, 'Rejoin before playing.')
+        const beforeSweepState = JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id, r.game?.eventSequence, r.members.map(m => [m.id, m.connected, m.left])])
         m.lastSeen = Date.now()
         m.connected = true
         m.disconnectedAt = null
@@ -438,7 +444,7 @@ export class GameRoom {
           if (!r.members.some((m) => m.id === id))
             await this.directory('/untrack', { id, roomId: r.id })
         if (data.type === 'ping') {
-          await this.persist(false)
+          await this.persist(beforeSweepState !== JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id, r.game?.eventSequence, r.members.map(m => [m.id, m.connected, m.left])]))
           ws.send(JSON.stringify({ type: 'pong', serverNow: Date.now() }))
           return
         }

@@ -112,10 +112,15 @@ export type GameView = {
   events: GameEvent[]
   log: string[]
 }
+export const HOST_TRANSFER_MS = 30_000
+export type HostTransfer = { id: string; fromId: string; deadline: number }
+export type HostChange = { id: string; playerId: string; at: number }
 export type RoomView = {
   id: string
   code: string
   hostId: string
+  hostTransfer?: HostTransfer & { eligibleIds: string[] }
+  hostChange?: HostChange
   settings: RoomSettings
   status: 'waiting' | 'in-game' | 'closed'
   members: Member[]
@@ -125,7 +130,9 @@ export type RoomView = {
 }
 export type ClientGameAction = {
   type:
-    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round'
+    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round' | 'transfer-host'
+  targetId?: string
+  transferId?: string
   cardIds?: string[]
   source?: 'pile' | 'discard'
   cardId?: string
