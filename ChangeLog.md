@@ -8,7 +8,18 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
-## 1.1.6 — 2026-11-12
+## 1.1.8 — 2026-11-14
+
+- **Round penalties (#38):** successful Declare Least losses are now capped at 40 round penalty points per player, matching the failed-Least penalty; the zero-point tied-Least example was corrected accordingly (`engine.ts`, `docs/rule-clarifications.md`, `docs/RULEBOOK.md`).
+- **Host transfer (#39):** when the host is eliminated, hosting transfers to another seat without pausing gameplay (`server/room.ts`, `server/objects.ts`).
+- **Timeout forfeits (#40):** players who time out in a round are forfeited for that round with a single 40-point penalty instead of the legacy timeout-elimination flow; career metrics now track round timeout forfeits separately from score eliminations (`server/room.ts`, `docs/player-careers.md`).
+- **Verification:** typecheck, unit tests, and production build pass on the merged result.
+
+## 1.1.7 — 2026-11-13
+
+- Released for a few minutes as a leaderboard layout optimization (dynamic scrollable list, personal rank in the left column) and then fully reverted on request; no lasting changes. The version number is skipped.
+
+## 1.1.6 - 2026-11-12
 
 - **Update screen:** the update button is wider (min 320px), centered, no longer autofocuses (removing the golden focus frame), and its label reads **"Update to latest version"** (`PwaStatus.tsx`, `branding.css`); the e2e was updated to the new accessible name.
 - **Verification:** typecheck, 330 unit tests, production build, the real service-worker update lifecycle e2e, and a visual screenshot review pass.
