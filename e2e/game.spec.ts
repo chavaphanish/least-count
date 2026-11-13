@@ -770,3 +770,26 @@ test('active opponent and countdown stay in the seat strip after a phone resize'
   await expect(page.getByRole('region', { name: 'Turn actions' }).locator('button')).toHaveCount(0)
   await noOverflow(page)
 })
+
+
+for (const successful of [true, false]) test(`Declare Least scoring boundaries reach the round summary (successful=${successful})`, async ({ page }) => {
+  const game = fixture(5)
+  game.players[0].hand = [card('4')]
+  game.players[1].hand = [card(successful ? '8' : '2')]
+  game.players[2].hand = [card('K'), card('Q'), card('J'), card('8'), card('A')]
+  game.players[3].hand = [card('K'), card('Q'), card('J'), card('10')]
+  game.players[4].hand = [card('K'), card('Q'), card('J'), card('10'), card('A')]
+  game.players.forEach(player => { player.score = 20 })
+  const totals = [4, successful ? 8 : 2, 39, 40, 41]
+  const penalties = successful ? [0, 8, 39, 40, 40] : [40, 0, 0, 0, 0]
+  await load(page, game)
+  await page.getByRole('button', { name: 'Declare Least', exact: true }).click()
+  const rows = page.getByRole('table').locator('tbody tr')
+  await expect(rows).toHaveCount(5)
+  for (let index = 0; index < totals.length; index++) {
+    await expect(rows.nth(index).locator('td')).toHaveText([String(totals[index]), `+${penalties[index]}`, String(20 + penalties[index]), 'Active'])
+  }
+  const settled = await saved(page)
+  expect(settled.players.map(player => player.score)).toEqual(penalties.map(penalty => 20 + penalty))
+  expect(settled.result!.winners).toEqual([successful ? 'p0' : 'p1'])
+})

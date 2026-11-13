@@ -95,3 +95,10 @@ The action bar uses the current validated turn phase. On a normal turn, select c
 During a 7 penalty response, only playing 7s or drawing the current penalty is offered. Without a 7, the existing engine draws the penalty automatically. Match and Drop, playing 7s, and required closed replacements without an eligible open choice still complete automatically under the existing rules. Waiting players see the active player's name instead of gameplay buttons.
 
 The countdown appears beside the active player's profile, with a warning at 15 seconds and a stronger warning at 5. Untimed games hide the countdown. The deadline remains authoritative and spans the Drop and replacement choice; selection, animations, refreshes, and reconnection never extend it. Dealing and mandatory transitions execute synchronously before control is returned, without waiting on client animation acknowledgements.
+
+
+## Declare Least round penalties
+
+A failed Least declaration gives only the declarer **40 penalty points**. Every other active player receives **0**, regardless of hand value. A successful Least declaration gives the declarer **0**; each other active player receives **min(hand value, 40)**. Add these penalties to cumulative scores and apply the existing elimination cutoff. Hand values themselves remain unchanged in round reports and statistics.
+
+Declaration eligibility, success conditions, zero-point ties, round winners, exhaustion scoring, and all other mechanics remain unchanged. Zero penalty points alone do not make an opponent a round winner after a failed declaration.

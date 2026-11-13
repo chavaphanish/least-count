@@ -28,7 +28,7 @@ These transitions do not make older drop groups available again. They do not add
 
 **Confirmed:** A player who empties their hand must wait until the beginning of their next normal turn and then declare Least. There is no option to pass. Emptying the hand does not automatically end the round. The restriction on Least during an active 7 penalty remains in effect.
 
-When a zero-point Least is tied by other zero-point hands, the caller and all other zero-point players are tied **round winners**, each receiving zero round penalty points. The caller does not receive the failed-Least penalty of 40 points for this zero-point tie. Other active players receive their hand totals as round penalty points under the existing scoring rules.
+When a zero-point Least is tied by other zero-point hands, the caller and all other zero-point players are tied **round winners**, each receiving zero round penalty points. The caller does not receive the failed-Least penalty of 40 points for this zero-point tie. Other active players receive their hand totals as round penalty points, capped at 40 points per player.
 
 **Example:** A empties their hand through Match and Drop. On A's next normal turn, A must declare Least. If B also has a hand total of zero, both A and B receive zero round penalty points. If C has a hand total of 8, C receives 8 round penalty points. The tied round result does not itself end the match.
 

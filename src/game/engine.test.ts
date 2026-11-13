@@ -397,9 +397,34 @@ describe('Show, scoring, and ordinary rounds', () => {
       s.players[2].hand = [card('K')]
       const next = act(s, { type: 'show', playerId: 'p0' })
       expect(next.result!.successful).toBe(false)
-      expect(next.result!.scores.map((p) => p.penalty)).toEqual([40, 0, 10])
+      expect(next.result!.scores.map((p) => p.penalty)).toEqual([40, 0, 0])
     },
   )
+
+  it.each([true, false])('applies Declare Least penalties at 39, 40 and 41 hand points (successful=%s)', (successful) => {
+    const s = fixture(5)
+    s.players[0].hand = [card('4')]
+    s.players[1].hand = [card(successful ? '8' : '2')]
+    s.players[2].hand = [card('K'), card('Q'), card('J'), card('8'), card('A')]
+    s.players[3].hand = [card('K'), card('Q'), card('J'), card('10')]
+    s.players[4].hand = [card('K'), card('Q'), card('J'), card('10'), card('A')]
+    const prior = [60, 50, 60, 60, 59]
+    s.players.forEach((p, index) => { p.score = prior[index] })
+    const penalties = successful ? [0, 8, 39, 40, 40] : [40, 0, 0, 0, 0]
+    const next = act(s, { type: 'show', playerId: 'p0' })
+    expect(next.result!.successful).toBe(successful)
+    expect(next.result!.scores.map(p => p.total)).toEqual([4, successful ? 8 : 2, 39, 40, 41])
+    expect(next.result!.scores.map(p => p.penalty)).toEqual(penalties)
+    const cumulative = prior.map((score, index) => score + penalties[index])
+    expect(next.players.map(p => p.score)).toEqual(cumulative)
+    expect(next.result!.scores.map(p => p.score)).toEqual(cumulative)
+    expect(next.players.filter(p => p.eliminated).map(p => p.id)).toEqual([successful ? 'p3' : 'p0'])
+    expect(next.result!.winners).toEqual([successful ? 'p0' : 'p1'])
+    const completed = next.events!.find(event => event.type === 'ROUND_COMPLETED')!
+    expect(completed).toMatchObject({ scores: next.result!.scores.map(({id,name,total,penalty,score}) => ({id,name,total,penalty,score})) })
+    const round = act(next, { type: 'next-round' }, 3000)
+    expect(round.players.map(p => p.score)).toEqual(cumulative)
+  })
 
   it('awards zero to every tied lowest opponent on an unsuccessful Show', () => {
     const s = fixture()

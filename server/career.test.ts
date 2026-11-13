@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createRoom, join, start, gameAction, sweep, leave } from './room'
+import { createRoom, join, start, gameAction, sweep, leave, view } from './room'
 import { observeCareer, syncCareer, careerOriginAllowed } from './career'
 import type { Identity } from './types'
 import { createCard } from '../src/game/cards'
@@ -253,4 +253,43 @@ it('counts zero-value cards under the actual round indicator', () => {
     1000,
   )
   expect(r.career!.players[0].stats.zeroCardsDropped).toBe(1)
+})
+
+
+it.each([39, 40, 41])('propagates a successful Least with hand total %i through server views, history and career statistics', total => {
+  const r = fixture(3)
+  r.game!.players[0].hand = [card('A')]
+  r.game!.players[1].hand = [card('8')]
+  const hand = [card('K'), card('Q'), card('J')]
+  hand.push(...(total === 39 ? [card('8'), card('A')] : [card('10'), ...(total === 41 ? [card('A')] : [])]))
+  r.game!.players[2].hand = hand
+  r.game!.players[2].score = 20
+  gameAction(r, ids[0], { type: 'show' }, 1000)
+  const penalty = Math.min(total, 40)
+  expect(r.game!.result!.scores[2]).toMatchObject({ total, penalty, score: 20 + penalty })
+  expect(r.career!.rounds[0].scores[2]).toMatchObject({ total, penalty, score: 20 + penalty })
+  expect(r.career!.players[2].stats).toMatchObject({ roundPenalties: penalty, highestHand: total })
+  for (const id of ids) {
+    const projection = view(r, id, 1000).game!
+    expect(projection.result!.scores[2]).toMatchObject({ total, penalty, score: 20 + penalty })
+    expect(projection.players[2].score).toBe(20 + penalty)
+  }
+})
+
+it.each([39, 40, 41])('records only the failed declarer penalty when another opponent holds %i points', total => {
+  const r = fixture(3)
+  r.game!.players[0].hand = [card('4')]
+  r.game!.players[1].hand = [card('2')]
+  r.game!.players[2].hand = [card('K'), card('Q'), card('J'), ...(total === 39 ? [card('8'), card('A')] : [card('10'), ...(total === 41 ? [card('A')] : [])])]
+  r.game!.players[2].score = 99
+  gameAction(r, ids[0], { type: 'show' }, 1000)
+  expect(r.game!.result!.scores.map(score => score.penalty)).toEqual([40, 0, 0])
+  expect(r.career!.rounds[0].scores.map(score => score.penalty)).toEqual([40, 0, 0])
+  expect(r.career!.players.map(p => p.stats.roundPenalties)).toEqual([40, 0, 0])
+  expect(r.career!.players[2].stats.highestHand).toBe(total)
+  for (const id of ids) {
+    const projection = view(r, id, 1000).game!
+    expect(projection.result!.scores.map(score => score.penalty)).toEqual([40, 0, 0])
+    expect(projection.players[2]).toMatchObject({ score: 99, eliminated: false })
+  }
 })
