@@ -298,3 +298,10 @@ Set runtime variables using Cloudflare configuration for both deployment and pre
 Substantial changes use pull requests; this feature must not merge automatically. Small trivial updates may go directly to `main` when authorized.
 
 Registered player identities display first and last name together with @username; legacy accounts without names use their username until completed in My Profile. Email and authentication data remain private. Apply the additive [public identity migration](supabase/migrations/202611100002_public_player_names.sql) after the signup migration; it changes no stored accounts or career records.
+
+
+### Host handover after elimination
+
+When an online host is eliminated and several players remain, only that host sees a **Transfer Host Role** popup with the remaining players' public identities and photos. They can select one connected, active player. The Worker validates the selection and broadcasts the new host to all clients; the eliminated host remains a spectator. Turns and countdowns keep running while the popup is open.
+
+If the host disconnects, leaves, loses their session, or does not select within **30 seconds**, the server selects the next eligible player clockwise. A sole connected active survivor becomes host automatically. Offline/eliminated players cannot receive the role. Pending handovers and deadlines survive Worker restarts; duplicate actions cannot perform the same handover twice. With no connected active candidate the role stays unassigned until one reconnects, without changing game completion/scoring logic. Lobby host-transfer behavior remains unchanged.

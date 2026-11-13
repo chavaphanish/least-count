@@ -14,11 +14,14 @@ import {
 import type { Action, GameState } from '../src/game/engine'
 import {
   HEARTBEAT_MS,
+  HOST_TRANSFER_MS,
   LOBBY_GRACE_MS,
   roomSettings,
 } from '../src/shared/multiplayer'
 import type {
   ClientGameAction,
+  HostTransfer,
+  HostChange,
   Member,
   PublicPlayer,
   RoomSettings,
@@ -30,6 +33,8 @@ export type RoomRecord = {
   id: string
   code: string
   hostId: string
+  hostTransfer?: HostTransfer
+  hostChange?: HostChange
   settings: RoomSettings
   status: RoomView['status']
   members: Member[]
@@ -103,7 +108,37 @@ export function join(r: RoomRecord, identity: Identity, now: number) {
     left: false,
   })
 }
-export function transferHost(r: RoomRecord) {
+export function eligibleHosts(r: RoomRecord, now: number) {
+  if (!r.game) return []
+  const index = r.game.players.findIndex(p => p.id === r.hostId)
+  const ordered = [...r.game.players.slice(index + 1), ...r.game.players.slice(0, index + 1)]
+  return ordered.filter(p => !p.eliminated && r.members.some(m => m.id === p.id &&
+    m.connected && !m.left && m.authExpiresAt > now && now - m.lastSeen < HEARTBEAT_MS))
+}
+function assignHost(r: RoomRecord, id: string, now: number) {
+  if (r.hostId !== id && id) r.hostChange = { id: r.hostTransfer?.id ?? crypto.randomUUID(), playerId: id, at: now }
+  r.hostId = id
+  delete r.hostTransfer
+}
+/** Room administration only: never alters the game, scores, ordering or deadlines. */
+export function reconcileHost(r: RoomRecord, now: number) {
+  if (!r.game || r.status === 'closed') return
+  const active = r.game.players.filter(p => !p.eliminated)
+  const host = r.game.players.find(p => p.id === r.hostId)
+  const seat = r.members.find(m => m.id === r.hostId)
+  if (host && !host.eliminated && seat && !seat.left) return
+  const eligible = eligibleHosts(r, now)
+  if (!active.length || !eligible.length) { assignHost(r, '', now); return }
+  const connectedHost = seat && seat.connected && !seat.left && seat.authExpiresAt > now && now - seat.lastSeen < HEARTBEAT_MS
+  if (active.length === 1 || !connectedHost || !host || !r.hostId ||
+    (r.hostTransfer && r.hostTransfer.deadline <= now)) {
+    assignHost(r, eligible[0].id, now)
+    return
+  }
+  if (!r.hostTransfer) r.hostTransfer = { id: crypto.randomUUID(), fromId: r.hostId, deadline: now + HOST_TRANSFER_MS }
+}
+export function transferHost(r: RoomRecord, now = Date.now()) {
+  if (r.game) { reconcileHost(r, now); return }
   if (r.members.some((m) => m.id === r.hostId && !m.left)) return
   r.hostId =
     [...r.members]
@@ -121,7 +156,7 @@ export function leave(r: RoomRecord, id: string, now: number) {
     m.disconnectedAt = now
     m.left = true
   }
-  transferHost(r)
+  transferHost(r, now)
   if (!r.members.length) r.status = 'closed'
   if (r.game) observeCareer(r, r.game, r.game, now, false)
 }
@@ -142,7 +177,7 @@ export function sweep(r: RoomRecord, now: number) {
     )
     if (!r.members.some((m) => m.id === r.hostId)) {
       r.hostId = ''
-      transferHost(r)
+      transferHost(r, now)
     }
     if (!r.members.length) r.status = 'closed'
   }
@@ -153,6 +188,7 @@ export function sweep(r: RoomRecord, now: number) {
     r.game.deadline <= now
   )
     replaceGame(r, applyAction(r.game, { type: 'timeout' }, now, secureRandom), now)
+  reconcileHost(r, now)
 }
 export function start(
   r: RoomRecord,
@@ -209,9 +245,19 @@ export function gameAction(
   const a = raw as ClientGameAction
   if (!a || typeof a !== 'object')
     throw new ApiError(400, 'Choose a game action.')
+  if (a.type === 'transfer-host') {
+    reconcileHost(r, now)
+    if (id !== r.hostId) throw new ApiError(403, 'Only the eliminated host can transfer the host role.')
+    if (!r.hostTransfer || a.transferId !== r.hostTransfer.id)
+      throw new ApiError(409, 'This host transfer is no longer pending.')
+    if (typeof a.targetId !== 'string' || !eligibleHosts(r, now).some(p => p.id === a.targetId))
+      throw new ApiError(400, 'Select a connected, active player.')
+    assignHost(r, a.targetId, now)
+    return
+  }
   let action: Action
   if (a.type === 'next-round') {
-    if (id !== r.hostId)
+    if (id !== r.hostId || r.hostTransfer)
       throw new ApiError(403, 'Only the host can advance a completed round.')
     action = { type: 'next-round' }
   } else if (a.type === 'show' || a.type === 'accept-penalty')
@@ -257,6 +303,8 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
     id: r.id,
     code: r.code,
     hostId: r.hostId,
+    ...(r.hostTransfer ? { hostTransfer: { id: r.hostTransfer.id, fromId: r.hostTransfer.fromId, deadline: r.hostTransfer.deadline, eligibleIds: eligibleHosts(r, now).map(p => p.id) } } : {}),
+    ...(r.hostChange ? { hostChange: { id: r.hostChange.id, playerId: r.hostChange.playerId, at: r.hostChange.at } } : {}),
     settings: r.settings,
     status: r.status,
     revision: r.revision,
@@ -303,4 +351,5 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
 function replaceGame(r: RoomRecord, next: GameState, now: number, manual = false) {
   observeCareer(r, r.game, next, now, manual)
   r.game = next
+  reconcileHost(r, now)
 }

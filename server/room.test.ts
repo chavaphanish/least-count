@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { createRoom, gameAction, join, leave, start, sweep, view } from './room'
+import { createRoom, gameAction, join, leave, start, sweep, view, reconcileHost } from './room'
 import {
   DEFAULT_ROOM_SETTINGS,
   LOBBY_GRACE_MS,
+  HOST_TRANSFER_MS,
+  HEARTBEAT_MS,
   roomCode,
   roomSettings,
   avatarType,
@@ -294,4 +296,107 @@ it('rejects forged 7 pickups after a full cycle and synchronizes the automatic r
   expect(own.drawCount).toBe(peer.drawCount)
   expect(own.pickup).toEqual([{...createCard('clubs','5'),id:'five-0'}])
   expect(peer.pickup).toEqual(own.pickup)
+})
+
+
+function pendingHost(count = 4) {
+  const r = full(count, false)
+  start(r, r.hostId, 0, () => .6)
+  r.game!.phase = 'turn'; r.game!.sevens = null; r.game!.current = 0
+  r.game!.indicator = createCard('spades', '9')
+  r.game!.players.forEach((p, index) => { p.hand = [createCard('clubs', index === 0 ? '4' : index === 1 ? '2' : 'K')] })
+  r.game!.players[0].score = 60
+  gameAction(r, r.hostId, { type: 'show' }, 1)
+  return r
+}
+describe('eliminated host handover', () => {
+  it('requires a server-issued transfer, retains the spectator and updates every projection without changing the game', () => {
+    const r = pendingHost(), old = r.hostId, target = r.members[2].id
+    expect(r.hostTransfer).toMatchObject({ fromId: old, deadline: 1 + HOST_TRANSFER_MS })
+    expect(() => gameAction(r, old, { type: 'next-round' }, 2)).toThrow(/host/)
+    const before = structuredClone(r.game), order = r.members.map(m => m.id), transferId = r.hostTransfer!.id
+    gameAction(r, old, { type: 'transfer-host', transferId, targetId: target }, 2)
+    expect(r.hostId).toBe(target); expect(r.hostTransfer).toBeUndefined()
+    expect(r.game).toEqual(before); expect(r.members.map(m => m.id)).toEqual(order)
+    expect(r.game!.players[0].eliminated).toBe(true); expect(r.members[0].left).toBe(false)
+    for (const m of r.members) expect(view(r, m.id, 2)).toMatchObject({ hostId: target, hostChange: { id: transferId, playerId: target, at: 2 } })
+    const once = structuredClone(r.hostChange)
+    expect(() => gameAction(r, old, { type: 'transfer-host', transferId, targetId: r.members[1].id }, 3)).toThrow(/host/)
+    reconcileHost(r, 3); expect(r.hostChange).toEqual(once)
+    expect(() => gameAction(r, old, { type: 'next-round' }, 3)).toThrow(/host/)
+    gameAction(r, target, { type: 'next-round' }, 3)
+    expect(r.game!.round).toBe(2)
+  })
+  it('rejects other actors, forged transfer IDs and unsolicited transfers', () => {
+    const r = pendingHost(), transferId = r.hostTransfer!.id
+    expect(() => gameAction(r, r.members[1].id, { type: 'transfer-host', transferId, targetId: r.members[2].id }, 2)).toThrow(/host/)
+    expect(() => gameAction(r, r.hostId, { type: 'transfer-host', transferId: 'forged', targetId: r.members[2].id }, 2)).toThrow(/pending/)
+    const live = full(3, false); start(live, live.hostId, 0, () => .6)
+    expect(() => gameAction(live, live.hostId, { type: 'transfer-host', targetId: live.members[1].id }, 2)).toThrow(/pending/)
+  })
+  it.each(['eliminated', 'disconnected', 'left', 'expired', 'stale', 'self', 'unknown'])('rejects a %s target', kind => {
+    const r = pendingHost(), target = r.members[2]
+    if (kind === 'eliminated') r.game!.players[2].eliminated = true
+    if (kind === 'disconnected') target.connected = false
+    if (kind === 'left') target.left = true
+    if (kind === 'expired') target.authExpiresAt = 1
+    if (kind === 'stale') target.lastSeen = -HEARTBEAT_MS
+    expect(() => gameAction(r, r.hostId, { type: 'transfer-host', transferId: r.hostTransfer!.id, targetId: kind === 'self' ? r.hostId : kind === 'unknown' ? 'unknown' : target.id }, 2)).toThrow(/connected, active/)
+  })
+  it('assigns the next eligible clockwise player after the selection deadline exactly once', () => {
+    const r = pendingHost(), transfer = { ...r.hostTransfer! }, before = structuredClone(r.game)
+    r.members[1].connected = false
+    sweep(r, transfer.deadline)
+    expect(r.hostId).toBe(r.members[2].id); expect(r.hostTransfer).toBeUndefined()
+    expect(r.hostChange!.id).toBe(transfer.id); expect(r.game).toEqual(before)
+    const change = structuredClone(r.hostChange)
+    sweep(r, transfer.deadline + 1); expect(r.hostChange).toEqual(change)
+  })
+  it.each(['disconnect', 'leave', 'expiry'])('falls back when the eliminated host loses availability: %s', reason => {
+    const r = pendingHost(), old = r.hostId
+    if (reason === 'disconnect') r.members[0].connected = false
+    if (reason === 'expiry') r.members[0].authExpiresAt = 2
+    if (reason === 'leave') leave(r, old, 2)
+    else sweep(r, 2)
+    expect(r.hostId).toBe(r.members[1].id); expect(r.hostTransfer).toBeUndefined()
+  })
+  it('opens one prompt for simultaneous eliminations, or automatically selects the sole survivor', () => {
+    for (const count of [3, 5]) {
+      const r = full(count, false); start(r, r.hostId, 0, () => .6)
+      r.game!.phase = 'turn'; r.game!.sevens = null; r.game!.current = 1; r.game!.indicator = createCard('spades', '9')
+      r.game!.players.forEach((p, i) => { p.hand = [createCard('clubs', i === 1 ? 'A' : 'K')]; p.score = i === 0 || i === 2 ? 90 : 0 })
+      gameAction(r, r.members[1].id, { type: 'show' }, 1)
+      expect(r.game!.players.filter(p => p.eliminated)).toHaveLength(2)
+      if (count === 3) { expect(r.hostId).toBe(r.members[1].id); expect(r.hostTransfer).toBeUndefined() }
+      else { expect(r.hostTransfer!.fromId).toBe(r.members[0].id); expect(view(r, r.hostId, 1).hostTransfer!.eligibleIds).toEqual([r.members[1].id, r.members[3].id, r.members[4].id]) }
+      const state = JSON.stringify([r.hostId, r.hostTransfer, r.hostChange])
+      sweep(r, 2); sweep(r, 3)
+      expect(JSON.stringify([r.hostId, r.hostTransfer, r.hostChange])).toBe(state)
+    }
+  })
+  it('keeps gameplay and its normal deadline progression running during timeout-triggered selection', () => {
+    const r = full(4); start(r, r.hostId, 0, () => .6)
+    r.game!.phase = 'turn'; r.game!.sevens = null; r.game!.current = 0; r.game!.deadline = 1000
+    r.game!.discards = [[{ ...createCard('clubs', '4'), id: 'previous-four' }]]
+    r.game!.players[1].hand = [{ ...createCard('hearts', '4'), id: 'next-four' }, { ...createCard('clubs', '5'), id: 'next-five' }]
+    sweep(r, 1000)
+    expect(r.game!.players[0].eliminationReason).toBe('timeout')
+    const pending = { ...r.hostTransfer! }
+    expect(r.game!.current).toBe(1); expect(r.game!.deadline).toBe(61000)
+    gameAction(r, r.members[1].id, { type: 'discard', cardIds: ['next-four'] }, 2000)
+    expect(r.game!.current).toBe(2); expect(r.game!.deadline).toBe(62000)
+    expect(r.hostTransfer).toEqual(pending)
+  })
+  it('does not appoint spectators/offline players, and recovers when an active player reconnects', () => {
+    const r = pendingHost()
+    r.members.slice(1).forEach(m => { m.connected = false })
+    reconcileHost(r, 2)
+    expect(r.hostId).toBe(''); expect(r.hostTransfer).toBeUndefined()
+    r.members[2].connected = true; r.members[2].lastSeen = 3
+    reconcileHost(r, 3); expect(r.hostId).toBe(r.members[2].id)
+    r.game!.players.forEach(p => { p.eliminated = true })
+    const game = structuredClone(r.game)
+    reconcileHost(r, 4)
+    expect(r.hostId).toBe(''); expect(r.hostTransfer).toBeUndefined(); expect(r.game).toEqual(game)
+  })
 })

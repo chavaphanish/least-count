@@ -1,3 +1,4 @@
+import type { Fetcher, DurableObjectNamespace } from '@cloudflare/workers-types'
 import type { PublicPlayer } from '../src/shared/multiplayer'
 export interface Env {
   ASSETS: Fetcher

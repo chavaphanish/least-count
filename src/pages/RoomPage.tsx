@@ -1,3 +1,4 @@
+import { HostTransferDialog } from '../components/HostTransferDialog'
 import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
 import { ResultScores } from '../components/ResultScores'
@@ -103,7 +104,7 @@ export function RoomPage({
         </div>
       </section>
     )
-  const host = room.hostId === id
+  const host = room.hostId === id && !room.hostTransfer
   const connected = room.members.filter((m) => m.connected && !m.left).length
   const full =
     room.members.length === room.settings.maxPlayers &&
@@ -147,6 +148,10 @@ export function RoomPage({
       data-hand-count={g?.hand.length}
       className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
+      {room.hostTransfer?.fromId === id && <HostTransferDialog key={room.hostTransfer.id} room={room} now={now} busy={busy} live={connection === 'live'} error={error} send={send} />}
+      {room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 && room.members.some(member => member.id === room.hostChange!.playerId) && (
+        <p className="host-transfer-notice" role="status">{playerIdentity(room.members.find(member => member.id === room.hostChange!.playerId)!).primary} is now the host.</p>
+      )}
       <div className="room-heading">
         <div>
           <p className="eyebrow">
@@ -180,7 +185,7 @@ export function RoomPage({
           }))}
         >
           <p>
-            Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
+            Host: {room.members.find(member => member.id === room.hostId) ? playerIdentity(room.members.find(member => member.id === room.hostId)!).primary : 'Waiting for an active player'} · Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
             {connection === 'live'
               ? 'Connected'
               : connection === 'error'
@@ -367,7 +372,7 @@ export function RoomPage({
                     score={p.score}
                     active={p.id === g.currentPlayerId && !final}
                     eliminated={p.eliminated}
-                    status={p.accountType === 'guest' ? 'Guest' : 'Registered'}
+                    status={p.id === room.hostId ? 'Host' : p.accountType === 'guest' ? 'Guest' : 'Registered'}
                     timer={
                       !final && p.id === g.currentPlayerId ? (
                         <TurnTimer seconds={seconds} name={playerIdentity(p).label} />
