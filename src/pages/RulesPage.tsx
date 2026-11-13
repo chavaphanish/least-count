@@ -26,11 +26,11 @@ const rules = [
   },
   {
     title: 'Declare Least at five or less',
-    text: 'Declare Least at the beginning of your normal turn, before dropping. You cannot call it during a 7 penalty. Emptying your hand does not end the round: you must declare Least on your next normal turn, without passing. A unique lowest Least scores 0; other players score their totals. A failed positive-point Least costs the caller 40 instead of their hand value; lowest opponents score 0 and the rest score their totals.',
+    text: 'Declare Least at the beginning of your normal turn, before dropping. You cannot call it during a 7 penalty. Emptying your hand does not end the round: you must declare Least on your next normal turn, without passing. A successful Least scores 0; each other player scores their hand total capped at 40. A failed Least costs only the caller 40; every other player scores 0.',
   },
   {
     title: 'Zero ties share the round',
-    text: 'If the caller has 0 and others also have 0, all zero-point players receive 0 penalty points. The caller does not get 40. Other players score their hand totals. Positive-point ties still fail Least. Opponents’ individual cards are never revealed, including at round results.',
+    text: 'If the caller has 0 and others also have 0, all zero-point players receive 0 penalty points. The caller does not get 40. Other players score their hand totals capped at 40. Positive-point ties still fail Least. Opponents’ individual cards are never revealed, including at round results.',
   },
   {
     title: 'Stay below 100',

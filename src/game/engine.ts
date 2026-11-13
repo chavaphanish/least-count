@@ -215,15 +215,14 @@ function settle(
     if (reason === 'exhaustion')
       penalty = totals[index] === minimum ? 0 : totals[index]
     else if (successful)
-      penalty = index === callerIndex || totals[index] === 0 ? 0 : totals[index]
-    else
-      penalty =
-        index === callerIndex
-          ? 40
-          : totals[index] === opponentMinimum
-            ? 0
-            : totals[index]
-    if (penalty === 0) winners.push(player.id)
+      penalty = index === callerIndex ? 0 : Math.min(totals[index], 40)
+    else penalty = index === callerIndex ? 40 : 0
+    // A failed declaration waives every opponent's penalty, but does not
+    // change which lowest-hand opponents won the round.
+    const won = reason === 'show' && !successful
+      ? index !== callerIndex && totals[index] === opponentMinimum
+      : penalty === 0
+    if (won) winners.push(player.id)
     player.score += penalty
     if (player.score >= gameSettings(s).eliminationThreshold) {
       player.eliminated = true
