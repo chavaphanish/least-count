@@ -8,6 +8,14 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.7 — 2026-11-13
+
+- **Leaderboard layout optimization:** the player list no longer caps at 5 rows — it fills the remaining height of the leaderboard container and scrolls vertically (`overflow-y: auto`), showing as many complete compact rows as fit; more server batches keep loading while scrolled to the bottom, and on tall screens where every fetched player already fits, the next batch is pulled automatically so the list is never silently limited (`leaderboard.css`, `Leaderboard.tsx`).
+- **Personal rank moved:** "Your Global/Buddies Rank: …" now sits directly below the Global/Buddies Ranking buttons in the left column instead of above the player list, keeps the gold theme styling, and follows the selected scope (`Leaderboard.tsx`).
+- **Space usage:** on the dedicated `#/leaderboards` route the screen now flex-fills the space between the header and the footer (no whole-page scrolling); on mobile the scope buttons and personal rank stack above the full-width list, which takes the remaining height (`leaderboard.css`, `app-mobile.css` rules untouched elsewhere).
+- **Tests:** `leaderboards.spec.ts` geometry assertions updated to the dynamic fill (rows-within-frame instead of the fixed 5-row height, container-relative final-scroll check) and `app-layout.spec.ts` ranking-scroll assertions relaxed to a 0.99 viewport ratio to tolerate sub-pixel edge rendering; eager loading covered for tall viewports.
+- **Verification:** typecheck, 344 unit tests, production build, and the leaderboards, career, lounge-navigation, public-identity, orientation-guard, ux-audit, ux-interactions, app-layout and dual-brand e2e suites pass (remaining failures — `ux-audit` public profile heading, `app-layout` keyboard signup, `ux-interactions` 667px hand + profile draft, `career` public profiles — were each confirmed failing on clean `main` and are pre-existing). Desktop (1440×900) and mobile (844×390, 667×375) screenshots reviewed.
+
 ## 1.1.6 — 2026-11-12
 
 - **Update screen:** the update button is wider (min 320px), centered, no longer autofocuses (removing the golden focus frame), and its label reads **"Update to latest version"** (`PwaStatus.tsx`, `branding.css`); the e2e was updated to the new accessible name.
