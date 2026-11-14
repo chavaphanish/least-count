@@ -8,6 +8,11 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.10 — 2026-11-15
+
+- **Improved sound effects:** all game audio files in `public/audio/` were replaced with improved versions (card deal/draw/pickup/drop, timer tick, turn bell, round & game applause). No playback code changed.
+- **Verification:** production build passes with the new audio embedded; no code or test changes.
+
 ## 1.1.9 — 2026-11-14
 
 - **First names in gameplay:** during gameplay (local practice and online rooms) the UI now shows only each player's **first name** — last names and usernames are removed from the active-player banner, opponent seats, your-hand header, turn timers, round/match results, match-score rows, game notices, the lobby seat list, and the host-transfer dialog. Full names and usernames are unchanged in the database, profiles, leaderboards, buddies, career pages, and game history; avatar initials and alt text are also unchanged (`src/shared/playerIdentity.ts`, gameplay components and pages).
