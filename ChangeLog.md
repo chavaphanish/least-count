@@ -8,6 +8,11 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.9 — 2026-11-14
+
+- **First names in gameplay:** during gameplay (local practice and online rooms) the UI now shows only each player's **first name** — last names and usernames are removed from the active-player banner, opponent seats, your-hand header, turn timers, round/match results, match-score rows, game notices, the lobby seat list, and the host-transfer dialog. Full names and usernames are unchanged in the database, profiles, leaderboards, buddies, career pages, and game history; avatar initials and alt text are also unchanged (`src/shared/playerIdentity.ts`, gameplay components and pages).
+- **Verification:** typecheck, 390 unit tests, production build, and the public-identity, host-transfer, and gameplay e2e suites pass; visual screenshot review of the lobby, table, and local game on desktop and mobile confirms first-name-only display. The remaining `game`/`multiplayer`/`mobile`/`fixed-table` e2e failures were each re-confirmed failing on clean `main` and are pre-existing.
+
 ## 1.1.8 — 2026-11-14
 
 - **Round penalties (#38):** successful Declare Least losses are now capped at 40 round penalty points per player, matching the failed-Least penalty; the zero-point tied-Least example was corrected accordingly (`engine.ts`, `docs/rule-clarifications.md`, `docs/RULEBOOK.md`).

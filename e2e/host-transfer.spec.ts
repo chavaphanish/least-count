@@ -7,7 +7,7 @@ import { png } from './career-fixture'
 const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'
 function setupRoom(hostScore = 60) {
   const now = Date.now(), names = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
-  const people = names.map((name, i) => ({ id: `user:00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`, displayName: `Player ${name}`, username: `player000${i + 1}`, firstName: 'Player', lastName: name, avatarUrl: '/host-player.png', accountType: 'registered' as const, expiresAt: now + 3600000 }))
+  const people = names.map((name, i) => ({ id: `user:00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`, displayName: `Player ${name}`, username: `player000${i + 1}`, firstName: name, lastName: 'Member', avatarUrl: '/host-player.png', accountType: 'registered' as const, expiresAt: now + 3600000 }))
   const room = createRoom('host-room', 'ABC234', people[0], { maxPlayers: 8, timedGame: true, eliminationThreshold: 100 }, now)
   people.slice(1).forEach(p => join(room, p, now))
   room.members.forEach(m => { m.connected = true; m.lastSeen = now; m.disconnectedAt = null })
@@ -67,16 +67,16 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320]])
     for (const control of size.controls) { expect(control.top).toBeGreaterThanOrEqual(size.top); expect(control.bottom).toBeLessThanOrEqual(size.bottom); expect(control.left).toBeGreaterThanOrEqual(size.left); expect(control.right).toBeLessThanOrEqual(size.right) }
     await expect(dialog.locator('.identity-primary').first()).toHaveCSS('transform', 'none')
     if (width === 667 || width === 568) await page.screenshot({ path: `/tmp/yaydu-host-transfer-${width}.png` })
-    await dialog.getByText('@player0003', { exact: true }).click()
+    await dialog.getByText('Three', { exact: true }).click()
     await expect(dialog.getByRole('radio').nth(1)).toBeChecked()
     room.members[2].connected = false; publish(room, sockets)
     await expect(dialog.getByRole('radio').nth(1)).toBeDisabled(); await expect(confirm).toBeDisabled()
-    await dialog.getByText('@player0002', { exact: true }).click()
+    await dialog.getByText('Two', { exact: true }).click()
     await expect(dialog.getByRole('radio').nth(0)).toBeChecked()
     const game = structuredClone(room.game), order = room.members.map(m=>m.id)
     await confirm.click()
     await expect(dialog).toHaveCount(0)
-    await expect(page.getByRole('status').filter({ hasText: 'Player Two is now the host.' })).toBeVisible()
+    await expect(page.getByRole('status').filter({ hasText: 'Two is now the host.' })).toBeVisible()
     expect(room.hostId).toBe(room.members[1].id); expect(room.game).toEqual(game); expect(room.members.map(m=>m.id)).toEqual(order)
     expect(room.members[0].left).toBe(false); expect(room.game!.players[0].eliminated).toBe(true)
   })
@@ -93,9 +93,9 @@ test('other clients continue playing while the host chooses and receive new priv
     await peer.getByRole('button', { name: 'Drop 1 Card', exact: true }).click()
     await expect.poll(()=>room.game!.current).toBe(2)
     expect(room.hostTransfer!.id).toBe(transferId)
-    await page.getByRole('dialog', { name: 'Transfer Host Role' }).getByText('@player0002', { exact: true }).click()
+    await page.getByRole('dialog', { name: 'Transfer Host Role' }).getByText('Two', { exact: true }).click()
     await page.getByRole('button', { name: 'Transfer Host', exact: true }).click()
-    await expect(peer.getByRole('status').filter({ hasText: 'Player Two is now the host.' })).toBeVisible()
+    await expect(peer.getByRole('status').filter({ hasText: 'Two is now the host.' })).toBeVisible()
     room.game!.players[2].hand = [{ ...createCard('clubs', 'A'), id: 'low-hand' }]
     room.game!.players.slice(1).forEach((p,i) => { if (i !== 1) p.hand = [{ ...createCard('clubs', 'K'), id: `high-hand-${i}` }] })
     gameAction(room, room.members[2].id, { type: 'show' }, Date.now()); publish(room, sockets)
@@ -115,7 +115,7 @@ test('automatic reassignment closes the eliminated host popup and announces the 
   room.hostTransfer!.deadline = Date.now() - 1
   reconcileHost(room, Date.now()); publish(room, sockets)
   await expect(page.getByRole('dialog', { name: 'Transfer Host Role' })).toHaveCount(0)
-  await expect(page.getByRole('status').filter({ hasText: 'Player Two is now the host.' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Two is now the host.' })).toBeVisible()
   expect(room.game).toEqual(game)
 })
 
@@ -127,7 +127,7 @@ for (const mobile of [false, true]) test(`round forfeits synchronize without eli
     const host = await context.newPage(), peer = await context.newPage()
     await connect(host, room, 0, sockets); await connect(peer, room, 1, sockets)
     for (const page of [host, peer]) {
-      await expect(page.getByRole('status').filter({ hasText: 'Player One (@player0001) forfeited the round (timeout, +40 points).' })).toBeVisible()
+      await expect(page.getByRole('status').filter({ hasText: 'One forfeited the round (timeout, +40 points).' })).toBeVisible()
       await expect(page.getByRole('dialog', { name: 'Transfer Host Role' })).toHaveCount(0)
     }
     await expect(host.getByText('You forfeited this round. You can play again next round.', { exact: true })).toBeVisible()

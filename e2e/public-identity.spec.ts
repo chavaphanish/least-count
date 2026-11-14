@@ -40,27 +40,25 @@ for (const mobile of [false,true]) test.describe(mobile ? 'mobile landscape iden
     await page.route('**/api/rooms/ABC234/ticket',r=>r.fulfill({json:{ticket:'mock'}}))
     await page.routeWebSocket('**/api/rooms/ABC234/ws?**',ws=>{ ws.onMessage(()=>{}) })
     await page.goto('/#/room/ABC234')
-    await expect(page.locator('.lobby-player .player-identity').first()).toContainText('John Smith')
-    await expect(page.locator('.lobby-player .player-identity').nth(1)).toContainText('@otherplayer99')
+    await expect(page.locator('.lobby-player .player-identity').first()).toHaveText('John')
+    await expect(page.locator('.lobby-player .player-identity').nth(1)).toHaveText('Élodie')
     const game=createGame(['John Smith (@cardmaster99)','Élodie O’Neill (@otherplayer99)'],now,()=>0.5,{timedGame:false,eliminationThreshold:100},[host.id,opponent.id])
     snapshot.status='in-game'
     snapshot.game={phase:game.phase,round:game.round,currentPlayerId:game.players[game.current].id,players:[host,opponent].map((p,i)=>({...p,cardCount:game.players[i].hand.length,score:0,eliminated:false})),hand:game.players[0].hand,indicator:game.indicator,latestDiscard:latestGroup(game),pickup:pickupCards(game),drawCount:game.drawPile.length,deadline:null,penalty:game.sevens?.amount??0,openingPenalty:game.sevens?.opening===true,canShow:canShow(game,host.id),result:null,events:game.events??[],log:game.log}
     await page.reload()
-    await expect(page.locator('.live-opponent .player-identity').first()).toContainText('Élodie O’Neill')
-    await expect(page.locator('.hand-player .player-identity')).toContainText('@cardmaster99')
+    await expect(page.locator('.live-opponent .player-identity').first()).toHaveText('Élodie')
+    await expect(page.locator('.hand-player .player-identity')).toHaveText('John')
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
     if(mobile){
       const seat=page.locator('.live-opponent').first()
       const bounds=await seat.boundingBox()
       expect(bounds!.y+bounds!.height).toBeLessThanOrEqual(375)
       await seat.click()
-      await expect(page.locator('.opponent-detail .player-identity')).toContainText('Élodie O’Neill')
-      await expect(page.locator('.opponent-detail .player-identity')).toContainText('@otherplayer99')
+      await expect(page.locator('.opponent-detail .player-identity')).toHaveText('Élodie')
     }
     await page.goto('/#/game')
     await page.getByRole('button',{name:/Start local game/}).click()
-    await expect(page.locator('.hand-player .player-identity')).toContainText('John Smith')
-    await expect(page.locator('.hand-player .player-identity')).toContainText('@cardmaster99')
+    await expect(page.locator('.hand-player .player-identity')).toHaveText('John')
 
   })
 })

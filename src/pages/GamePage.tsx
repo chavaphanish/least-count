@@ -1,6 +1,6 @@
 import { GameNotices } from '../components/GameNotices'
 import { useFeedback, useGameFeedback } from '../feedback/FeedbackProvider'
-import { playerIdentity, withPlayerNames } from '../shared/playerIdentity'
+import { gameplayIdentity, playerFirstName, withPlayerNames } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
 import { MobileGameBar } from '../components/MobileGameBar'
 import { OpponentSeat } from '../components/OpponentSeat'
@@ -411,7 +411,7 @@ export function GamePage({
             playing && game.current === 0 ? (
               <TurnTimer
                 seconds={game.deadline === null ? null : seconds}
-                name={auth.user ? playerIdentity(auth.user.player).label : human.name}
+                name={auth.user ? playerFirstName(auth.user.player) : human.name}
               />
             ) : null
           }
@@ -495,7 +495,7 @@ export function GamePage({
           <ul>
             {displayGame.players.map((player) => (
               <li key={player.id}>
-                <span>{auth.user && player.id === human.id ? <PlayerIdentity player={auth.user.player} compact /> : player.name}</span>
+                <span>{auth.user && player.id === human.id ? <PlayerIdentity player={gameplayIdentity(auth.user.player)} compact /> : player.name}</span>
                 <strong>{player.score}</strong>
                 <small>
                   {player.forfeited ? (player.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : player.eliminated

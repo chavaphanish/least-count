@@ -2,6 +2,7 @@ import { Children } from 'react'
 import type { ReactNode } from 'react'
 import { PlayerIdentity } from './PlayerIdentity'
 import type { PlayerIdentityData } from '../shared/playerIdentity'
+import { gameplayIdentity } from '../shared/playerIdentity'
 import { Avatar } from './Avatar'
 import { AdaptiveHand } from './AdaptiveHand'
 
@@ -24,14 +25,15 @@ export function PlayerHand({
   timer?: ReactNode
 }) {
   const cards = Children.toArray(children)
+  const identity = gameplayIdentity(player)
   return (
     <div className="your-live-seat">
       <div className="hand-heading">
         <div className={`hand-player ${active ? 'active-hand-player' : ''}`}>
-          <Avatar player={player} />
+          <Avatar player={identity} />
           <div>
             <h2>Your hand</h2>
-            <span className="hand-player-name"><PlayerIdentity player={player} compact /></span>
+            <span className="hand-player-name"><PlayerIdentity player={identity} compact /></span>
           </div>
         </div>
         {timer}

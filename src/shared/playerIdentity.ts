@@ -13,6 +13,16 @@ export function playerIdentity(player: PlayerIdentityData) {
   return { primary, secondary: name ? handle : '', label: name && handle ? `${name} (${handle})` : primary }
 }
 
+/** Gameplay label: the first name when available, otherwise the existing public primary. */
+export function playerFirstName(player: PlayerIdentityData) {
+  return player.firstName?.trim() || playerIdentity(player).primary
+}
+
+/** Gameplay-only projection: identity copy whose visible name is the first name. */
+export function gameplayIdentity(player: PlayerIdentityData): PlayerIdentityData {
+  return { displayName: playerFirstName(player), avatarUrl: player.avatarUrl }
+}
+
 /** Decorate a presentation copy, preserving authoritative game state and old snapshots. */
 export function withPlayerNames<T>(value: T, players: readonly (PlayerIdentityData & { id: string })[]): T {
   if (Array.isArray(value)) return value.map(item => withPlayerNames(item, players)) as T
@@ -20,6 +30,6 @@ export function withPlayerNames<T>(value: T, players: readonly (PlayerIdentityDa
   const object = value as Record<string, unknown>
   const next = Object.fromEntries(Object.entries(object).map(([key, item]) => [key, withPlayerNames(item, players)]))
   const player = players.find(p => p.id === object.id)
-  if (player && typeof object.name === 'string') next.name = playerIdentity(player).label
+  if (player && typeof object.name === 'string') next.name = playerFirstName(player)
   return next as T
 }

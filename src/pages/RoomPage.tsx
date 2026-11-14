@@ -17,7 +17,7 @@ import { GameActivity } from '../components/GameActivity'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
-import { playerIdentity } from '../shared/playerIdentity'
+import { gameplayIdentity, playerFirstName } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
 import { Avatar } from '../components/Avatar'
 import { PlayingCard } from '../components/PlayingCard'
@@ -113,7 +113,7 @@ export function RoomPage({
   const g = room.game
   const own = g?.players.find((p) => p.id === id)
   const current = g?.players.find((p) => p.id === g.currentPlayerId)
-  const activeName = current ? playerIdentity(current).label : 'the active player'
+  const activeName = current ? playerFirstName(current) : 'the active player'
   const winner = g?.players.find((p) => !p.eliminated)
   const yours =
     !!g &&
@@ -151,7 +151,7 @@ export function RoomPage({
       className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       {room.hostTransfer?.fromId === id && <HostTransferDialog key={room.hostTransfer.id} room={room} now={now} busy={busy} live={connection === 'live'} error={error} send={send} />}
-      <GameNotices events={g?.events ?? []} now={now} hostName={room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 ? room.members.find(member => member.id === room.hostId) && playerIdentity(room.members.find(member => member.id === room.hostId)!).primary : undefined} />
+      <GameNotices events={g?.events ?? []} now={now} hostName={room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 ? room.members.find(member => member.id === room.hostId) && playerFirstName(room.members.find(member => member.id === room.hostId)!) : undefined} />
       <div className="room-heading">
         <div>
           <p className="eyebrow">
@@ -179,14 +179,14 @@ export function RoomPage({
           penalty={g.penalty}
           players={g.players.map((p) => ({
             id: p.id,
-            name: playerIdentity(p).label,
+            name: playerFirstName(p),
             score: p.score,
             eliminated: p.eliminated,
             forfeited: p.forfeited,
           }))}
         >
           <p>
-            Host: {room.members.find(member => member.id === room.hostId) ? playerIdentity(room.members.find(member => member.id === room.hostId)!).primary : 'Waiting for an active player'} · Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
+            Host: {room.members.find(member => member.id === room.hostId) ? playerFirstName(room.members.find(member => member.id === room.hostId)!) : 'Waiting for an active player'} · Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
             {connection === 'live'
               ? 'Connected'
               : connection === 'error'
@@ -282,7 +282,7 @@ export function RoomPage({
               >
                 <Avatar player={m} />
                 <h3>
-                  <PlayerIdentity player={m} compact />
+                  <PlayerIdentity player={gameplayIdentity(m)} compact />
                   {m.id === id ? ' (You)' : ''}
                 </h3>
                 <span className="account-badge">
@@ -377,7 +377,7 @@ export function RoomPage({
                     status={p.id === room.hostId ? 'Host' : p.accountType === 'guest' ? 'Guest' : 'Registered'}
                     timer={
                       !final && p.id === g.currentPlayerId ? (
-                        <TurnTimer seconds={seconds} name={playerIdentity(p).label} />
+                        <TurnTimer seconds={seconds} name={playerFirstName(p)} />
                       ) : null
                     }
                   />
@@ -419,7 +419,7 @@ export function RoomPage({
                 !final && g.currentPlayerId === id ? (
                   <TurnTimer
                     seconds={seconds}
-                    name={own ? playerIdentity(own).label : 'You'}
+                    name={own ? playerFirstName(own) : 'You'}
                   />
                 ) : null
               }
@@ -501,7 +501,7 @@ export function RoomPage({
                 )}
                 <h2>
                   {g.phase === 'game-over'
-                    ? `${winner ? playerIdentity(winner).label : 'The remaining player'} wins the match!`
+                    ? `${winner ? playerFirstName(winner) : 'The remaining player'} wins the match!`
                     : g.result.reason === 'show'
                       ? g.result.successful
                         ? 'Least successful!'
@@ -561,7 +561,7 @@ export function RoomPage({
               <ul>
                 {g.players.map((p) => (
                   <li key={p.id}>
-                    <PlayerIdentity player={p} compact />
+                    <PlayerIdentity player={gameplayIdentity(p)} compact />
                     <strong>{p.score}</strong>
                     <small>{p.forfeited ? (p.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : p.eliminated ? 'Eliminated' : 'Active'}</small>
                   </li>

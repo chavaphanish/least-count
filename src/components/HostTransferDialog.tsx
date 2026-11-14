@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { PlayerIdentity } from './PlayerIdentity'
+import { gameplayIdentity } from '../shared/playerIdentity'
 import type { ClientGameAction, RoomView } from '../shared/multiplayer'
 import './host-transfer.css'
 
@@ -28,7 +29,7 @@ export function HostTransferDialog({ room, now, busy, live, error, send }: {
             const eligible = transfer.eligibleIds.includes(player.id)
             return <label key={player.id} className={`button host-transfer-option ${valid && selected === player.id ? 'button-primary' : 'button-secondary'}`}>
               <input className="visually-hidden" type="radio" name={group} value={player.id} checked={valid && selected === player.id} disabled={!eligible || busy || !live} onChange={() => setSelected(player.id)} />
-              <PlayerIdentity player={player} compact avatar />
+              <PlayerIdentity player={gameplayIdentity(player)} compact avatar />
               {!eligible && <small>Offline</small>}
             </label>
           })}
