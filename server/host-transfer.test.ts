@@ -102,7 +102,7 @@ it('persists and broadcasts one round forfeit across overlapping alarms, disconn
   const saved = h.storage.get('room') as RoomRecord
   expect(saved.game!.players[0]).toMatchObject({ forfeited: true, eliminated: false, score: 40, hand: [] })
   expect(saved.game!.current).toBe(1)
-  expect(saved.game!.deadline).toBe(h.now + 120000)
+  expect(saved.game!.deadline).toBe(h.now + 105000)
   expect(saved.game!.events.filter(e => e.type === 'PLAYER_FORFEITED')).toHaveLength(1)
   expect(saved.hostId).toBe('Alex'); expect(saved.hostTransfer).toBeUndefined()
   for (const records of h.messages.values()) {

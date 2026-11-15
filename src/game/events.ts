@@ -137,7 +137,7 @@ export function formatGameEvent(event: GameEvent): string {
       return `${event.player.name} forfeited the round (timeout, +40 points).`
     case 'PLAYER_ELIMINATED':
       return event.reason === 'timeout'
-        ? `${event.player.name} failed to complete the turn within 60 seconds and was eliminated.`
+        ? `${event.player.name} failed to complete the turn within 45 seconds and was eliminated.`
         : `${event.player.name} reached the elimination threshold of ${event.cutoff} points and was eliminated.`
     case 'GAME_COMPLETED':
       return `${event.winner.name} wins the match.`

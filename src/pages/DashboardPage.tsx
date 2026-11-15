@@ -283,11 +283,11 @@ export function DashboardPage() {
                       setSettings((s) => ({
                         ...s,
                         timedGame: e.target.checked,
-                        turnDurationSeconds: e.target.checked ? 60 : null,
+                        turnDurationSeconds: e.target.checked ? 45 : null,
                       }))
                     }
                   />
-                  Timed game · 60 seconds per turn
+                  Timed game · 45 seconds per turn
                 </label>
                 <p className="field-hint">
                   {settings.timedGame

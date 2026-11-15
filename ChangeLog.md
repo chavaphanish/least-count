@@ -8,6 +8,12 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.12 — 2026-11-15
+
+- **45-second turns:** timed turns now last **45 seconds** instead of 60 (`src/game/engine.ts` `TURN_MS`, room settings validation in `src/shared/multiplayer.ts`, and all player-facing copy — Dashboard, GamePage setup, RoomPage status pill, Rules page, timeout notices, and the rulebooks/README). Room creation still offers timed or untimed only; the fixed duration is 45 s.
+- **Reminder retimed:** the once-per-turn reminder sound (file unchanged, `50s_Reminder.mp3`) now plays at the **30-second** mark of the local player's turn (was 50 s); the 15-second tick loop is unchanged (`src/feedback/tracker.ts`).
+- **Verification:** typecheck, 391 unit tests (deadline assertions updated to the 45 s turn length), production build, and the public-identity e2e suite pass. The `feedback.spec` bell assertion failures were each re-confirmed failing on clean `main` and are pre-existing; its decode-count assertions were updated for the ten now-preloaded assets.
+
 ## 1.1.11 — 2026-11-15
 
 - **50-second turn reminder:** a new sound (`public/audio/50s_Reminder.mp3`) plays **once** when the local player's own active turn drops to 50 seconds remaining. It uses the same authoritative-crossing logic as the existing 15-second tick loop (`src/feedback/tracker.ts`), respects the Sound Effects toggle and the tab-visibility guard, and never replays for the same turn, for opponents' turns, or in untimed games. No other sounds or features changed.

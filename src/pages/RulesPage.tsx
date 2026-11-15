@@ -37,7 +37,7 @@ const rules = [
     text: 'Round penalties accumulate. At 100 or more, a player is eliminated. A tied round is not a shared match victory: keep scores and play ordinary rounds until one player remains. There is no special tiebreaker mode. For example, two players at 99 who tie on zero stay at 99 and play another round.',
   },
   {
-    title: 'Finish within 60 seconds',
+    title: 'Finish within 45 seconds',
     text: 'The same timer covers your drop and required replacement draw. Invalid moves do not restart it. Running out of time forfeits this round, immediately adds 40 points, and clears any 7 penalty. You return next round unless your score reaches the elimination cutoff. Accepting a penalty or timing out clears the previous group’s pickup eligibility. Refreshing does not renew the deadline.',
   },
 ]

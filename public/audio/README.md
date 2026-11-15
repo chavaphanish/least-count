@@ -4,4 +4,4 @@ These short mono MP3s are original procedural sound effects generated for this p
 
 Regeneration requires Python 3 and ffmpeg with libmp3lame, not additional app dependencies. Durations: card effects 0.12–0.22s, bell 0.8s, tick buffer 1s (one click per loop), round applause 3s, game applause 5s. MP3 encoder padding is trimmed by browser decoding.
 
-The 50-second turn reminder (`50s_Reminder.mp3`, added in 1.1.11) is a hand-supplied file rather than script output; it plays once when the local player's own turn drops to 50 seconds remaining.
+The 50-second turn reminder (`50s_Reminder.mp3`, added in 1.1.11; retimed to the 30-second mark in 1.1.12 when turn length became 45 s) is a hand-supplied file rather than script output; it plays once when the local player's own turn drops to 30 seconds remaining.

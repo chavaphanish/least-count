@@ -41,12 +41,12 @@ function full(count = 2, timed = true, cutoff = 100) {
   return r
 }
 describe('room configuration', () => {
-  it('uses four players, 100 points, and 60-second turns by default', () => {
+  it('uses four players, 100 points, and 45-second turns by default', () => {
     expect(roomSettings(DEFAULT_ROOM_SETTINGS)).toEqual({
       maxPlayers: 4,
       eliminationThreshold: 100,
       timedGame: true,
-      turnDurationSeconds: 60,
+      turnDurationSeconds: 45,
     })
   })
   it.each([2, 8])('accepts boundary capacity %i', (n) =>
@@ -383,9 +383,9 @@ describe('eliminated host handover', () => {
     sweep(r, 1000)
     expect(r.game!.players[0].eliminationReason).toBe('score')
     const pending = { ...r.hostTransfer! }
-    expect(r.game!.current).toBe(1); expect(r.game!.deadline).toBe(61000)
+    expect(r.game!.current).toBe(1); expect(r.game!.deadline).toBe(46000)
     gameAction(r, r.members[1].id, { type: 'discard', cardIds: ['next-four'] }, 2000)
-    expect(r.game!.current).toBe(2); expect(r.game!.deadline).toBe(62000)
+    expect(r.game!.current).toBe(2); expect(r.game!.deadline).toBe(47000)
     expect(r.hostTransfer).toEqual(pending)
   })
   it('does not appoint spectators/offline players, and recovers when an active player reconnects', () => {

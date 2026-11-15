@@ -23,13 +23,13 @@ export type RoomSettings = {
   maxPlayers: number
   eliminationThreshold: number
   timedGame: boolean
-  turnDurationSeconds: 60 | null
+  turnDurationSeconds: 45 | null
 }
 export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   maxPlayers: 4,
   eliminationThreshold: 100,
   timedGame: true,
-  turnDurationSeconds: 60,
+  turnDurationSeconds: 45,
 }
 export const LOBBY_GRACE_MS = 90_000
 export const HEARTBEAT_MS = 45_000
@@ -67,16 +67,16 @@ export function roomSettings(value: unknown): RoomSettings {
     throw new Error('Choose timed or untimed mode.')
   if (
     v.turnDurationSeconds !== undefined &&
-    v.turnDurationSeconds !== (v.timedGame ? 60 : null)
+    v.turnDurationSeconds !== (v.timedGame ? 45 : null)
   )
     throw new Error(
-      'Timed turns are fixed at 60 seconds; untimed turns have no duration.',
+      'Timed turns are fixed at 45 seconds; untimed turns have no duration.',
     )
   return {
     maxPlayers: v.maxPlayers!,
     eliminationThreshold: v.eliminationThreshold!,
     timedGame: v.timedGame,
-    turnDurationSeconds: v.timedGame ? 60 : null,
+    turnDurationSeconds: v.timedGame ? 45 : null,
   }
 }
 export type Member = PublicPlayer & {

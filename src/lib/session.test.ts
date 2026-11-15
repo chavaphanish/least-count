@@ -22,7 +22,7 @@ describe('local session', () => {
     const game = createGame(['You', 'Alex'], 1000)
     saveSession(store, game)
     expect(loadSession(store)).toEqual(game)
-    expect(loadSession(store)!.deadline).toBe(61_000)
+    expect(loadSession(store)!.deadline).toBe(46_000)
     saveSession(store, null)
     expect(loadSession(store)).toBeNull()
   })

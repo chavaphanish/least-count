@@ -6,7 +6,7 @@
 **Players:** 2 to 8  
 **Starting Hand:** 7 cards  
 **Platform:** Browser-based game with planned mobile support  
-**Turn Duration:** 60 seconds  
+**Turn Duration:** 45 seconds  
 **Default Elimination Threshold:** 100 points
 
 ---
@@ -37,7 +37,7 @@ The primary objectives are to:
 4. Strategically use the 7 Power Card against opponents.
 5. Declare Least when eligible and when your hand is likely to have the lowest total.
 6. Avoid accumulating 100 or more penalty points.
-7. Complete every turn within 60 seconds.
+7. Complete every turn within 45 seconds.
 
 The game rewards strategic card management, risk assessment, and decision-making.
 
@@ -271,7 +271,7 @@ A normal turn consists of:
 1. Dropping one card or a legal matching group.
 2. Drawing one card, unless the matching-drop exception applies.
 
-A player must complete the required actions before the 60-second timer expires.
+A player must complete the required actions before the 45-second timer expires.
 
 ## 5.2 Dropping Cards
 
@@ -488,11 +488,11 @@ While responding to an active penalty:
 
 If a player has no 7, the application automatically applies the accumulated draw penalty and advances the turn.
 
-If a player has a 7, the application presents the two available choices, with the normal 60-second action timer.
+If a player has a 7, the application presents the two available choices, with the normal 45-second action timer.
 
 ## 6.7 Timer Expiry During a 7 Sequence
 
-The same 60-second limit applies to a player deciding whether to play a 7 or draw the penalty.
+The same 45-second limit applies to a player deciding whether to play a 7 or draw the penalty.
 
 If the player fails to make the required choice before the timer expires:
 
@@ -523,7 +523,7 @@ A player cannot declare Least:
 - After already performing a normal-turn action.
 - During another player's turn.
 - While responding to an active 7 penalty.
-- After their 60-second turn timer expires.
+- After their 45-second turn timer expires.
 
 The application automatically calculates the player's hand value and enables Least only when the conditions are satisfied.
 
@@ -654,7 +654,7 @@ For example:
 
 ## 9.1 Turn Duration
 
-Every player has a maximum of **60 seconds** to complete their required turn action.
+Every player has a maximum of **45 seconds** to complete their required turn action.
 
 The countdown begins when the application enables the player to act.
 
@@ -673,7 +673,7 @@ A player responding to a 7 penalty completes the action by either playing a lega
 
 ## 9.3 Timer Expiry
 
-If the player fails to complete their turn within 60 seconds:
+If the player fails to complete their turn within 45 seconds:
 
 **The player is immediately eliminated from the game.**
 
@@ -692,7 +692,7 @@ Elimination occurs regardless of the player's cumulative score.
 
 ## 9.4 Timer During Special Actions
 
-The 60-second limit also applies when the player must make a choice during a 7 Power Card sequence.
+The 45-second limit also applies when the player must make a choice during a 7 Power Card sequence.
 
 If no decision is required because the player has no 7, the application automatically processes the penalty draw instead of waiting for the countdown.
 
@@ -701,7 +701,7 @@ If no decision is required because the player has no 7, the application automati
 The timer is managed by the game system.
 
 - Only one player has an active action timer at a time.
-- Each new turn begins with a fresh 60-second countdown.
+- Each new turn begins with a fresh 45-second countdown.
 - The timer cannot be paused by the player.
 - Invalid actions do not restart the timer.
 - The timer must remain consistent across all connected clients.
@@ -731,7 +731,7 @@ Until that feature is implemented, the default remains 100 points.
 
 ## 10.2 Elimination by Timeout
 
-A player is eliminated immediately if they fail to complete a required turn within 60 seconds.
+A player is eliminated immediately if they fail to complete a required turn within 45 seconds.
 
 This applies even if their cumulative score is zero.
 
@@ -813,7 +813,7 @@ When a player attempts an invalid action:
 1. The action is rejected.
 2. The game state remains unchanged.
 3. An explanatory message may be displayed.
-4. The 60-second timer continues normally.
+4. The 45-second timer continues normally.
 
 Repeated invalid attempts do not provide additional time.
 
@@ -889,7 +889,7 @@ If the required penalty still cannot be completed, the remaining available cards
 
 ## 13.3 Player Disconnects
 
-A disconnected player remains subject to the active 60-second timer.
+A disconnected player remains subject to the active 45-second timer.
 
 If the player reconnects before the timer expires, they may continue their pending action.
 
@@ -1048,7 +1048,7 @@ A receives the next normal turn.
 
 ## Example 7: Turn Timeout
 
-Player C begins a normal turn with 60 seconds available.
+Player C begins a normal turn with 45 seconds available.
 
 C does not complete a legal turn before the countdown reaches zero.
 
@@ -1103,7 +1103,7 @@ The following settings define the standard Least Count game.
 | Successful Least | Caller scores 0 |
 | Failed Least penalty | 40 points |
 | Score-elimination threshold | 100 points |
-| Turn duration | 60 seconds |
+| Turn duration | 45 seconds |
 | Timeout consequence | Immediate elimination |
 | Illegal drops | Blocked |
 | Revealing private hands | Prohibited |
@@ -1132,7 +1132,7 @@ The elimination score threshold will be configurable in a future game settings m
 
 7. **Score the round.** A successful Least gives the caller zero points. A failed Least gives the caller 40 penalty points.
 
-8. **Watch the timer.** Complete each turn within 60 seconds or be eliminated.
+8. **Watch the timer.** Complete each turn within 45 seconds or be eliminated.
 
 9. **Avoid elimination.** Players reaching 100 cumulative points are eliminated.
 

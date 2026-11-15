@@ -29,7 +29,7 @@ function fixture(timedGame = true) {
   s.sevens = null
   s.current = 0
   s.starter = 0
-  s.deadline = timedGame ? 60_000 : null
+  s.deadline = timedGame ? 45_000 : null
   s.events = []
   s.eventSequence = 0
   s.log = []
@@ -64,7 +64,7 @@ describe('automatic transitions and public event history', () => {
         s = discard(s, [seven.id])
         expect(s.drawPile).toEqual(pile)
         expect(s.players[i].hand).toHaveLength(1)
-        expect(s.deadline).toBe(timed ? 60_100 : null)
+        expect(s.deadline).toBe(timed ? 45_100 : null)
       }
       expect(s.current).toBe(0)
       expect(s.phase).toBe('turn')
@@ -108,7 +108,7 @@ describe('automatic transitions and public event history', () => {
       true,
     )
     const waiting = discard(s)
-    expect(waiting.deadline).toBe(60_000)
+    expect(waiting.deadline).toBe(45_000)
     expect(waiting.events).toEqual([])
     const done = applyAction(
       waiting,

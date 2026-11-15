@@ -28,7 +28,7 @@ Vibration is disabled with an explanation when unsupported (including most iPhon
 
 - Continue as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh.
 - From the Lounge, create a room or join using a six-character code or invitation link.
-- Room defaults are four players, a 100-point cumulative elimination cutoff, and 60-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
+- Room defaults are four players, a 100-point cumulative elimination cutoff, and 45-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
 - Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
 - The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
 - Each round opens with a visible card. For a non-7, the starter drops first, then picks up the eligible opening card or draws one closed replacement when required. Match and Drop and playing 7s skip that replacement. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
@@ -75,7 +75,7 @@ Guests receive a cryptographically random session in an HttpOnly, SameSite cooki
 
 Each identity may belong to one room at a time. Refreshing reconnects the existing seat. Live sockets heartbeat every 20 seconds; after 45 seconds without a heartbeat, a connection is considered offline. Waiting-lobby seats are retained for a further 90 seconds before removal. Explicitly leaving frees a waiting seat immediately. Host ownership transfers deterministically to the earliest connected remaining participant, then earliest remaining participant if nobody is connected. Empty waiting rooms close.
 
-An active game's disconnected seats remain part of the match; disconnecting does not introduce a new forfeit rule or pause timed turns. The server's 60-second deadline still applies. Untimed games have no turn alarm or automatic timeout forfeit: a disconnected current player must reconnect to continue. No automatic bot replacement or midgame seat replacement is implemented. Closing a room is available to its host only before the game starts.
+An active game's disconnected seats remain part of the match; disconnecting does not introduce a new forfeit rule or pause timed turns. The server's 45-second deadline still applies. Untimed games have no turn alarm or automatic timeout forfeit: a disconnected current player must reconnect to continue. No automatic bot replacement or midgame seat replacement is implemented. Closing a room is available to its host only before the game starts.
 
 Local practice is stored in this tab's `sessionStorage`; other hands are only visually concealed in this offline mode. Online state is persisted in Cloudflare Durable Objects, with private hand projections sent over authenticated WebSockets. Refreshing never resets the server deadline.
 
@@ -99,7 +99,7 @@ The shared engine follows these rules; the linked documents give the full detail
 - **Power card 7:** starts a two-card penalty, with two more cards per responding 7 action. Playing one or more 7s ends the action immediately with no replacement draw; it overrides normal drawing and Match and Drop. Multiple 7s in one action still add only two. A full uninterrupted cycle through all active players cancels the penalty.
 - **Least:** available at the start of a normal turn with a hand total of five or less. An empty-handed player must declare Least at their next normal turn; passing is not allowed. Least cannot be called during a 7 penalty.
 - **Zero-point Least ties:** all zero-point players, including the caller, are tied round winners and receive zero round penalties. The caller does not receive the 40-point failed-Least penalty for a zero-point tie. This exception does not extend to positive-point ties.
-- **Elimination and winning:** the default cumulative cutoff is 100 points; reaching or exceeding it eliminates a player. Turns have a 60-second limit, with a round forfeit and immediate +40 points on timeout. Forfeited players spectate until the next round; only reaching the cumulative cutoff eliminates them. There are no special tiebreaker rounds. Ordinary rounds retain cumulative scores until elimination leaves one match winner.
+- **Elimination and winning:** the default cumulative cutoff is 100 points; reaching or exceeding it eliminates a player. Turns have a 45-second limit, with a round forfeit and immediate +40 points on timeout. Forfeited players spectate until the next round; only reaching the cumulative cutoff eliminates them. There are no special tiebreaker rounds. Ordinary rounds retain cumulative scores until elimination leaves one match winner.
 
 For example, if the final two players each have 99 cumulative points and tie on a zero-point Least, both remain at 99 and play another ordinary round. A tied round result is not a shared match victory.
 

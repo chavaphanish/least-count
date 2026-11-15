@@ -64,7 +64,7 @@ Example: Alex drops K♥ onto a 3. With no eligible preceding group, one closed 
 - The next player may play one or more 7s or accept the accumulated penalty and lose the normal turn. With no 7 held, the penalty is applied automatically under the existing rule.
 - The full-cycle rule is unchanged for 2–8 active players: once every active player has consecutively participated, cancel the penalty without drawing and give the initiator the next normal turn.
 - A starting face-up 7 immediately activates the opening penalty described above; its first responding player is not credited until they actually play a 7.
-- Timed actions retain the existing 60-second deadline. Untimed rooms have no deadline. Least cannot be called during a penalty.
+- Timed actions retain the existing 45-second deadline. Untimed rooms have no deadline. Least cannot be called during a penalty.
 
 Example: Alex plays two 7s, draws nothing, and Ben faces two penalty cards. Ben plays a 7, draws nothing, and Chris faces four. If all active players participate consecutively, no penalty is drawn and Alex takes the next normal turn.
 
@@ -82,7 +82,7 @@ PJ remains the rulebook/internal abbreviation for **Printed Joker**. The visible
 
 ## Room defaults and quick start
 
-Online rooms default to four players, a cumulative cutoff of 100, and timed 60-second turns. Hosts may choose 2–8 players, another positive integer cutoff, or untimed play. Deal seven cards each using one standard deck plus one Printed Joker for 2–4 active players, or two decks plus two Printed Jokers for 5–8.
+Online rooms default to four players, a cumulative cutoff of 100, and timed 45-second turns. Hosts may choose 2-8 players, another positive integer cutoff, or untimed play. Deal seven cards each using one standard deck plus one Printed Joker for 2–4 active players, or two decks plus two Printed Jokers for 5–8.
 
 On the first and all subsequent normal turns, declare Least if eligible or drop same-rank cards before any required replacement. Resolve an opening 7 as a penalty instead. Play 7s immediately; use Match and Drop when the prior top rank matches; otherwise draw automatically when there is no open choice, or choose a source when there is. Follow the live activity panel. Round scoring, zero-point ties, cumulative elimination, and ordinary next rounds follow the confirmed decisions; no special tiebreaker round is introduced.
 

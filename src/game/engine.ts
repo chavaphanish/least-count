@@ -5,7 +5,7 @@ import type { GameCard, GameRank } from './deck'
 import { formatGameEvent, gameEvents, HISTORY_LIMIT } from './events'
 import type { GameEvent, GameEventData, EventPlayer } from './events'
 
-export const TURN_MS = 60_000
+export const TURN_MS = 45_000
 export const ELIMINATION_SCORE = 100
 export type GameSettings = { eliminationThreshold: number; timedGame: boolean }
 export const gameSettings = (s: GameState): GameSettings =>

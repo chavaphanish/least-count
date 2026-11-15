@@ -58,9 +58,9 @@ for(const mobile of [false,true])test.describe(mobile?'Android feedback':'deskto
   await harness(page,true);await clock(page);const {room,view,sockets,now}=await backend(page)
   await page.goto('/#/room/ABC234');await expect(page.locator('.connection-live')).toHaveCount(1)
   expect((await traces(page)).filter(t=>t.kind==='start')).toHaveLength(0)
-  // A trusted interaction unlocks audio; all nine assets decode once and are cached.
+  // A trusted interaction unlocks audio; all ten assets decode once and are cached.
   await page.mouse.click(2,180)
-  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(9)
+  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(10)
   const turn={...view,currentPlayerId:'p0',deadline:now+20000,events:[...view.events,{id:'event-2',sequenceNumber:2,roundNumber:1,timestamp:now,type:'POWER_SEVEN_CYCLE_COMPLETED',next:{id:'p0',name:'You'}}]}
   sockets.at(-1)!.send(JSON.stringify({type:'state',room:{...room,revision:2,game:turn}}))
   await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&Math.abs(Number(t.duration)-.8)<.05).length).toBe(1)
@@ -90,11 +90,11 @@ for(const mobile of [false,true])test.describe(mobile?'Android feedback':'deskto
 
 test('local dealing and confirmed card flights produce cues; invalid selection does not',async({page})=>{
  await harness(page,false);await page.goto('/#/game');await page.getByRole('button',{name:/Start local game/}).click()
- await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(9)
+ await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(10)
  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start').length).toBeGreaterThan(0)
  const game=auditGame(2,7);game.settings={timedGame:false,eliminationThreshold:100};game.deadline=null
  await page.evaluate(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game});await page.reload()
- await page.locator('.hand-card').first().click();await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(9)
+ await page.locator('.hand-card').first().click();await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(10)
  const selected=(await traces(page)).filter(t=>t.kind==='start').length
  expect(selected).toBe(0)
  await page.locator('[data-plan-discard]').click()

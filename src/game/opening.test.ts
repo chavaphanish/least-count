@@ -201,7 +201,7 @@ describe('standard discard-first opening', () => {
     (timed) => {
       const s = fixture(false, true, timed)
       const waiting = discard(s)
-      expect(waiting.deadline).toBe(timed ? 60100 : null)
+      expect(waiting.deadline).toBe(timed ? 45100 : null)
       expect(isSavedGame(waiting)).toBe(true)
       expect(isSavedGame(JSON.parse(JSON.stringify(waiting)))).toBe(true)
       if (timed)

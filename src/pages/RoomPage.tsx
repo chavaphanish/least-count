@@ -257,7 +257,7 @@ export function RoomPage({
         <span>Elimination cutoff: {room.settings.eliminationThreshold}</span>
         <span>
           {room.settings.timedGame
-            ? 'Timed · 60 seconds'
+            ? 'Timed · 45 seconds'
             : 'Untimed · no timeout forfeits'}
         </span>
       </div>

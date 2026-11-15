@@ -140,7 +140,7 @@ export function GamePage({
             {count <= 4
               ? 'One deck + one Printed Joker'
               : 'Two decks + two Printed Jokers'}{' '}
-            · 60 seconds per turn
+            · 45 seconds per turn
           </p>
           <button
             className="button button-primary"

@@ -71,7 +71,7 @@ export class FeedbackTracker {
     }
     if(active&&(initialRound||(!baseline&&previous?.turn!==turn&&changed.some(e=>boundaries.has(e.type)))))this.sink.turn(`${s.scope}:${turn}`)
     if(active&&seconds!==null&&seconds>0&&seconds<=15&&previous?.turn===turn&&previous.seconds!==null&&previous.seconds>15)this.sink.tick(`${s.scope}:${turn}`)
-    if(active&&seconds!==null&&seconds>0&&seconds<=50&&previous?.turn===turn&&previous.seconds!==null&&previous.seconds>50)this.sink.sound('50s_Reminder',`${s.scope}:50:${turn}`)
+    if(active&&seconds!==null&&seconds>0&&seconds<=30&&previous?.turn===turn&&previous.seconds!==null&&previous.seconds>30)this.sink.sound('50s_Reminder',`${s.scope}:30:${turn}`)
   }
 }
 export type { Cursor }
