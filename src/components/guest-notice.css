@@ -1,0 +1,12 @@
+/* Guest multiplayer notice: center the single OK action, no focus frame on open. */
+.guest-notice-dialog .table-overlay-body {
+  display: grid;
+  gap: 12px;
+}
+.guest-notice-dialog .guest-notice-actions {
+  display: flex;
+  justify-content: center;
+}
+.guest-notice-dialog .guest-notice-actions .button:focus {
+  outline: none;
+}
