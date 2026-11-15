@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.14 — 2026-11-15
+
+- **Guest block moved to the lounge buttons:** for guests, clicking **Set the Table** or **Take a Seat** now shows the under-testing popup immediately instead of opening the room form (the submit guard and backend gate remain as backup). Settings, Local Practice and every other lounge destination are unchanged; registered users are unaffected.
+
 ## 1.1.13 — 2026-11-15
 
 - **Guest online multiplayer temporarily disabled:** guests can still sign up as guests and play Local Practice, but every online multiplayer entry point is blocked while the mode is under testing. Attempting to host, join, open an invite link, or enter a room as a guest now shows a modal notice — *"Multiplayer Online Mode for Guests is currently under testing. Please sign up or sign in to play online."* — with an **OK** button that returns the player to safety. Registered users are unaffected.

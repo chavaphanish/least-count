@@ -33,6 +33,16 @@ export function DashboardPage() {
   const [guestNotice, setGuestNotice] = useState(false)
   const [busy, setBusy] = useState(false)
   const go = (value: typeof mode) => {
+    if (
+      (value === 'create' || value === 'join') &&
+      guestMultiplayerBlocked(
+        player.accountType,
+        auth.services.guestMultiplayerEnabled,
+      )
+    ) {
+      setGuestNotice(true)
+      return
+    }
     if (value !== mode) navigation.start()
     setMode(value)
     setError('')
