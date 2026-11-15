@@ -1,7 +1,7 @@
 {
   "name": "least-count",
   "private": true,
-  "version": "1.1.12",
+  "version": "1.1.13",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "dev:server": "wrangler dev --log-level warn --ip 127.0.0.1 --port 8787 --var APP_ORIGIN:http://127.0.0.1:5173,http://127.0.0.1:4173",
+    "dev:server": "wrangler dev --log-level warn --ip 127.0.0.1 --port 8787 --var APP_ORIGIN:http://127.0.0.1:5173,http://127.0.0.1:4173 --var GUEST_MULTIPLAYER_ENABLED:true",
     "typecheck": "tsc -b",
     "mobile:build": "npm run build",
     "mobile:sync": "npm run mobile:build && cap sync",

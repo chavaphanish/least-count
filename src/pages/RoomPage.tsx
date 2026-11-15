@@ -1,5 +1,6 @@
 import { GameNotices } from '../components/GameNotices'
 import { HostTransferDialog } from '../components/HostTransferDialog'
+import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
 import { ResultScores } from '../components/ResultScores'
@@ -33,7 +34,8 @@ export function RoomPage({
 }) {
   const auth = useAuth()
   const local = useRoom(code)
-  const { room, connection, error, busy, now, send, command } = local
+  const { room, connection, error, busy, now, send, command, guestBlocked } =
+    local
   useGameplayLoading(!!room?.game)
   useGameFeedback(room?.game ? {scope:`room:${room.id}`,revision:room.revision,round:room.game.round,phase:room.game.phase,dropIds:room.game.latestDiscard.map(c=>c.id).join(','),localId:auth.user!.player.id,currentId:room.game.currentPlayerId,players:room.game.players,events:room.game.events,deadline:room.game.deadline,now,connected:connection==='live',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
   useActiveSeat(room?.game?.currentPlayerId)
@@ -79,6 +81,14 @@ export function RoomPage({
       <section
         className={`room-page ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
       >
+        {guestBlocked && (
+          <GuestNoticeDialog
+            onDismiss={() => {
+              onExit()
+              location.hash = '#/'
+            }}
+          />
+        )}
         <h1>
           {connection === 'error'
             ? 'Room unavailable'

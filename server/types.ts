@@ -10,5 +10,6 @@ export interface Env {
   CAREER_ENABLED?: string
   CAREER_ORIGIN?: string
   APP_ORIGIN?: string
+  GUEST_MULTIPLAYER_ENABLED?: string
 }
 export type Identity = PublicPlayer & { expiresAt: number }

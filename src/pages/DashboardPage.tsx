@@ -9,8 +9,10 @@ import { useAuth } from '../auth/AuthProvider'
 import { playerIdentity } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
 import { Avatar } from '../components/Avatar'
+import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import {
   DEFAULT_ROOM_SETTINGS,
+  guestMultiplayerBlocked,
   roomCode,
   roomSettings,
 } from '../shared/multiplayer'
@@ -28,6 +30,7 @@ export function DashboardPage() {
   })
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  const [guestNotice, setGuestNotice] = useState(false)
   const [busy, setBusy] = useState(false)
   const go = (value: typeof mode) => {
     if (value !== mode) navigation.start()
@@ -36,6 +39,15 @@ export function DashboardPage() {
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault()
+    if (
+      guestMultiplayerBlocked(
+        player.accountType,
+        auth.services.guestMultiplayerEnabled,
+      )
+    ) {
+      setGuestNotice(true)
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -326,6 +338,9 @@ export function DashboardPage() {
       <button className="text-button" disabled={busy} onClick={logout}>
         {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
       </button>
+      {guestNotice && (
+        <GuestNoticeDialog onDismiss={() => setGuestNotice(false)} />
+      )}
     </section>
   )
 }

@@ -72,4 +72,16 @@ describe('initialization', () => {
       globalThis.fetch = original
     }
   })
+  it('fails closed on the guest multiplayer flag when config omits it', () => {
+    const services = new Services()
+    expect(services.guestMultiplayerEnabled).toBe(false)
+    services.configure({
+      supabase: null,
+      service: 'least-count',
+      guestMultiplayerEnabled: true,
+    })
+    expect(services.guestMultiplayerEnabled).toBe(true)
+    services.configure({ supabase: null, service: 'least-count' })
+    expect(services.guestMultiplayerEnabled).toBe(false)
+  })
 })

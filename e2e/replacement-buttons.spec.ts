@@ -24,7 +24,7 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
     game=applyAction(game,{type:'discard',playerId:'p0',cardIds:[outgoing.id]})
     expect(game.phase).toBe('draw')
     const actions: Record<string,unknown>[]=[]
-    await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null}}))
+    await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null,guestMultiplayerEnabled:true}}))
     if(online){
       const players=game.players.map(p=>({id:p.id,displayName:p.name,avatarUrl:null,accountType:'guest'}))
       await page.route('**/api/session',r=>r.fulfill({json:{user:{player:players[0],email:null,createdAt:'2026-11-11',lastActiveAt:'2026-11-11'},room:{id:'room',code:'ABC234'}}}))

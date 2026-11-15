@@ -28,7 +28,7 @@ async function backend(page:Page){
  const game=auditGame(2,7),players=game.players.map(p=>({id:p.id,displayName:p.name,avatarUrl:null,accountType:'guest'})),now=await page.evaluate(()=>Date.now())
  const view={phase:'turn',round:1,currentPlayerId:'p1',players:players.map((p,i)=>({...p,cardCount:game.players[i].hand.length,score:0,eliminated:false})),hand:game.players[0].hand,indicator:game.indicator,latestDiscard:game.discards.at(-1)!,pickup:[],drawCount:game.drawPile.length,deadline:now+60000,penalty:0,openingPenalty:false,canShow:false,result:null,events:[{id:'event-1',sequenceNumber:1,roundNumber:1,timestamp:now-10000,type:'ROUND_STARTED'}],log:[]}
  const room={id:'sound-room',code:'ABC234',hostId:'p0',settings:{maxPlayers:2,timedGame:true,turnDurationSeconds:60,eliminationThreshold:100},status:'in-game',revision:1,serverNow:now,members:players.map((p,order)=>({...p,order,connected:true,lastSeen:now,disconnectedAt:null,authExpiresAt:now+600000,left:false})),game:view}
- await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null}}))
+ await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null,guestMultiplayerEnabled:true}}))
  await page.route('**/api/session',r=>r.fulfill({json:{user:{player:players[0],email:null,createdAt:'2026-11-11',lastActiveAt:'2026-11-11'},room:null}}))
  await page.route('**/api/rooms/ABC234/join',r=>r.fulfill({json:room}));await page.route('**/api/rooms/ABC234/ticket',r=>r.fulfill({json:{ticket:'test'}}))
  const sockets:WebSocketRoute[]=[]

@@ -19,9 +19,18 @@ import {
   json,
   requireOrigin,
 } from './http'
-import { roomCode, roomSettings } from '../src/shared/multiplayer'
+import {
+  GUEST_MULTIPLAYER_ENABLED,
+  GUEST_MULTIPLAYER_NOTICE,
+  guestMultiplayerBlocked,
+  roomCode,
+  roomSettings,
+} from '../src/shared/multiplayer'
 export { Directory, GameRoom } from './objects'
 type Reservation = { id: string; code: string }
+/** The baked constant wins unless the Worker variable explicitly re-enables guests. */
+const guestMultiplayerEnabled = (env: Env) =>
+  GUEST_MULTIPLAYER_ENABLED || env.GUEST_MULTIPLAYER_ENABLED === 'true'
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
@@ -34,6 +43,7 @@ export default {
           ...publicConfig(env),
           service: 'least-count',
           lobbyGraceSeconds: 90,
+          guestMultiplayerEnabled: guestMultiplayerEnabled(env),
         })
       if (url.pathname === '/api/session' && request.method === 'GET') {
         const auth = await authenticate(request, env)
@@ -120,6 +130,13 @@ export default {
         return json({ user: await updateProfile(request, env) })
       if (url.pathname === '/api/rooms' && request.method === 'POST') {
         const auth = await requireAuth(request, env)
+        if (
+          guestMultiplayerBlocked(
+            auth.identity.accountType,
+            guestMultiplayerEnabled(env),
+          )
+        )
+          throw new ApiError(403, GUEST_MULTIPLAYER_NOTICE)
         const settings = roomSettings(await body(request))
         return directory(env, '/create', { identity: auth.identity, settings })
       }
@@ -156,6 +173,15 @@ export default {
       )
         throw new ApiError(405, 'This method is not supported.')
       const auth = await requireAuth(request, env)
+      if (
+        guestMultiplayerBlocked(
+          auth.identity.accountType,
+          guestMultiplayerEnabled(env),
+        ) &&
+        operation !== 'leave' &&
+        operation !== 'close'
+      )
+        throw new ApiError(403, GUEST_MULTIPLAYER_NOTICE)
       if (operation === 'join') {
         const tracked = await directory(env, '/track', {
           id: auth.identity.id,

@@ -7,7 +7,7 @@ async function clock(page: Page) {
   await page.clock.pauseAt(new Date(now.getTime() + 60_000))
 }
 async function config(page: Page) {
-  await page.route('**/api/config', r => r.fulfill({json:{service:'least-count',supabase:null}}))
+  await page.route('**/api/config', r => r.fulfill({json:{service:'least-count',supabase:null,guestMultiplayerEnabled:true}}))
 }
 async function session(page: Page) {
   await page.route('**/api/session', r=>r.fulfill({json:{user:null,room:null}}))

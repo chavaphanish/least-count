@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  GUEST_MULTIPLAYER_ENABLED,
+} from '../shared/multiplayer'
 import type { SessionUser } from '../shared/multiplayer'
 export class ServiceError extends Error {
   constructor(
@@ -13,11 +16,16 @@ export class ServiceError extends Error {
 export type RuntimeConfig = {
   supabase: { url: string; publishableKey: string } | null
   service: string
+  guestMultiplayerEnabled?: boolean
 }
 export class Services {
   provider: SupabaseClient | null = null
   private providerUrl = ''
+  /** Fails closed: a config without the field keeps guests blocked. */
+  guestMultiplayerEnabled: boolean = GUEST_MULTIPLAYER_ENABLED
   configure(config: RuntimeConfig) {
+    this.guestMultiplayerEnabled =
+      config.guestMultiplayerEnabled ?? GUEST_MULTIPLAYER_ENABLED
     if (
       config.supabase &&
       this.provider &&

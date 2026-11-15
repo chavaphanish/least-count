@@ -133,7 +133,7 @@ test('an online game immediately cancels navigation branding and socket updates 
   const players=game.players.map(p=>({id:p.id,displayName:p.name,avatarUrl:null,accountType:'guest'}))
   const view={phase:game.phase,round:game.round,currentPlayerId:'p0',players:players.map((p,i)=>({...p,cardCount:game.players[i].hand.length,score:0,eliminated:false})),hand:game.players[0].hand,indicator:game.indicator,latestDiscard:game.discards.at(-1),pickup:[],drawCount:game.drawPile.length,deadline:now+60000,penalty:0,openingPenalty:false,canShow:false,result:null,events:game.events,log:game.log}
   const room={id:'room',code:'ABC234',hostId:'p0',settings:{maxPlayers:2,timedGame:true,turnDurationSeconds:60,eliminationThreshold:100},status:'waiting',revision:1,serverNow:now,members:players.map((p,order)=>({...p,order,connected:true,lastSeen:now,disconnectedAt:null,authExpiresAt:now+600000,left:false})),game:null as typeof view|null}
-  await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null}}))
+  await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null,guestMultiplayerEnabled:true}}))
   await page.route('**/api/session',r=>r.fulfill({json:{user:{player:players[0],email:null,createdAt:'2026-11-11',lastActiveAt:'2026-11-11'},room:null}}))
   await page.route('**/api/rooms/ABC234/join',r=>r.fulfill({json:room}))
   await page.route('**/api/rooms/ABC234/ticket',r=>r.fulfill({json:{ticket:'test'}}))

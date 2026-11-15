@@ -33,6 +33,20 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
 }
 export const LOBBY_GRACE_MS = 90_000
 export const HEARTBEAT_MS = 45_000
+/**
+ * Guests are temporarily blocked from online multiplayer (1.1.13). Flip this
+ * constant (or set the Worker variable GUEST_MULTIPLAYER_ENABLED=true) to
+ * restore access; the notice dialog and backend gate then stay dormant.
+ */
+export const GUEST_MULTIPLAYER_ENABLED = false
+export const GUEST_MULTIPLAYER_NOTICE =
+  'Multiplayer Online Mode for Guests is currently under testing. Please sign up or sign in to play online.'
+export function guestMultiplayerBlocked(
+  accountType: string | null | undefined,
+  enabled: boolean = GUEST_MULTIPLAYER_ENABLED,
+): boolean {
+  return !enabled && accountType === 'guest'
+}
 export function displayName(value: unknown): string {
   if (typeof value !== 'string') throw new Error('Enter a display name.')
   const name = value.normalize('NFKC').trim().replace(/\s+/g, ' ')

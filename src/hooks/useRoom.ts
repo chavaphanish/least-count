@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { ServiceError } from '../auth/services'
+import {
+  guestMultiplayerBlocked,
+} from '../shared/multiplayer'
 import type {
   ClientGameAction,
   RoomView,
@@ -13,6 +16,7 @@ export function useRoom(code: string) {
     'connecting' | 'live' | 'reconnecting' | 'error'
   >('connecting')
   const [error, setError] = useState('')
+  const [guestBlocked, setGuestBlocked] = useState(false)
   const [offset, setOffset] = useState(0)
   const [now, setNow] = useState(Date.now)
   const [retry, setRetry] = useState(0)
@@ -63,6 +67,17 @@ export function useRoom(code: string) {
     }
     async function connect() {
       if (stopped) return
+      if (
+        guestMultiplayerBlocked(
+          auth.user?.player.accountType,
+          auth.services.guestMultiplayerEnabled,
+        )
+      ) {
+        setGuestBlocked(true)
+        setConnection('error')
+        setError('')
+        return
+      }
       if (!navigator.onLine) {
         setConnection('reconnecting')
         setError('Internet connection required. Reconnecting when available.')
@@ -220,5 +235,6 @@ export function useRoom(code: string) {
     send,
     command,
     reconnect: () => setRetry((value) => value + 1),
+    guestBlocked,
   }
 }

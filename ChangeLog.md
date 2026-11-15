@@ -8,6 +8,12 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.13 — 2026-11-15
+
+- **Guest online multiplayer temporarily disabled:** guests can still sign up as guests and play Local Practice, but every online multiplayer entry point is blocked while the mode is under testing. Attempting to host, join, open an invite link, or enter a room as a guest now shows a modal notice — *"Multiplayer Online Mode for Guests is currently under testing. Please sign up or sign in to play online."* — with an **OK** button that returns the player to safety. Registered users are unaffected.
+- **Single revert flag:** `GUEST_MULTIPLAYER_ENABLED = false` in `src/shared/multiplayer.ts` controls everything. The frontend reads the flag through `/api/config` (`guestMultiplayerEnabled`) and fails closed if the field is missing; the Worker enforces the same gate on every room route (`POST /api/rooms` and join/ticket/start/view; `leave`/`close` stay open for graceful exit) so it cannot be bypassed client-side. The Worker variable `GUEST_MULTIPLAYER_ENABLED=true` overrides the flag for e2e runs only.
+- **Verification:** typecheck, 397 unit tests (new Worker gate tests + config flag test), production build, and targeted e2e (multiplayer, mobile, ux-interactions, lounge, host-transfer, public-identity, app-layout, animated-loading, dual-brand, feedback, replacement-buttons) show no new failures — every failing case was re-confirmed failing on clean `main`. A throwaway probe verified the popup message verbatim, OK dismissal, Local Practice access, and invite-link handling for guests.
+
 ## 1.1.12 — 2026-11-15
 
 - **45-second turns:** timed turns now last **45 seconds** instead of 60 (`src/game/engine.ts` `TURN_MS`, room settings validation in `src/shared/multiplayer.ts`, and all player-facing copy — Dashboard, GamePage setup, RoomPage status pill, Rules page, timeout notices, and the rulebooks/README). Room creation still offers timed or untimed only; the fixed duration is 45 s.
