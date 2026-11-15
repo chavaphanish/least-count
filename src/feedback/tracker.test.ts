@@ -28,6 +28,13 @@ describe('confirmed feedback tracking',()=>{
   tracker.update(base({currentId:'you',deadline:30000,now:30000}));expect(sink.tick).toHaveBeenLastCalledWith(null)
   tracker.update(base({deadline:null}));expect(sink.tick).toHaveBeenLastCalledWith(null)
  })
+ it('plays the 50-second reminder once per local turn on the authoritative crossing and never for opponents or untimed turns',()=>{
+  const {tracker,sink}=setup();tracker.update(base({currentId:'you',deadline:110000,now:55000}))
+  tracker.update(base({currentId:'you',deadline:110000,now:60000}));expect(sink.sound).toHaveBeenCalledExactlyOnceWith('50s_Reminder',expect.any(String))
+  tracker.update(base({currentId:'you',deadline:110000,now:65000}));tracker.update(base({currentId:'you',deadline:110000,now:70000}));expect(sink.sound).toHaveBeenCalledTimes(1)
+  tracker.update(base({currentId:'other',deadline:120000,now:65000}));tracker.update(base({currentId:'other',deadline:120000,now:70000}));expect(sink.sound).toHaveBeenCalledTimes(1)
+  tracker.update(base({currentId:'you',deadline:null,now:70000}));tracker.update(base({currentId:'you',deadline:null,now:71000}));expect(sink.sound).toHaveBeenCalledTimes(1)
+ })
  it('final rounds produce only the game celebration once, stopping ticking first',()=>{
   const {tracker,sink}=setup();tracker.update(base())
   const done=base({phase:'game-over',events:[event(2,'ROUND_COMPLETED'),event(3,'GAME_COMPLETED')]})

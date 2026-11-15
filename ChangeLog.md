@@ -8,6 +8,11 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.11 — 2026-11-15
+
+- **50-second turn reminder:** a new sound (`public/audio/50s_Reminder.mp3`) plays **once** when the local player's own active turn drops to 50 seconds remaining. It uses the same authoritative-crossing logic as the existing 15-second tick loop (`src/feedback/tracker.ts`), respects the Sound Effects toggle and the tab-visibility guard, and never replays for the same turn, for opponents' turns, or in untimed games. No other sounds or features changed.
+- **Verification:** typecheck, 391 unit tests (including a new reminder-crossing test), and the production build pass.
+
 ## 1.1.10 — 2026-11-15
 
 - **Improved sound effects:** all game audio files in `public/audio/` were replaced with improved versions (card deal/draw/pickup/drop, timer tick, turn bell, round & game applause). No playback code changed.

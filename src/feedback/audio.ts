@@ -1,6 +1,6 @@
-export const sounds = ['card_deal','card_draw','card_pickup','card_drop','card_swoosh','turn_bell','timer_tick','round_applause','game_applause'] as const
+export const sounds = ['card_deal','card_draw','card_pickup','card_drop','card_swoosh','turn_bell','timer_tick','50s_Reminder','round_applause','game_applause'] as const
 export type Sound = typeof sounds[number]
-const volume: Record<Sound,number> = {card_deal:.22,card_draw:.24,card_pickup:.24,card_drop:.25,card_swoosh:.16,turn_bell:.22,timer_tick:.17,round_applause:.28,game_applause:.28}
+const volume: Record<Sound,number> = {card_deal:.22,card_draw:.24,card_pickup:.24,card_drop:.25,card_swoosh:.16,turn_bell:.22,timer_tick:.17,'50s_Reminder':.25,round_applause:.28,game_applause:.28}
 
 /** One context, decoded buffers and bounded sources. No autoplay or background queue. */
 export class AudioPlayer {
