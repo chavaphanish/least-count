@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.16 — 2026-11-15
+
+- **Header player profile:** the top bar no longer shows the game logo and "YAYDU · The Game of Sevens" wordmark for signed-in players. It now shows the player: small profile picture on the left, full name with the username beneath it, and a Level/XP block (from the career profile) beside a divider — all fitting the existing header bar and linking to the profile page. Signed-out visitors still see the original brand; guests show their display name with a "Guest player" caption and no Level block (guests stay casual).
+
 ## 1.1.15 — 2026-11-15
 
 - **Guest popup polish:** the OK button in the guest multiplayer notice no longer shows the gold focus frame on open (its automatic focus was removed) and is now centered in the popup. Message text and dismissal behavior are unchanged.

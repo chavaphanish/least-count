@@ -2,6 +2,7 @@ import { StudioLogo } from './StudioLogo'
 import type { ReactNode } from 'react'
 import { useAppViewport } from './MobileOrientation'
 import { useAuth } from '../auth/AuthProvider'
+import { HeaderProfile } from './HeaderProfile'
 import { PwaStatus } from '../pwa/PwaStatus'
 
 export function Layout({
@@ -26,14 +27,18 @@ export function Layout({
         Skip to content
       </a>
       <header className="site-header">
-        <a className="brand" href="#/" aria-label="YAYDU home">
-          <span className="brand-mark" aria-hidden="true">
-            <StudioLogo />
-          </span>
-          <span>
-            YAYDU<span className="brand-caption">The Game of Sevens</span>
-          </span>
-        </a>
+        {user ? (
+          <HeaderProfile />
+        ) : (
+          <a className="brand" href="#/" aria-label="YAYDU home">
+            <span className="brand-mark" aria-hidden="true">
+              <StudioLogo />
+            </span>
+            <span>
+              YAYDU<span className="brand-caption">The Game of Sevens</span>
+            </span>
+          </a>
+        )}
         <nav aria-label="Main navigation">
           <a
             href="#/rules"

@@ -33,6 +33,14 @@ em { color: var(--gold); font-weight: 400; }
 .brand { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
 .brand-mark { font-family: Georgia, serif; font-size: 37px; color: var(--gold); }
 .brand-caption { display: block; margin-top: 5px; font-size: 8px; font-weight: 400; letter-spacing: 3px; color: var(--muted); }
+.header-profile { gap: 10px; letter-spacing: normal; font-weight: 400; min-width: 0; }
+.header-profile .profile-avatar { width: 42px; height: 42px; font-size: 14px; }
+.header-profile-lines { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.header-profile-lines strong { font-size: 15px; font-weight: 600; letter-spacing: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.header-profile-lines small { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.header-profile-level { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 1px solid var(--border); flex-shrink: 0; }
+.header-profile-level strong { font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: normal; white-space: nowrap; }
+.header-profile-level span { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; }
 .site-header nav { display: flex; align-items: center; gap: 32px; font-size: 13px; }
 .site-header nav a { padding: 10px 0; color: #d8e1d5; }
 .site-header nav a:hover { color: var(--gold); }
@@ -167,6 +175,13 @@ em { color: var(--gold); font-weight: 400; }
   .brand { font-size: 11px; letter-spacing: 1.6px; gap: 9px; }
   .brand-mark { font-size: 32px; }
   .brand-caption { font-size: 6px; }
+  .header-profile { gap: 8px; }
+  .header-profile .profile-avatar { width: 34px; height: 34px; font-size: 12px; }
+  .header-profile-lines strong { font-size: 13px; max-width: 150px; }
+  .header-profile-lines small { font-size: 10px; max-width: 150px; }
+  .header-profile-level { padding-left: 10px; }
+  .header-profile-level strong { font-size: 12px; }
+  .header-profile-level span { font-size: 10px; }
   .site-header nav { gap: 15px; font-size: 12px; }
   .version-badge { font-size: 7px; letter-spacing: .8px; padding: 7px; }
   .hero { grid-template-columns: 1fr; gap: 18px; padding: 45px 0 30px; min-height: auto; }
