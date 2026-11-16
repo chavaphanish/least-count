@@ -49,7 +49,7 @@ export function Layout({
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
             Lounge
           </a>
-          {mobile && user && <a href="#/profile">Profile</a>}
+          {mobile && user && page !== 'home' && <a href="#/profile">Profile</a>}
           {mobile && keyboard && (
             <button
               type="button"

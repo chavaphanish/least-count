@@ -84,7 +84,7 @@ test('visual audit of all existing mobile surfaces', async ({
   await page.goto('/')
   await expect(page.getByRole('heading', { name: /Welcome/ })).toBeVisible()
   await shot('dashboard')
-  for (const mode of ['Set the Table', 'Take a Seat']) {
+  for (const mode of ['Create Game Room', 'Join Game Room']) {
     await page.getByRole('button', { name: mode }).click()
     await shot(mode.startsWith('Set') ? 'create' : 'join')
     await page.getByRole('button', { name: 'Back to Lounge' }).click()

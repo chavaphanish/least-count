@@ -657,3 +657,14 @@ body:has(.turn-animation[data-phase="incoming"]) .turn-discard-in-motion .discar
 .brand-caption { letter-spacing: .8px; }
 .studio-loading .startup-brand-name { margin: 0; font: 400 32px/1.1 'Libre Caslon Display',Georgia,serif; letter-spacing: 4px; color: var(--gold); }
 .brand-tagline { font: italic 16px/1.4 'Libre Caslon Display',Georgia,serif; color: var(--muted); }
+
+/* Lounge: game choices on the left, greeting and account navigation on the right. */
+.lounge-home { display: grid; grid-template-columns: minmax(190px,1fr) minmax(0,2fr); align-items: center; gap: clamp(24px,4vw,64px); padding: 24px 0; }
+.dashboard-page[data-mode=home] .dashboard-actions { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; margin: 0; min-width: 0; }
+.lounge-welcome { display: grid; align-content: center; gap: 20px; min-width: 0; }
+.lounge-welcome .dashboard-heading h1 { margin: 0; }
+.lounge-navigation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.lounge-home .lounge-nav-button { width: 100%; min-height: 44px; margin: 0; }
+@media (max-width: 600px) and (orientation: portrait) {
+  .lounge-home { grid-template-columns: minmax(0,1fr); }
+}

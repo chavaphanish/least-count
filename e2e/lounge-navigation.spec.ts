@@ -39,7 +39,7 @@ for (const viewport of [
     }) => {
       await mock(page)
       await page.goto('/')
-      const group = page.locator('.mobile-main-menu'),
+      const group = page.locator('.lounge-navigation'),
         buttons = group.locator('.lounge-nav-button')
       await expect(buttons).toHaveText([
         'My Profile',
@@ -122,12 +122,12 @@ for (const viewport of [
     })
   })
 }
-test('desktop retains its existing layout and profile navigation', async ({
+test('desktop retains profile navigation', async ({
   page,
 }) => {
   await mock(page)
   await page.goto('/')
-  await expect(page.locator('.mobile-main-menu')).toHaveCount(0)
+  await expect(page.locator('.lounge-navigation')).toBeVisible()
   const profile = page.getByRole('link', { name: 'My Profile', exact: true })
   await expect(profile).toHaveClass(/button-primary lounge-nav-button/)
   await expect(page.getByRole('button', { name: 'Leaderboards', exact: true })).toBeVisible()

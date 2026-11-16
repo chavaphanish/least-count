@@ -27,18 +27,18 @@ for (const mobile of [false, true]) {
         .getByRole('button', { name: 'Enter as guest', exact: true })
         .click()
       await expect(
-        page.getByRole('heading', { name: 'Welcome, Lounge Guest.' }),
+        page.getByRole('heading', { name: 'Welcome, Lounge Guest!' }),
       ).toBeVisible()
       await expect(page).toHaveTitle('YAYDU — Lounge')
       const before = (await (await page.request.get('/api/session')).json())
         .user.player.id
-      await page.getByRole('button', { name: 'Set the Table' }).click()
+      await page.getByRole('button', { name: 'Create Game Room' }).click()
       await page.getByRole('button', { name: 'Back to Lounge' }).click()
       await page.getByRole('link', { name: 'Rules', exact: true }).click()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await page.reload()
       await expect(
-        page.getByRole('heading', { name: 'Welcome, Lounge Guest.' }),
+        page.getByRole('heading', { name: 'Welcome, Lounge Guest!' }),
       ).toBeVisible()
       expect(
         (await (await page.request.get('/api/session')).json()).user.player.id,
@@ -58,7 +58,7 @@ for (const mobile of [false, true]) {
       await expect(page).toHaveURL(/#\/$/)
       await expect(page).toHaveTitle('YAYDU — Lounge')
       await expect(
-        page.getByRole('heading', { name: 'Welcome, Career Tester.' }),
+        page.getByRole('heading', { name: 'Welcome back, Career Tester!' }),
       ).toBeVisible()
       await page.goto('/auth/callback?flow=recovery')
       // Recovery routing is deliberately unchanged in this terminology-only task.

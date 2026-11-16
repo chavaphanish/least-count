@@ -141,7 +141,7 @@ test('legacy profile completion is optional for login and public names save thro
   })
   await page.goto('/')
   await expect(
-    page.getByRole('heading', { name: 'Welcome, @legacyuser99.' }),
+    page.getByRole('heading', { name: 'Welcome back, @legacyuser99!' }),
   ).toBeVisible()
   await page.getByRole('link', { name: 'Update profile →' }).click()
   await expect(

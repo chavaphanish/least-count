@@ -254,13 +254,13 @@ test('complete guest room journey reaches results, then existing career screens'
     await p.getByLabel('Display name', { exact: true }).fill(name)
     await p.getByRole('button', { name: 'Enter as guest', exact: true }).click()
     await expect(
-      p.getByRole('heading', { name: `Welcome, ${name}.` }),
+      p.getByRole('heading', { name: `Welcome, ${name}!` }),
     ).toBeVisible()
   }
   try {
     await guest(page, 'UX Host')
     await guest(peer, 'UX Buddy')
-    await page.getByRole('button', { name: 'Set the Table' }).click()
+    await page.getByRole('button', { name: 'Create Game Room' }).click()
     await page.getByLabel('Number of players').selectOption('2')
     await page.getByLabel('Elimination cutoff').fill('1')
     await page.getByLabel('Timed game').uncheck()
@@ -269,7 +269,7 @@ test('complete guest room journey reaches results, then existing career screens'
       page.getByRole('heading', { name: 'Waiting lobby' }),
     ).toBeVisible()
     const code = (await page.locator('.room-code-panel strong').textContent())!
-    await peer.getByRole('button', { name: 'Take a Seat' }).click()
+    await peer.getByRole('button', { name: 'Join Game Room' }).click()
     await peer.getByLabel('Room code', { exact: true }).fill(code)
     await peer.getByRole('button', { name: 'Join Room', exact: true }).click()
     await page.getByRole('button', { name: 'Start Game', exact: true }).click()
@@ -347,7 +347,7 @@ test('complete guest room journey reaches results, then existing career screens'
       .last()
       .click()
     await expect(
-      page.getByRole('heading', { name: 'Welcome, UX Host.' }),
+      page.getByRole('heading', { name: 'Welcome, UX Host!' }),
     ).toBeVisible()
     // Guest games are casual. Career navigation uses the existing registered-account fixture,
     // rather than claiming the guest match earned real XP or used a production account.
@@ -372,7 +372,7 @@ test('complete guest room journey reaches results, then existing career screens'
       .click()
     await page.getByRole('link', { name: 'Lounge', exact: true }).click()
     await expect(
-      page.getByRole('heading', { name: 'Welcome, Career Tester.' }),
+      page.getByRole('heading', { name: 'Welcome back, Career Tester!' }),
     ).toBeVisible()
   } finally {
     await peerContext.close()

@@ -334,12 +334,12 @@ test('real multiplayer retains its socket, selection and deadline through rotati
       .getByRole('button', { name: 'Enter as guest', exact: true })
       .tap()
     await expect(
-      page.getByRole('heading', { name: `Welcome, ${name}.` }),
+      page.getByRole('heading', { name: `Welcome, ${name}!` }),
     ).toBeVisible()
   }
   try {
     await guest(host, 'Rotate Host')
-    await host.getByRole('button', { name: /Set the Table/ }).tap()
+    await host.getByRole('button', { name: /Create Game Room/ }).tap()
     await host.getByLabel('Number of players').selectOption('2')
     await host.getByRole('button', { name: 'Create Room', exact: true }).tap()
     await expect(
@@ -347,7 +347,7 @@ test('real multiplayer retains its socket, selection and deadline through rotati
     ).toBeVisible()
     const code = (await host.locator('.room-code-panel strong').textContent())!
     await guest(friend, 'Rotate Friend')
-    await friend.getByRole('button', { name: /Take a Seat/ }).tap()
+    await friend.getByRole('button', { name: /Join Game Room/ }).tap()
     await friend.getByLabel('Room code', { exact: true }).fill(code)
     await friend.getByRole('button', { name: 'Join Room', exact: true }).tap()
     await expect(
