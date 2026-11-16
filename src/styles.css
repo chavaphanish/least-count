@@ -259,7 +259,9 @@ button.button-secondary { border: 1px solid #c4d4bf55; color: var(--cream); }
 .game-setup label { display: block; margin: 26px 0 10px; font-size: 13px; text-align: left; }
 .game-setup select { width: 100%; padding: 14px; border-radius: 6px; background: #163f32; color: var(--cream); border: 1px solid #b7c9ba77; font-size: 14px; }
 select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
-.game-setup .setup-detail { font-size: 11px !important; }
+.game-setup .bot-count-field { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 26px 0 10px; }
+.game-setup .bot-count-field label { margin: 0; }
+.game-setup .bot-count-field select { width: 4.5rem; flex: 0 0 auto; padding: 8px 10px; }
 .game-setup .button { margin: 12px 0 8px; }
 .game-setup .text-link { display: block; }
 .game-setup .setup-saving { font-size: 10px !important; margin-top: 25px !important; }

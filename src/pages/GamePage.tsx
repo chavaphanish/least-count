@@ -43,7 +43,7 @@ export function GamePage({
   const { game, now, error, canSave, send, start, reset } = local
   useActiveSeat(game?.current)
   useGameFeedback(game ? {scope:'local',round:game.round,phase:game.phase,dropIds:game.discards.at(-1)?.map(c=>c.id).join(','),localId:game.players[0].id,currentId:game.players[game.current].id,players:game.players,events:gameEvents(game),deadline:game.deadline,now,connected:true,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
-  const [count, setCount] = useState(4)
+  const [botCount, setBotCount] = useState(3)
   const [selected, setSelected] = useState<string[]>([])
   const [motion, setMotion] = useState<
     (TurnMotion & { game: GameState; previousGroup: GameCard[] }) | null
@@ -123,30 +123,23 @@ export function GamePage({
             Seven cards each. Keep your count low. Declare Least at five or
             less, and stay below 100 points.
           </p>
-          <label htmlFor="player-count">Players at the table</label>
-          <select
-            id="player-count"
-            value={count}
-            onChange={(event) => setCount(Number(event.target.value))}
-          >
-            {Array.from({ length: 7 }, (_, i) => i + 2).map((n) => (
-              <option key={n} value={n}>
-                {n} players · you + {n - 1} simulated{' '}
-                {n === 2 ? 'opponent' : 'opponents'}
-              </option>
-            ))}
-          </select>
-          <p className="setup-detail">
-            {count <= 4
-              ? 'One deck + one Printed Joker'
-              : 'Two decks + two Printed Jokers'}{' '}
-            · 45 seconds per turn
-          </p>
+          <div className="bot-count-field">
+            <label htmlFor="bot-count">Number of Bots</label>
+            <select
+              id="bot-count"
+              value={botCount}
+              onChange={(event) => setBotCount(Number(event.target.value))}
+            >
+              {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
           <button
             className="button button-primary"
             onClick={() => {
               setSelected([])
-              start(count)
+              start(botCount + 1)
             }}
           >
             Start local game <span aria-hidden="true">→</span>
