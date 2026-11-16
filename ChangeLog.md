@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.18 — 2026-11-16
+
+- **Compact header:** tightened player name/username spacing and proportionally reduced the profile picture on desktop and mobile. Avatar, player details, and the single-row Level | XP display remain vertically aligned, with the progress bar below. Existing styling, identity, and navigation are preserved.
+
 ## 1.1.17 — 2026-11-16
 
 - **Header XP progress (#42):** replaced the text-only XP block with a compact gold progress bar, current level, and earned/required XP toward the next level. Reuses the existing career data, `xpProgress()` calculation, and Lounge progress styling without additional API calls. Avatar, full name, username, and navigation remain unchanged. Verified on desktop and mobile landscape down to 568×320.

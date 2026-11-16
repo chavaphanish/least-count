@@ -34,8 +34,8 @@ em { color: var(--gold); font-weight: 400; }
 .brand-mark { font-family: Georgia, serif; font-size: 37px; color: var(--gold); }
 .brand-caption { display: block; margin-top: 5px; font-size: 8px; font-weight: 400; letter-spacing: 3px; color: var(--muted); }
 .header-profile { gap: 10px; letter-spacing: normal; font-weight: 400; min-width: 0; }
-.header-profile .profile-avatar { width: 42px; height: 42px; font-size: 14px; }
-.header-profile-lines { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.header-profile .profile-avatar { width: 32px; height: 32px; font-size: 12px; }
+.header-profile-lines { display: flex; flex-direction: column; gap: 0; line-height: 1.1; min-width: 0; }
 .header-profile-lines strong { font-size: 15px; font-weight: 600; letter-spacing: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 .header-profile-lines small { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 .header-profile-level { display: grid; grid-template-columns: auto auto auto; justify-content: space-between; align-items: center; gap: 4px 6px; width: clamp(164px, 16vw, 200px); line-height: 1.1; padding-left: 12px; border-left: 1px solid var(--border); flex-shrink: 0; }
@@ -178,7 +178,7 @@ em { color: var(--gold); font-weight: 400; }
   .brand-mark { font-size: 32px; }
   .brand-caption { font-size: 6px; }
   .header-profile { gap: 8px; }
-  .header-profile .profile-avatar { width: 34px; height: 34px; font-size: 12px; }
+  .header-profile .profile-avatar { width: 28px; height: 28px; font-size: 10px; }
   .header-profile-lines strong { font-size: 13px; max-width: 150px; }
   .header-profile-lines small { font-size: 10px; max-width: 150px; }
   .header-profile-level { padding-left: 10px; }
