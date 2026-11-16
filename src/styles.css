@@ -38,9 +38,10 @@ em { color: var(--gold); font-weight: 400; }
 .header-profile-lines { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .header-profile-lines strong { font-size: 15px; font-weight: 600; letter-spacing: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 .header-profile-lines small { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-.header-profile-level { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 1px solid var(--border); flex-shrink: 0; }
+.header-profile-level { display: flex; flex-direction: column; gap: 2px; width: clamp(108px, 11vw, 144px); line-height: 1.1; padding-left: 12px; border-left: 1px solid var(--border); flex-shrink: 0; }
 .header-profile-level strong { font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: normal; white-space: nowrap; }
-.header-profile-level span { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; }
+.header-profile-level span { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.career-glance progress, .header-profile-level progress { width: 100%; height: 6px; accent-color: var(--gold); }
 .site-header nav { display: flex; align-items: center; gap: 32px; font-size: 13px; }
 .site-header nav a { padding: 10px 0; color: #d8e1d5; }
 .site-header nav a:hover { color: var(--gold); }
