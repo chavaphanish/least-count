@@ -80,7 +80,7 @@ for (const width of [1440, 768, 390, 320]) {
       page.getByRole('heading', { name: 'Pull up a chair.' }),
     ).toBeVisible()
     await noOverflow(page)
-    await page.getByLabel('Players at the table').selectOption('8')
+    await page.getByLabel('Number of Bots').selectOption('7')
     await page.getByRole('button', { name: 'Start local game' }).click()
     const dealt = await saved(page)
     const automaticPenalty = dealt.events?.find(
@@ -330,7 +330,7 @@ test('plays a complete local match through the real controls', async ({
   })
   await page.clock.install({ time: new Date() })
   await page.goto('/#/game')
-  await page.getByLabel('Players at the table').selectOption('2')
+  await page.getByLabel('Number of Bots').selectOption('1')
   await page.getByRole('button', { name: 'Start local game' }).click()
   let steps = 0
   while (steps++ < 1500) {
@@ -799,4 +799,29 @@ for (const successful of [true, false]) test(`Declare Least scoring boundaries r
   const settled = await saved(page)
   expect(settled.players.map(player => player.score)).toEqual(penalties.map(penalty => 20 + penalty))
   expect(settled.result!.winners).toEqual([successful ? 'p0' : 'p1'])
+})
+
+
+for (const mobile of [false, true]) test(`local practice selects bots plus one human (${mobile ? 'mobile landscape' : 'desktop'})`, async ({ browser }) => {
+  const context = await browser.newContext({ viewport: mobile ? { width: 667, height: 375 } : { width: 1280, height: 800 }, ...(mobile ? { isMobile: true, hasTouch: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1' } : {}) })
+  try {
+    for (const bots of [1, 3, 7]) {
+      const page = await context.newPage()
+      await page.goto('/#/game')
+      const selector = page.getByLabel('Number of Bots')
+      await expect(selector).toHaveValue('3')
+      await expect(selector.locator('option')).toHaveText(['1', '2', '3', '4', '5', '6', '7'])
+      await expect(page.getByText(/One deck \+ one Printed Joker|Two decks \+ two Printed Jokers/)).toHaveCount(0)
+      const label = await page.locator('label[for="bot-count"]').boundingBox(), dropdown = await selector.boundingBox()
+      expect(dropdown!.x).toBeGreaterThan(label!.x + label!.width)
+      expect(Math.abs(dropdown!.y + dropdown!.height / 2 - label!.y - label!.height / 2)).toBeLessThan(2)
+      expect(dropdown!.width).toBeLessThan(100)
+      await selector.selectOption(String(bots))
+      await page.getByRole('button', { name: 'Start local game' }).click()
+      const game = await saved(page)
+      expect(game.players).toHaveLength(bots + 1)
+      expect(game.players[0].id).toBe('p0')
+      await page.close()
+    }
+  } finally { await context.close() }
 })
