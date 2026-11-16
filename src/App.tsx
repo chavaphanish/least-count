@@ -35,7 +35,9 @@ function route() {
                 ? 'leaderboards'
                 : hash === '#/profile'
                   ? 'profile'
-                  : 'home',
+                  : hash === '#/settings'
+                    ? 'settings'
+                    : 'home',
     code: room?.[1] ?? null,
     username: player?.[1],
     gameId: history?.[1],
@@ -92,7 +94,7 @@ function Application() {
     return () => removeEventListener('hashchange', navigate)
   }, [current, navigation.start])
   useEffect(() => {
-    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'leaderboards' ? 'Leaderboards' : current.page === 'home' ? 'Lounge' : 'Your card table'}`
+    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'leaderboards' ? 'Leaderboards' : current.page === 'home' ? 'Lounge' : current.page === 'settings' ? 'Settings' : 'Your card table'}`
     if (previous.current !== current.page) {
       document.getElementById('main')?.focus()
       scrollTo(0, 0)
@@ -128,6 +130,7 @@ function Application() {
     content = <GameHistoryReport key={current.gameId} id={current.gameId} />
   else if (current.page === 'leaderboards') content = <Leaderboard />
   else if (current.page === 'profile') content = <ProfilePage />
+  else if (current.page === 'settings') content = <DashboardPage key="settings" initialMode="settings" />
   else if (current.page === 'room' && current.code) {
     try {
       content = (

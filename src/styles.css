@@ -43,9 +43,14 @@ em { color: var(--gold); font-weight: 400; }
 .header-profile-level span { font-size: 11px; letter-spacing: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .header-profile-level progress { grid-column: 1 / -1; }
 .career-glance progress, .header-profile-level progress { width: 100%; height: 6px; accent-color: var(--gold); }
-.site-header nav { display: flex; align-items: center; gap: 32px; font-size: 13px; }
+.site-header nav { display: flex; align-items: center; flex-shrink: 0; gap: 16px; font-size: 13px; }
 .site-header nav a { padding: 10px 0; color: #d8e1d5; }
 .site-header nav a:hover { color: var(--gold); }
+.site-header nav .header-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; padding: 6px; border: 0; border-radius: 6px; background: transparent; color: var(--gold); }
+.header-icon svg { display: block; width: 18px; height: 18px; }
+.site-header nav .header-icon:hover { background: #e9cd9114; color: var(--cream); }
+.site-header nav .header-icon:active { background: var(--gold); color: #173c2d; }
+.site-header nav .header-icon:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .version-badge { color: var(--gold); border: 1px solid #e9cd9150; padding: 8px 12px; border-radius: 4px; font-size: 9px; letter-spacing: 1.5px; }
 .hero { min-height: 650px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 20px; padding: 52px 0 64px; }
 .hero-copy, .hero-art { min-width: 0; }
@@ -184,7 +189,7 @@ em { color: var(--gold); font-weight: 400; }
   .header-profile-level { padding-left: 10px; }
   .header-profile-level strong { font-size: 12px; }
   .header-profile-level span { font-size: 10px; }
-  .site-header nav { gap: 15px; font-size: 12px; }
+  .site-header nav { gap: 8px; font-size: 12px; }
   .version-badge { font-size: 7px; letter-spacing: .8px; padding: 7px; }
   .hero { grid-template-columns: 1fr; gap: 18px; padding: 45px 0 30px; min-height: auto; }
   .hero-copy { text-align: center; }

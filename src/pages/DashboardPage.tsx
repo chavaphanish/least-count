@@ -16,7 +16,7 @@ import {
   roomSettings,
 } from '../shared/multiplayer'
 import type { RoomSettings } from '../shared/multiplayer'
-export function DashboardPage() {
+export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' | 'settings' }) {
   const navigation = useNavigationLoading()
   const auth = useAuth()
   const player = auth.user!.player
@@ -28,7 +28,7 @@ export function DashboardPage() {
   const greetingName = returning ? player.firstName || playerIdentity(player).primary : playerIdentity(player).primary
   const [mode, setMode] = useState<
     'home' | 'create' | 'join' | 'buddies' | 'settings'
-  >('home')
+  >(initialMode)
   const [settings, setSettings] = useState<RoomSettings>({
     ...DEFAULT_ROOM_SETTINGS,
   })
@@ -47,6 +47,7 @@ export function DashboardPage() {
       setGuestNotice(true)
       return
     }
+    if (value === 'home' && initialMode === 'settings') location.hash = '#/'
     if (value !== mode) navigation.start()
     setMode(value)
     setError('')
@@ -172,12 +173,10 @@ export function DashboardPage() {
                 <h1>Welcome{returning ? ' back' : ''}, <em>{greetingName}</em>!</h1>
               </div>
               <div className="lounge-navigation">
-                <a className="button button-primary lounge-nav-button" href="#/profile">My Profile</a>
                 <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
                   Leaderboards
                 </button>
                 <button className="button button-primary lounge-nav-button" onClick={() => go('buddies')}>Buddies</button>
-                <button className="button button-primary lounge-nav-button" onClick={() => go('settings')}>Settings</button>
               </div>
             </div>
           </div>

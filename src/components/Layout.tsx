@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useAppViewport } from './MobileOrientation'
 import { useAuth } from '../auth/AuthProvider'
 import { HeaderProfile } from './HeaderProfile'
+import { TableOverlay } from './TableOverlay'
 import { PwaStatus } from '../pwa/PwaStatus'
 
 export function Layout({
@@ -49,7 +50,20 @@ export function Layout({
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
             Lounge
           </a>
-          {mobile && user && page !== 'home' && <a href="#/profile">Profile</a>}
+          <TableOverlay label="Mailbox" triggerClass="header-icon" trigger={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 6 9 7 9-7" />
+            </svg>
+          }>
+            <p>Under Construction.</p>
+          </TableOverlay>
+          <a className="header-icon" href="#/settings" aria-label="Settings" title="Settings" aria-current={page === 'settings' ? 'page' : undefined}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9.5 3h5l.5 2.2 2 1.1 2.1-.6 2.4 4.2-1.6 1.6v2.3l1.6 1.6-2.4 4.2-2.1-.6-2 1.1-.5 2.2h-5L9 20.1 7 19l-2.1.6-2.4-4.2 1.6-1.6v-2.3L2.5 9.9l2.4-4.2 2.1.6 2-1.1Z" />
+              <circle cx="12" cy="12.6" r="3" />
+            </svg>
+          </a>
           {mobile && keyboard && (
             <button
               type="button"

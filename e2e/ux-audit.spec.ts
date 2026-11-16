@@ -90,7 +90,7 @@ test('visual audit of all existing mobile surfaces', async ({
     await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
   for (const mode of ['Leaderboards', 'Buddies', 'Settings']) {
-    await page.getByRole('button', { name: mode, exact: true }).click()
+    await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
     await shot(mode.toLowerCase())
     if (mode === 'Leaderboards') {
       await expect(page.getByText(/Your Global Rank/)).toBeVisible()
@@ -314,7 +314,7 @@ test('visual audit of all existing mobile surfaces', async ({
   await expect(access.getByLabel('Email address')).toBeVisible()
   await shot('sign-in', access)
   for (const mode of ['Sign Up', 'Continue as Guest']) {
-    await access.getByRole('button', { name: mode, exact: true }).click()
+    await access.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
     await shot(mode === 'Sign Up' ? 'sign-up' : 'guest', access)
   }
   await access.getByRole('button', { name: 'Sign In', exact: true }).click()

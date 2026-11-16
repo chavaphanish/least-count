@@ -1,0 +1,67 @@
+import { expect, test } from '@playwright/test'
+import { mock } from './career-fixture'
+const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'
+
+for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], [480, 320]]) {
+  test(`header icons, profile targets and settings route work at ${width}x${height}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width, height }, ...(width < 1000 ? { isMobile: true, hasTouch: true, userAgent: iphone } : {}) })
+    try {
+      const page = await context.newPage(), state = await mock(page)
+      Object.assign(state.user.player, { firstName: 'Career', lastName: 'Tester', username: 'lc_owner' })
+      await page.goto('/')
+      await expect(page.getByRole('heading', { name: 'Welcome back, Career!' })).toBeVisible()
+      const header = page.getByRole('banner'), nav = header.getByRole('navigation')
+      await expect(nav.locator(':scope > a, :scope > button')).toHaveCount(4)
+      expect(await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => el.getAttribute('aria-label') || el.textContent?.trim()))).toEqual(['Rules', 'Lounge', 'Mailbox', 'Settings'])
+      await expect(page.locator('.lounge-navigation').getByRole('link', { name: 'My Profile' })).toHaveCount(0)
+      await expect(page.locator('.lounge-navigation').getByText('Settings', { exact: true })).toHaveCount(0)
+      const boxes = await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => {
+        const r = el.getBoundingClientRect()
+        return { x: r.x, right: r.right, center: r.y + r.height / 2 }
+      }))
+      for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].x).toBeGreaterThanOrEqual(boxes[i - 1].right)
+        expect(Math.abs(boxes[i].center - boxes[0].center)).toBeLessThan(1)
+      }
+      expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+      const identity = header.getByRole('link', { name: 'Your profile' }), identityBox = await identity.boundingBox(), navBox = await nav.boundingBox()
+      expect(identityBox!.x + identityBox!.width).toBeLessThanOrEqual(navBox!.x)
+      const mailbox = nav.getByRole('button', { name: 'Mailbox', exact: true }), url = page.url()
+      await mailbox.click()
+      const dialog = page.getByRole('dialog', { name: 'Mailbox', exact: true })
+      await expect(dialog).toBeVisible()
+      await expect(dialog.getByText('Under Construction.', { exact: true })).toBeVisible()
+      expect(page.url()).toBe(url)
+      if (width === 568) await page.screenshot({ path: '/tmp/header-mailbox-popup-568.png' })
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+      await expect(dialog).not.toBeVisible()
+      await expect(mailbox).toBeFocused()
+      await mailbox.click(); await page.keyboard.press('Escape')
+      await expect(dialog).not.toBeVisible()
+      await expect(mailbox).toBeFocused()
+      for (const target of ['.profile-avatar', '.header-profile-lines strong', '.header-profile-lines small']) {
+        await identity.locator(target).click()
+        await expect(page).toHaveURL(/#\/profile$/)
+        await expect(page.getByRole('region', { name: 'Player career' })).toBeVisible()
+        await nav.getByRole('link', { name: 'Lounge', exact: true }).click()
+      }
+      await nav.getByRole('link', { name: 'Settings', exact: true }).click()
+      await expect(page).toHaveURL(/#\/settings$/)
+      await expect(page).toHaveTitle('YAYDU — Settings')
+      await expect(nav.getByRole('link', { name: 'Settings', exact: true })).toHaveAttribute('aria-current', 'page')
+      const sound = page.getByRole('checkbox', { name: 'Sound Effects', exact: true })
+      await expect(sound).toBeChecked(); await sound.uncheck()
+      await page.reload()
+      await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+      await expect(sound).not.toBeChecked()
+      await page.getByRole('button', { name: 'Back to Lounge' }).click()
+      await expect(page).toHaveURL(/#\/$/)
+      await expect(page.locator('.lounge-home')).toBeVisible()
+      await page.goBack()
+      await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+      await nav.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await expect(page.locator('.lounge-home')).toBeVisible()
+      if (width === 568) await page.screenshot({ path: '/tmp/header-mailbox-settings-568.png' })
+    } finally { await context.close() }
+  })
+}
