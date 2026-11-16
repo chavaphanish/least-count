@@ -42,10 +42,8 @@ for (const viewport of [
       const group = page.locator('.lounge-navigation'),
         buttons = group.locator('.lounge-nav-button')
       await expect(buttons).toHaveText([
-        'My Profile',
         'Leaderboards',
         'Buddies',
-        'Settings',
       ])
       await expect(group).toBeVisible()
       const base = await appearance(buttons.first())
@@ -95,7 +93,7 @@ for (const viewport of [
       }
       for (const states of [hovered, pressed, focused, disabled])
         for (const style of states) expect(style).toEqual(states[0])
-      await group.getByRole('link', { name: 'My Profile', exact: true }).click()
+      await page.getByRole('link', { name: 'Your profile', exact: true }).click()
       await expect(
         page.getByRole('region', { name: 'Player career' }),
       ).toBeVisible()
@@ -103,7 +101,6 @@ for (const viewport of [
       for (const [name, target] of [
         ['Leaderboards', '.leaderboard'],
         ['Buddies', '.player-search'],
-        ['Settings', '.account-menu'],
       ]) {
         await group.getByRole('button', { name, exact: true }).click()
         await expect(page.locator(target)).toBeVisible()
@@ -128,8 +125,8 @@ test('desktop retains profile navigation', async ({
   await mock(page)
   await page.goto('/')
   await expect(page.locator('.lounge-navigation')).toBeVisible()
-  const profile = page.getByRole('link', { name: 'My Profile', exact: true })
-  await expect(profile).toHaveClass(/button-primary lounge-nav-button/)
+  const profile = page.getByRole('link', { name: 'Your profile', exact: true })
+  await expect(profile).toHaveClass(/brand header-profile/)
   await expect(page.getByRole('button', { name: 'Leaderboards', exact: true })).toBeVisible()
   await profile.click()
   await expect(

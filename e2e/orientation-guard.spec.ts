@@ -61,7 +61,7 @@ test('one guard covers routes and dashboard screens without replacing mounted co
     'Buddies',
     'Settings',
   ]) {
-    await page.getByRole('button', { name }).click()
+    await page.getByRole(name === 'Settings' ? 'link' : 'button', { name }).click()
     await page.setViewportSize(portrait)
     await expect(
       page.getByRole('dialog', { name: 'Rotate Your Phone' }),

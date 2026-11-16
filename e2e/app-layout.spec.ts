@@ -103,7 +103,7 @@ for (const size of sizes)
     if (size.width === 667)
       await page.screenshot({ path: 'docs/mobile-layout/dashboard.png' })
     for (const mode of ['Leaderboards', 'Buddies', 'Settings']) {
-      await page.getByRole('button', { name: mode, exact: true }).click()
+      await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
       if (mode === 'Leaderboards') {
         await expect(page.getByText(/Your Global Rank/)).toBeVisible()
         await fits(page)
@@ -188,7 +188,7 @@ for (const size of sizes)
     if (size.width === 667)
       await page.screenshot({ path: 'docs/mobile-layout/sign-in.png' })
     for (const mode of ['Sign Up', 'Continue as Guest']) {
-      await page.getByRole('button', { name: mode, exact: true }).click()
+      await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
       await fits(page)
     }
   })

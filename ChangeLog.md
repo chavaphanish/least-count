@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.20 — 2026-11-16
+
+- **Header navigation:** Rules and Lounge are followed by compact mailbox and settings icons. Mailbox opens the existing themed popup with “Under Construction.”; Settings opens the existing settings panel at `#/settings`, including direct links and reloads. Removed My Profile and Settings from the Lounge; the entire header identity still opens My Profile. Mobile landscape alignment, keyboard focus, and existing settings controls are preserved.
+
 ## 1.1.19 — 2026-11-16
 
 - **Lounge layout:** stacked matching gold Create Game Room, Join Game Room, and Local Practice actions on the left; moved the greeting to the right with account navigation. Removed the duplicate Lounge avatar/XP, introductory text, bottom practice/rules links, and Lounge header Profile button. The header identity and XP display remain unchanged. Returning registered players are recognized by existing recorded game participation; new players receive a personalized welcome. Room flows, guest restrictions, and landscape responsiveness are preserved.
