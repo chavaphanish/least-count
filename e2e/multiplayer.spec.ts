@@ -10,11 +10,11 @@ async function guest(page: Page, name: string) {
     .getByRole('button', { name: 'Enter as guest', exact: true })
     .click()
   await expect(
-    page.getByRole('heading', { name: `Welcome, ${name}.` }),
+    page.getByRole('heading', { name: `Welcome, ${name}!` }),
   ).toBeVisible()
 }
 async function create(page: Page, capacity = 2, timed = false, cutoff = 100) {
-  await page.getByRole('button', { name: /Set the Table/ }).click()
+  await page.getByRole('button', { name: /Create Game Room/ }).click()
   await page.getByLabel('Number of players').selectOption(String(capacity))
   await page.getByLabel('Elimination cutoff').fill(String(cutoff))
   if (!timed) await page.getByLabel('Timed game').uncheck()
@@ -28,7 +28,7 @@ async function create(page: Page, capacity = 2, timed = false, cutoff = 100) {
   return (await page.locator('.room-code-panel strong').textContent())!
 }
 async function enter(page: Page, code: string) {
-  await page.getByRole('button', { name: /Take a Seat/ }).click()
+  await page.getByRole('button', { name: /Join Game Room/ }).click()
   await page.getByLabel('Room code', { exact: true }).fill(code.toLowerCase())
   await page.getByRole('button', { name: 'Join Room', exact: true }).click()
   await expect(
@@ -50,7 +50,7 @@ test('restores a server guest across refresh and clears it on sign out', async (
   expect(await page.evaluate(() => document.cookie)).not.toContain('lc_guest')
   await page.reload()
   await expect(
-    page.getByRole('heading', { name: 'Welcome, Guest Restore.' }),
+    page.getByRole('heading', { name: 'Welcome, Guest Restore!' }),
   ).toBeVisible()
   expect(
     (await (await page.request.get('/api/session')).json()).user.player.id,
@@ -67,12 +67,12 @@ test('default room form is four players, 100 points, and timed; invalid codes fa
   page,
 }) => {
   await guest(page, 'Settings Guest')
-  await page.getByRole('button', { name: /Set the Table/ }).click()
+  await page.getByRole('button', { name: /Create Game Room/ }).click()
   await expect(page.getByLabel('Number of players')).toHaveValue('4')
   await expect(page.getByLabel('Elimination cutoff')).toHaveValue('100')
   await expect(page.getByLabel('Timed game')).toBeChecked()
   await page.getByRole('button', { name: '← Back to Lounge' }).click()
-  await page.getByRole('button', { name: /Take a Seat/ }).click()
+  await page.getByRole('button', { name: /Join Game Room/ }).click()
   await page.getByLabel('Room code', { exact: true }).fill('ZZZZZZ')
   await page.getByRole('button', { name: 'Join Room', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText(/invalid|closed/)
@@ -293,7 +293,7 @@ test('reconnects without a duplicate seat and rejects an extra player when full'
       page.getByText('2 connected · 2 of 2 seats reserved'),
     ).toBeVisible()
     await guest(extra, 'Extra Guest')
-    await extra.getByRole('button', { name: /Take a Seat/ }).click()
+    await extra.getByRole('button', { name: /Join Game Room/ }).click()
     await extra.getByLabel('Room code', { exact: true }).fill(code)
     await extra.getByRole('button', { name: 'Join Room', exact: true }).click()
     await expect(extra.getByRole('alert')).toContainText('full')

@@ -50,8 +50,8 @@ for(const mobile of [false,true])test.describe(mobile?'mobile account access':'d
   await page.route('**/api/auth/login',r=>{signedIn=true;return r.fulfill({json:{session:{access_token:token,refresh_token:'test-refresh'}}})})
   await page.route('https://mock-project.supabase.co/auth/v1/token**',r=>{signedIn=true;expect(r.request().postDataJSON().email).toBe('owner@example.test');return r.fulfill({json:session})})
   await page.goto('/');await page.getByLabel('Email or Username',{exact:true}).fill(byUsername?'CardMaster99':'OWNER@EXAMPLE.TEST');await page.getByLabel('Password',{exact:true}).fill('verified-password');await page.getByRole('button',{name:'Sign in',exact:true}).click()
-  await expect(page.getByRole('heading',{name:'Welcome, John Smith (@cardmaster99).'})).toBeVisible();expect(registrations).toBe(0)
-  await page.reload();await expect(page.getByRole('heading',{name:'Welcome, John Smith (@cardmaster99).'})).toBeVisible();expect(registrations).toBe(0)
+  await expect(page.getByRole('heading',{name:/Welcome(?: back)?, John(?: Smith)?!/})).toBeVisible();expect(registrations).toBe(0)
+  await page.reload();await expect(page.getByRole('heading',{name:/Welcome(?: back)?, John(?: Smith)?!/})).toBeVisible();expect(registrations).toBe(0)
  })
 
 })

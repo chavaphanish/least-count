@@ -20,11 +20,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320]])
       await expect(progress).toHaveAttribute('value', '250')
       await expect(progress).toHaveAttribute('max', '500')
       await expect(progress).toBeVisible()
-      if (width < 1000) {
-        const loungeProgress = page.getByLabel('Your career').getByRole('progressbar')
-        await expect(loungeProgress).toHaveAttribute('value', '250')
-        expect(await progress.evaluate(el => getComputedStyle(el).accentColor)).toBe(await loungeProgress.evaluate(el => getComputedStyle(el).accentColor))
-      }
+      await expect(page.getByRole('progressbar')).toHaveCount(1)
       const brandBox = await profile.boundingBox(), navBox = await header.getByRole('navigation').boundingBox()
       expect(brandBox!.x + brandBox!.width).toBeLessThanOrEqual(navBox!.x)
       expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)

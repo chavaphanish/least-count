@@ -1,14 +1,13 @@
 import { SoundSettings } from '../feedback/SoundSettings'
 import { useNavigationLoading } from '../components/NavigationLoading'
-import { CareerGlance } from '../career/CareerGlance'
+import { useCareer } from '../career/useCareer'
+import type { CareerData } from '../career/model'
 import { Buddies } from '../career/Buddies'
-import { useMobileLandscape } from '../components/MobileOrientation'
 import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { playerIdentity } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
-import { Avatar } from '../components/Avatar'
 import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import {
   DEFAULT_ROOM_SETTINGS,
@@ -19,9 +18,14 @@ import {
 import type { RoomSettings } from '../shared/multiplayer'
 export function DashboardPage() {
   const navigation = useNavigationLoading()
-  const mobile = useMobileLandscape()
   const auth = useAuth()
   const player = auth.user!.player
+  const { data: career } = useCareer<CareerData>(
+    player.accountType === 'registered' ? '/career?op=profile' : null,
+  )
+  // Activity timestamps also change on first-session reads; prior games are explicit evidence.
+  const returning = (career?.profile.gamesPlayed ?? 0) > 0 || (career?.statistics?.gamesStarted ?? 0) > 0
+  const greetingName = returning ? player.firstName || playerIdentity(player).primary : playerIdentity(player).primary
   const [mode, setMode] = useState<
     'home' | 'create' | 'join' | 'buddies' | 'settings'
   >('home')
@@ -91,26 +95,6 @@ export function DashboardPage() {
   }
   return (
     <section className="dashboard-page" data-mode={mode}>
-      <div className="dashboard-heading">
-        <div>
-          <p className="eyebrow">YOUR NEXT CARD NIGHT STARTS HERE</p>
-          <h1 aria-label={`Welcome, ${playerIdentity(player).label}.`}>
-            Welcome, <em><PlayerIdentity player={player} compact /></em>.
-          </h1>
-        </div>
-        <div className="player-chip">
-          <Avatar player={player} />
-          <span>
-            <strong className="player-chip-name"><PlayerIdentity player={player} compact /></strong>
-            <small>
-              {player.accountType === 'guest'
-                ? 'Guest player'
-                : 'Registered account'}
-            </small>
-          </span>
-        </div>
-        {mobile && <CareerGlance />}
-      </div>
       {(auth.room || auth.user?.profile?.needsCompletion) && (
         <div className="invitation-banner">
           {auth.user?.profile?.needsCompletion && (
@@ -171,77 +155,31 @@ export function DashboardPage() {
         </div>
       ) : mode === 'home' ? (
         <>
-          <div className="dashboard-actions">
-            <div className="dashboard-action">
-              <h2>Create Game Room</h2>
-              <p>Set the table. Pick your settings. Invite your friends.</p>
-              <button
-                className="button button-primary"
-                onClick={() => go('create')}
-              >
-                Set the Table
+          <div className="lounge-home">
+            <div className="dashboard-actions" role="group" aria-label="Game options">
+              <button className="button button-primary lounge-nav-button" onClick={() => go('create')}>
+                Create Game Room
               </button>
-            </div>
-            <div className="dashboard-action">
-              <h2>Join Game Room</h2>
-              <p>Have a code? Your seat is waiting.</p>
-              <button
-                className="button button-primary"
-                onClick={() => go('join')}
-              >
-                Take a Seat
+              <button className="button button-primary lounge-nav-button" onClick={() => go('join')}>
+                Join Game Room
               </button>
-            </div>
-          </div>
-          {mobile && (
-            <div className="mobile-main-menu">
-              <a
-                className="button button-primary lounge-nav-button"
-                href="#/profile"
-              >
-                My Profile
+              <a className="button button-primary lounge-nav-button" href="#/game">
+                Local Practice
               </a>
-              <button
-                className="button button-primary lounge-nav-button"
-                onClick={() => { location.hash = '#/leaderboards' }}
-              >
-                Leaderboards
-              </button>
-              <button
-                className="button button-primary lounge-nav-button"
-                onClick={() => go('buddies')}
-              >
-                Buddies
-              </button>
-              <button
-                className="button button-primary lounge-nav-button"
-                onClick={() => go('settings')}
-              >
-                Settings
-              </button>
             </div>
-          )}
-          <div className="dashboard-links">
-            {!mobile && <button className="text-button" onClick={() => go('settings')}>Settings</button>}
-            <a className="button button-secondary" href="#/rules">
-              How to Play
-            </a>
-            {!mobile && (
-              <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
-                Leaderboards
-              </button>
-            )}
-            {!mobile && player.accountType === 'registered' && (
-              <a
-                className="button button-primary lounge-nav-button"
-                href="#/profile"
-              >
-                My Profile
-              </a>
-            )}
-            <a className="text-link" href="#/game">
-              Local practice →
-            </a>
+            <div className="lounge-welcome">
+              <div className="dashboard-heading">
+                <h1>Welcome{returning ? ' back' : ''}, <em>{greetingName}</em>!</h1>
+              </div>
+              <div className="lounge-navigation">
+                <a className="button button-primary lounge-nav-button" href="#/profile">My Profile</a>
+                <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
+                  Leaderboards
+                </button>
+                <button className="button button-primary lounge-nav-button" onClick={() => go('buddies')}>Buddies</button>
+                <button className="button button-primary lounge-nav-button" onClick={() => go('settings')}>Settings</button>
+              </div>
+            </div>
           </div>
         </>
       ) : (
