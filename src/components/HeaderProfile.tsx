@@ -5,7 +5,7 @@ import type { CareerData } from '../career/model'
 import { Avatar } from './Avatar'
 import { playerIdentity } from '../shared/playerIdentity'
 
-/** Header brand replacement for signed-in players: avatar, full name + username, Level/XP. */
+/** Header identity with the existing career data and level progress calculation. */
 export function HeaderProfile() {
   const { user } = useAuth()
   const player = user?.player
@@ -28,7 +28,10 @@ export function HeaderProfile() {
       {xp && (
         <span className="header-profile-level" aria-label={`Level ${xp.level}, ${data!.profile.xp.toLocaleString()} XP`}>
           <strong>Level {xp.level}</strong>
-          <span>{data!.profile.xp.toLocaleString()} XP</span>
+          <span title={`${data!.profile.xp.toLocaleString()} total XP`}>
+            {xp.earned.toLocaleString()} / {xp.needed.toLocaleString()} XP
+          </span>
+          <progress max={xp.needed} value={xp.earned} aria-label="Level progress" />
         </span>
       )}
     </a>
