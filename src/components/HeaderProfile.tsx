@@ -28,6 +28,7 @@ export function HeaderProfile() {
       {xp && (
         <span className="header-profile-level" aria-label={`Level ${xp.level}, ${data!.profile.xp.toLocaleString()} XP`}>
           <strong>Level {xp.level}</strong>
+          <span aria-hidden="true">|</span>
           <span title={`${data!.profile.xp.toLocaleString()} total XP`}>
             {xp.earned.toLocaleString()} / {xp.needed.toLocaleString()} XP
           </span>
