@@ -1,5 +1,7 @@
 /** Explicit public identity fields; never pass auth/session objects to public projections. */
 export type PlayerIdentityData = {
+  id?: string
+  accountType?: string
   displayName: string
   username?: string
   firstName?: string

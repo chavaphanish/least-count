@@ -1,3 +1,4 @@
+import { presenceOperation, sweepPresence } from './presence'
 import { stepErasure } from './account-deletion'
 import type { ErasureJob, ErasureResult } from './account-deletion'
 import { eraseRoomIdentity, erasureBlocked } from './erasure'
@@ -36,6 +37,7 @@ export class Directory {
       try {
         const data = await body(request)
         const path = new URL(request.url).pathname
+        if(path.startsWith('/presence/'))return await presenceOperation(this.ctx.storage,path.slice('/presence/'.length),data)
         if (path === '/erasure/start') {
           const uid=String(data.uid),namespace=String(data.namespace)
           if(!/^[0-9a-f-]{36}$/.test(uid)||!/^[0-9a-f]{32}$/.test(namespace))throw new ApiError(400,'Invalid deletion request.')
@@ -238,7 +240,7 @@ export class Directory {
         }
       }
       await this.ctx.blockConcurrencyWhile(async()=>{
-        next=Infinity
+        next=await sweepPresence(this.ctx.storage,now)
         const latest=await this.ctx.storage.list<ErasureResult>({prefix:'erasure-job:'})
         for(const value of latest.values())next=Math.min(next,'nextAt' in value?value.nextAt:value.expires)
         const bucket=await this.ctx.storage.get<{expires:number}>('access-rate')

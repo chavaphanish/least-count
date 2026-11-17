@@ -1,3 +1,4 @@
+import { presenceApi, clearPresence } from './presence'
 import { startDeletion, deletionStatus } from './account-deletion'
 import { accessLimit, availability, login, register } from './access'
 import { checkUsername, saveIdentity } from './identity'
@@ -39,6 +40,7 @@ export default {
     try {
       if (request.method !== 'GET' || url.pathname.endsWith('/ws'))
         requireOrigin(request, env.APP_ORIGIN)
+      if (url.pathname === '/api/presence' && request.method === 'POST') return await presenceApi(request,env)
       if (url.pathname === '/api/config' && request.method === 'GET')
         return json({
           ...publicConfig(env),
@@ -91,6 +93,7 @@ export default {
               },
             )
         }
+        if(auth?.uid)await clearPresence(request,env,auth.uid)
         await directory(env, '/logout', { token: cookie(request) })
         return new Response(JSON.stringify({ ok: true }), {
           headers: {

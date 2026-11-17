@@ -1,3 +1,4 @@
+import { usePresence } from '../presence/PresenceProvider'
 import { useState } from 'react'
 import type { PlayerIdentityData } from '../shared/playerIdentity'
 import { playerIdentity } from '../shared/playerIdentity'
@@ -6,9 +7,10 @@ export function Avatar({
 }: {
   player: PlayerIdentityData
 }) {
+  const { ref, online } = usePresence(player)
   const [failed, setFailed] = useState<string | null>(null)
   return (
-    <span className="profile-avatar">
+    <span ref={ref} className="profile-avatar">
       {player.avatarUrl && failed !== player.avatarUrl ? (
         <img
           src={player.avatarUrl}
@@ -20,6 +22,7 @@ export function Avatar({
           {(player.firstName && player.lastName ? `${player.firstName[0]}${player.lastName[0]}` : player.displayName.replace(/^@/, '').slice(0, 2)).toUpperCase()}
         </span>
       )}
+      {online && <span className="presence-dot" role="img" aria-label="Online" title="Online" />}
     </span>
   )
 }
