@@ -16,7 +16,7 @@ async function fits(page: Page) {
     return r.x < 0 || r.y < 0 || r.right > innerWidth + 1 || r.bottom > (parseFloat(getComputedStyle(root.closest('[data-mobile-device]') || document.documentElement).getPropertyValue('--app-height')) || innerHeight) + 1 ? [el.textContent || el.getAttribute('name') || el.tagName] : []
   }))
   expect(failures).toEqual([])
-  const overflow = await page.locator('.settings-profile-editor, .compact-profile-editor, .compact-profile-editor form').evaluateAll(els=>els.filter(el=>el.checkVisibility()).filter(el=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1).map(el=>el.className))
+  const overflow = await page.locator('.settings-profile-editor, .compact-profile-editor, .compact-profile-editor form').evaluateAll(els=>els.filter(el=>el.checkVisibility()).filter(el=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1).map(el=>({class:el.className,height:el.clientHeight,scrollHeight:el.scrollHeight,width:el.clientWidth,scrollWidth:el.scrollWidth})))
   expect(overflow).toEqual([])
   const dimensions = await page.locator('.dashboard-page').evaluate(el => ({ height:el.clientHeight,scroll:el.scrollHeight, children:Array.from(el.querySelectorAll('.settings-panel,.settings-layout,.settings-content,[role=tabpanel],.settings-profile-editor,.screen-pages,.screen-page-content,.screen-page,.identity-editor,form')).filter(el=>el.checkVisibility()).map(el=>({class:el.className,height:el.clientHeight,scroll:el.scrollHeight,bottom:el.getBoundingClientRect().bottom,margin:getComputedStyle(el).margin,padding:getComputedStyle(el).padding})) }))
   if(dimensions.scroll>dimensions.height)await page.screenshot({path:'/tmp/settings-overflow.png'})
@@ -34,12 +34,34 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       await expect(tabs.getByRole('tab')).toHaveText(['Account', 'Sounds', 'Profile'])
       await expect(page.getByRole('tab', { name: 'Account', exact: true })).toHaveAttribute('aria-selected','true')
       await expect(page.getByRole('button', { name: 'Sign Out', exact: true })).toBeVisible()
+      await expect(page.locator('.account-created')).toHaveText('Account Created: 1 January 2026')
+      await expect(page.locator('.account-created time')).toHaveAttribute('datetime', '2026-01-01T00:00:00Z')
+      const actionStyles = await page.locator('.account-actions > .button').evaluateAll(buttons => buttons.map(button => {
+        const rect = button.getBoundingClientRect(), style = getComputedStyle(button)
+        return { width: rect.width, height: rect.height, font: style.font, padding: style.padding, radius: style.borderRadius }
+      }))
+      expect(actionStyles).toHaveLength(2)
+      expect(actionStyles[0]).toEqual(actionStyles[1])
       await expect(page.getByRole('button', { name: 'Back to Lounge' })).toHaveCount(0)
       const boxes = await tabs.getByRole('tab').evaluateAll(els => els.map(el => { const r = el.getBoundingClientRect(); return { x:r.x,y:r.y,width:r.width,height:r.height } }))
       expect(new Set(boxes.map(r => r.width)).size).toBe(1); expect(new Set(boxes.map(r => r.height)).size).toBe(1)
       expect(boxes[1].y).toBeGreaterThan(boxes[0].y + boxes[0].height)
       expect(boxes[2].y).toBeGreaterThan(boxes[1].y + boxes[1].height)
       await fits(page)
+      const presentation = () => page.locator('.circle-panel').evaluate(panel => {
+        const tab = panel.querySelector('.career-tabs button')!, style = getComputedStyle(tab)
+        const rect = tab.getBoundingClientRect(), root = panel.getBoundingClientRect(), content = panel.querySelector('.circle-results')!.getBoundingClientRect()
+        const layout = getComputedStyle(panel.querySelector('.circle-layout')!), tabs = getComputedStyle(panel.querySelector('.career-tabs')!)
+        return { x: root.x, y: root.y, width: root.width, height: root.height, tabWidth: rect.width, tabHeight: rect.height,
+          font: style.font, padding: style.padding, radius: style.borderRadius, color: style.color, background: style.backgroundColor,
+          columns: layout.gridTemplateColumns, gap: layout.gap, tabGap: tabs.gap, contentY: content.y,
+          headingFont: getComputedStyle(panel.querySelector('h2')!).font }
+      })
+      const settingsPresentation = await presentation()
+      await page.getByRole('link', { name: 'Buddies', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Your Circle', exact: true })).toBeVisible()
+      expect(await presentation()).toEqual(settingsPresentation)
+      await page.getByRole('link', { name: 'Settings', exact: true }).click()
       await page.getByRole('tab', { name: 'Sounds', exact: true }).click()
       await expect(page.getByRole('checkbox', { name: 'Sound Effects', exact: true })).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Vibration', exact: true })).toBeVisible()
@@ -126,6 +148,7 @@ test('Account sign-out retains error recovery and clears the existing session', 
 test('guest Account retains session exit and Profile exposes no editing fields', async ({ page }) => {
   const state=await setup(page); state.user.player.accountType='guest'
   await page.goto('/#/settings'); await expect(page.getByRole('button',{name:'Leave Guest Session',exact:true})).toBeVisible()
+  await expect(page.locator('.account-created')).toHaveCount(0)
   await page.getByRole('tab',{name:'Profile',exact:true}).click()
   await expect(page.getByText('Profile editing is available to registered accounts.',{exact:true})).toBeVisible()
   await expect(page.getByRole('textbox')).toHaveCount(0)
@@ -195,4 +218,19 @@ test('account deletion requires explicit confirmation, handles errors and clears
   fail=false;await submit.click();await expect(dialog.getByRole('status')).toContainText('retrying automatically');await expect(page.locator('.header-profile')).toBeVisible()
   complete=true;await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible({timeout:10000})
   await expect(page.locator('.header-profile')).toHaveCount(0);expect(new URL(page.url()).hash).toBe('#/')
+})
+
+
+test('registration date uses existing session data and remains stable across time zones', async ({ browser }) => {
+  const context = await browser.newContext({ timezoneId: 'America/Los_Angeles', viewport: { width: 480, height: 320 }, isMobile: true, hasTouch: true, userAgent: iphone })
+  try {
+    const page = await context.newPage(), state = await setup(page)
+    state.user.createdAt = '2026-11-17T00:05:00Z'
+    await page.goto('/#/settings')
+    await expect(page.locator('.account-created')).toHaveText('Account Created: 17 November 2026')
+    await page.getByRole('tab', { name: 'Sounds', exact: true }).click()
+    await page.getByRole('tab', { name: 'Account', exact: true }).click()
+    await expect(page.locator('.account-created time')).toHaveText('17 November 2026')
+    await fits(page)
+  } finally { await context.close() }
 })

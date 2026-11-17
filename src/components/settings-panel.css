@@ -1,9 +1,5 @@
-/* Reuse career-tab colors, typography, and selected/focus states. */
-.settings-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; min-width: 0; min-height: 0; }
-.settings-panel > h2 { margin: 0; }
-.settings-layout { display: grid; grid-template-columns: minmax(110px,1fr) minmax(0,3fr); gap: 20px; min-height: 0; }
-.settings-panel .career-tabs { flex-direction: column; flex-wrap: nowrap; gap: 12px; margin: 0; align-self: start; }
-.settings-panel .career-tabs button { width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; font-size: 13px; }
+/* Shared panel and tabs come from circle.css; retain settings-specific controls. */
+.settings-panel { width: 100%; }
 .settings-content, .settings-content > [role=tabpanel] { min-width: 0; min-height: 0; }
 .settings-content > [role=tabpanel] { height: 100%; }
 .settings-panel .sound-haptics { margin: 0; }
@@ -25,26 +21,28 @@
 .profile-photo-pencil svg { width: 15px; height: 15px; }
 .profile-photo-control small { font-size: 10px; line-height: 1.3; color: var(--muted); }
 .profile-photo-remove { padding: 4px; font-size: 10px; }
-[data-mobile-device] .settings-panel { flex: 1; gap: 8px; }
-[data-mobile-device] .settings-layout { flex: 1; gap: 12px; }
-[data-mobile-device] .settings-panel .career-tabs { gap: 8px; }
-[data-mobile-device] .settings-panel .career-tabs button { padding: 8px; }
 [data-mobile-device] .settings-panel .compact-profile-editor { grid-template-columns: 64px minmax(0,1fr); gap: 8px; }
 [data-mobile-device] .profile-photo-trigger .profile-avatar { width: 60px; height: 60px; }
 [data-mobile-device] .settings-panel .compact-profile-editor form { gap: 6px 8px; }
 [data-mobile-device] .settings-panel .compact-profile-editor form input { min-height: 36px; padding: 6px 8px; }
 [data-mobile-device] .settings-panel .compact-profile-editor form > .button { padding: 6px; font-size: 12px; }
+[data-keyboard] .settings-panel.career-section { padding: 4px; }
 [data-keyboard] .settings-panel > h2, [data-keyboard] .profile-photo-control small { display: none; }
-[data-keyboard] .settings-panel .career-tabs { gap: 4px; }
-[data-keyboard] .settings-panel .career-tabs button { min-height: 32px; padding: 4px; }
-[data-keyboard] .settings-panel .compact-profile-editor { grid-template-columns: 48px minmax(0,1fr); gap: 6px; }
+[data-keyboard] .settings-panel .compact-profile-editor { grid-template-columns: 48px minmax(0,1fr); gap: 6px; padding: 0; }
 [data-keyboard] .profile-photo-trigger .profile-avatar { width: 44px; height: 44px; }
-[data-keyboard] .settings-panel .compact-profile-editor form { gap: 4px 6px; }
+[data-keyboard] .settings-panel .compact-profile-editor form { gap: 2px 6px; }
+[data-keyboard] .settings-panel .compact-profile-editor form > p { padding: 0; font-size: 10px; line-height: 1.1; }
 [data-keyboard] .settings-panel .compact-profile-editor form label { font-size: 10px; line-height: 1.1; gap: 2px; }
 [data-keyboard] .settings-panel .compact-profile-editor form input { min-height: 30px; padding: 3px 6px; }
 [data-keyboard] .settings-panel .compact-profile-editor form > .button { min-height: 32px; padding: 4px; }
 
 .settings-panel .account-actions:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.account-created { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.account-created time { color: var(--cream); }
+.settings-panel .account-actions > .button { width: min(100%, 220px); height: 44px; min-height: 44px; flex-shrink: 0; padding: 10px 16px; border: 1px solid transparent; justify-content: center; font-size: 13px; font-weight: 600; line-height: 1.2; }
+.settings-panel .account-actions > .button-danger { border-color: #d96b72; background: #902c3526; color: #fff4f0; box-shadow: none; }
+.settings-panel .account-actions > .button-danger:hover { background: #902c3555; }
+.settings-panel .account-actions > .button-danger:active { background: #902c3570; }
 .button.button-danger { border: 1px solid #d96b72; background: #902c35; color: #fff4f0; }
 .button.button-danger:hover { background: #a93640; }
 .button.button-danger:active { background: #75242b; }
