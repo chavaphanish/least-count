@@ -34,7 +34,7 @@ for (const viewport of [
 ]) {
   test.describe(`Lounge group ${viewport.width}`, () => {
     test.use({ viewport, userAgent: iphone, isMobile: true, hasTouch: true })
-    test('gold buttons share states and retain navigation', async ({
+    test('Lounge action states and navigation remain usable', async ({
       page,
     }) => {
       await mock(page)
@@ -46,7 +46,7 @@ for (const viewport of [
       ])
       await expect(group).toBeVisible()
       const base = await appearance(buttons.first())
-      expect(base[0]).toBe(
+      expect(await buttons.first().locator('.lounge-action-icon').evaluate(el=>getComputedStyle(el).color)).toBe(
         await page.locator('html').evaluate((el) => {
           const probe = document.createElement('span')
           probe.style.color = getComputedStyle(el).getPropertyValue('--gold')

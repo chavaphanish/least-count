@@ -11,6 +11,7 @@ import './gameplay-layout.css'
 import './branding.css'
 import './auth/access.css'
 import './career/leaderboard.css'
+import './pages/lounge.css'
 import { AuthProvider } from './auth/AuthProvider'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
