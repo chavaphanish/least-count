@@ -154,12 +154,6 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
                 <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="17" rx="2" /><path d="m5 6-2 1 3 14a2 2 0 0 0 2 1l6-1M14 8l3 4-3 4-3-4Z" /></svg>
                 Local Practice
               </a>
-              <div className="lounge-navigation">
-                <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
-                  <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0ZM8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 1v5m-4 3h8m-9 0v-3h10v3" /></svg>
-                  Leaderboards
-                </button>
-              </div>
             </div>
           </div>
         </>

@@ -12,8 +12,8 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       await page.goto('/')
       await expect(page.getByRole('heading', { name: 'Welcome back, Career!' })).toBeVisible()
       const header = page.getByRole('banner'), nav = header.getByRole('navigation')
-      await expect(nav.locator(':scope > a, :scope > button')).toHaveCount(5)
-      expect(await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => el.getAttribute('aria-label') || el.textContent?.trim()))).toEqual(['Rules', 'Lounge', 'Buddies', 'Mailbox', 'Settings'])
+      await expect(nav.locator(':scope > a, :scope > button')).toHaveCount(6)
+      expect(await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => el.getAttribute('aria-label') || el.textContent?.trim()))).toEqual(['Rules', 'Lounge', 'Leaderboards', 'Buddies', 'Mailbox', 'Settings'])
       await expect(page.locator('.lounge-navigation').getByRole('link', { name: 'My Profile' })).toHaveCount(0)
       await expect(page.locator('.lounge-navigation').getByText('Settings', { exact: true })).toHaveCount(0)
       await expect(page.locator('.lounge-navigation').getByText('Buddies', { exact: true })).toHaveCount(0)
@@ -28,6 +28,20 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
       const identity = header.getByRole('link', { name: 'Your profile' }), identityBox = await identity.boundingBox(), navBox = await nav.boundingBox()
       expect(identityBox!.x + identityBox!.width).toBeLessThanOrEqual(navBox!.x)
+      await expect(page.locator('.lounge-home').getByText('Leaderboards', { exact: true })).toHaveCount(0)
+      const rankings = nav.getByRole('link', { name: 'Leaderboards', exact: true })
+      await expect(rankings).toHaveAttribute('title', 'Leaderboards')
+      const style = (el: Element) => { const s = getComputedStyle(el); return [s.width, s.height, s.padding, s.color, s.backgroundColor, s.borderRadius] }
+      const friends = nav.getByRole('link', { name: 'Buddies', exact: true })
+      expect(await rankings.evaluate(style)).toEqual(await friends.evaluate(style))
+      await rankings.hover(); const hover = await rankings.evaluate(style)
+      await friends.hover(); expect(await friends.evaluate(style)).toEqual(hover)
+      await rankings.focus(); await expect(rankings).toHaveCSS('outline-width', '2px')
+      await rankings.click()
+      await expect(page).toHaveURL(/#\/leaderboards$/)
+      await expect(page.getByRole('heading', { name: 'Leaderboards', exact: true })).toBeVisible()
+      await expect(rankings).toHaveAttribute('aria-current', 'page')
+      await nav.getByRole('link', { name: 'Lounge', exact: true }).click()
       const buddies = nav.getByRole('link', { name: 'Buddies', exact: true })
       await buddies.click()
       await expect(page).toHaveURL(/#\/buddies$/)
@@ -78,3 +92,14 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
     } finally { await context.close() }
   })
 }
+
+test('all header controls stay within the smallest landscape viewport', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 480, height: 320 }, isMobile: true, hasTouch: true, userAgent: iphone })
+  try {
+    const page = await context.newPage(); await mock(page); await page.goto('/')
+    await expect(page.locator('.startup-screen')).not.toBeVisible()
+    const outside = await page.locator('.site-header .profile-avatar, .header-profile-lines, .header-profile-level, .site-header nav > a, .site-header nav > button').evaluateAll(els => els.filter(el => { const r = el.getBoundingClientRect(); return r.x < 0 || r.right > innerWidth + 1 }).map(el => el.getAttribute('aria-label') || el.className))
+    expect(outside).toEqual([])
+    await page.screenshot({ path: '/tmp/yaydu-trophy-header-480.png' })
+  } finally { await context.close() }
+})

@@ -16,7 +16,7 @@ for(const [width,height]of [[1280,800],[667,375]])test(`shared online avatars ac
  try{
   const page=await context.newPage(),state=await mock(page),p=await presence(page);state.setRelationship('accepted')
   await page.goto('/');await expect(page.locator('.lounge-home')).toBeVisible();await expect(page.locator('.header-profile .presence-dot')).toHaveCount(0)
-  p.enable();await page.getByRole('button',{name:'Leaderboards',exact:true}).click()
+  p.enable();await page.getByRole('link',{name:'Leaderboards',exact:true}).click()
   const dot=page.locator('.leaderboard .presence-dot').first();await expect(dot).toBeVisible();await expect(dot).toHaveAttribute('aria-label','Online')
   const geometry=await dot.evaluate(el=>{const a=el.parentElement!.getBoundingClientRect(),d=el.getBoundingClientRect();return{corner:d.x>a.x+a.width/2&&d.y>a.y+a.height/2,overlap:d.right>=a.right-2&&d.bottom>=a.bottom-2,position:getComputedStyle(el).position}})
   expect(geometry).toEqual({corner:true,overlap:true,position:'absolute'})
@@ -24,7 +24,7 @@ for(const [width,height]of [[1280,800],[667,375]])test(`shared online avatars ac
   if(width<1000)await page.getByRole('combobox',{name:'Buddy sections',exact:true}).selectOption({label:'accepted · 3/4'})
   await expect(page.locator('.social-list .presence-dot').first()).toBeVisible()
   await page.getByRole('link',{name:'Your profile',exact:true}).click();await expect(page.locator('.career-profile-header .presence-dot')).toBeVisible()
-  await page.getByRole('link',{name:'Lounge',exact:true}).click();await page.getByRole('button',{name:'Leaderboards',exact:true}).click()
+  await page.getByRole('link',{name:'Lounge',exact:true}).click();await page.getByRole('link',{name:'Leaderboards',exact:true}).click()
   await expect(page.locator('.leaderboard .presence-dot').first()).toBeVisible()
   expect(p.calls.filter(c=>c.heartbeat).length).toBe(1)
   expect(p.calls.every(c=>new Set(c.ids).size===c.ids.length&&c.ids.length<=100)).toBe(true)
