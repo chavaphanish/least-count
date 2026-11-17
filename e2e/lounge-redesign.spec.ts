@@ -22,7 +22,7 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
         const r = el.getBoundingClientRect()
         return { x: r.x, y: r.y, width: r.width, height: r.height, color: getComputedStyle(el).backgroundColor }
       }))
-      expect(boxes).toHaveLength(4)
+      expect(boxes).toHaveLength(3)
       expect(Math.max(...boxes.map(r => r.width))-Math.min(...boxes.map(r => r.width)),JSON.stringify(boxes)).toBeLessThan(1)
       expect(Math.max(...boxes.map(r => r.height))-Math.min(...boxes.map(r => r.height)),JSON.stringify(boxes)).toBeLessThan(1)
       expect(new Set(boxes.slice(1).map(r => r.color)).size).toBe(1)
@@ -31,10 +31,9 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       expect(boxes[1].y).toBe(boxes[0].y)
       expect(boxes[1].x).toBeGreaterThan(boxes[0].x + boxes[0].width)
       expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height)
-      expect(boxes[3].y).toBe(boxes[2].y)
       const welcome = await lounge.locator('.lounge-welcome').boundingBox()
       expect(welcome!.x + welcome!.width).toBeLessThan(boxes[0].x)
-      await expect(lounge.locator('.lounge-navigation .button')).toHaveCount(1)
+      await expect(lounge.getByRole('button', { name: 'Leaderboards', exact: true })).toHaveCount(0)
       const outside = await lounge.locator('button,a').evaluateAll(els => els.filter(el => el.checkVisibility()).filter(el => {
         const r = el.getBoundingClientRect()
         return r.x < 0 || r.y < 0 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1
