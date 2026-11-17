@@ -48,3 +48,14 @@ it('queries only intersecting avatars through one shared observer',async()=>{
  callback([{target:a,isIntersecting:true}] as unknown as IntersectionObserverEntry[],{} as IntersectionObserver);await settle()
  expect(read.mock.calls[0][0]).toEqual([other]);expect(Observer).toHaveBeenCalledTimes(1);remove();expect(unobserve).toHaveBeenCalledWith(a);client.stop();expect(disconnect).toHaveBeenCalled()
 })
+it('tracks offline friends without mounted avatars and reuses the heartbeat timer and reference counts',async()=>{
+ let connected=false
+ const read=vi.fn(async(ids:string[]):Promise<{online:Record<string,number>}>=>({online:connected&&ids.includes(other)?{[other]:60000}:{}}))
+ const client=new PresenceClient(read,uid,()=>Date.now()),untrack=client.track([other,other])
+ const avatar=client.watch({} as Element,other)
+ client.start();await settle();expect(client.isOnline(other)).toBe(false)
+ connected=true;await vi.advanceTimersByTimeAsync(30000);expect(client.isOnline(other)).toBe(true)
+ expect(read).toHaveBeenCalledTimes(2);expect(vi.getTimerCount()).toBe(1)
+ untrack();expect(client.isOnline(other)).toBe(true)
+ avatar();await vi.advanceTimersByTimeAsync(30000);expect(read.mock.calls.at(-1)![0]).toEqual([uid]);client.stop()
+})

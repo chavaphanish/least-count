@@ -7,6 +7,13 @@ export function presenceId(player:{id?:string;accountType?:string}) {
 type ReadPresence=(ids:string[],heartbeat:boolean,signal:AbortSignal)=>Promise<{online:Record<string,number>}>
 /** One scheduler and one in-flight batch for the entire app, never one timer per avatar. */
 export class PresenceClient {
+  private revision=0
+  getSnapshot=()=>this.revision
+  track(ids:string[]){
+    const unique=[...new Set(ids)]
+    unique.forEach(id=>this.add(id))
+    return()=>unique.forEach(id=>this.remove(id))
+  }
   private listeners=new Set<()=>void>()
   private refs=new Map<string,number>()
   private online=new Map<string,number>()
@@ -23,7 +30,7 @@ export class PresenceClient {
   constructor(private read:ReadPresence,private uid:string|null,private now=()=>performance.now()){}
   subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener)}}
   isOnline=(id:string|null)=>!!id&&(this.online.get(id)??0)>this.now()
-  private emit(){for(const listener of this.listeners)listener()}
+  private emit(){this.revision++;for(const listener of this.listeners)listener()}
   start(){if(this.controller.signal.aborted)this.controller=new AbortController();this.started=true;this.flush()}
   stop(){this.started=false;clearTimeout(this.timer);this.controller.abort();this.observer?.disconnect();this.elements.clear()}
   setVisible(visible:boolean){if(this.visible===visible)return;this.visible=visible;if(visible){this.nextBeat=0;this.flush()}this.schedule()}

@@ -1,0 +1,54 @@
+/* Your Circle reuses leaderboard tabs, row typography, avatars and presence. */
+.dashboard-page[data-mode=buddies] { display: flex; flex-direction: column; height: calc(100svh - 196px); min-height: 0; padding: 20px 0; }
+.dashboard-page[data-mode=buddies] .dashboard-focused { display: flex; flex: 1; min-height: 0; }
+.circle-panel.career-section { flex: 1; min-height: 0; margin: 0; }
+.circle-panel > h2 { margin: 0; font-family: 'Libre Caslon Display', Georgia, serif; font-size: clamp(24px, 3vw, 34px); font-weight: 400; }
+.circle-panel .circle-layout { flex: 1; grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr); }
+.circle-panel .career-tabs { flex-direction: column; }
+.circle-panel .career-tabs button { flex: none; }
+.circle-panel .circle-results { overflow: hidden; }
+.circle-panel .circle-list { max-height: none; min-height: 0; flex: 1; }
+.circle-panel .circle-list > li { grid-template-columns: minmax(0, 1fr) auto; height: auto; min-height: var(--ranking-row); gap: 8px; }
+.circle-player { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; color: var(--cream); padding: 1px 0; text-decoration: none; }
+.circle-player:hover { color: var(--gold); }
+.circle-player:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; border-radius: 4px; }
+.circle-identity { min-width: 0; display: grid; grid-template-columns: var(--ranking-avatar) minmax(0, 1fr); column-gap: 8px; align-items: center; }
+.circle-identity .player-identity { display: contents; }
+.circle-identity .profile-avatar { grid-column: 1; grid-row: 1 / 3; width: var(--ranking-avatar); height: var(--ranking-avatar); }
+.circle-identity .identity-text { grid-column: 2; min-width: 0; }
+.circle-identity .circle-level { grid-column: 2; font-size: 10px; color: var(--muted); line-height: 1.1; }
+.circle-identity .identity-primary { font-size: 14px; line-height: 1.1; }
+.circle-panel .circle-search { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 0; flex-shrink: 0; }
+.circle-search label { font-size: 12px; }
+.circle-search input { width: 100%; min-width: 0; margin: 0; }
+.circle-panel .circle-requests { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; overflow: hidden; }
+.circle-request-group { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 4px; }
+.circle-request-group h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--gold); }
+.circle-request-group p, .circle-panel .circle-message { margin: 0; font-size: 12px; line-height: 1.3; }
+.circle-panel .buddy-actions { justify-content: flex-end; flex-wrap: nowrap; gap: 6px; }
+.circle-panel .buddy-actions p { max-width: 160px; white-space: normal; font-size: 11px; }
+.circle-panel .buddy-actions .button, .circle-panel .buddy-actions .text-button { white-space: nowrap; min-height: 32px; padding: 5px 8px; font-size: 11px; }
+[data-mobile-device] .dashboard-page[data-mode=buddies] { height: 100%; padding: 4px; }
+[data-mobile-device] .circle-panel.career-section { gap: 8px; }
+[data-mobile-device] .circle-panel .circle-layout { grid-template-columns: minmax(110px, 1fr) minmax(0, 3fr); gap: 10px; }
+[data-mobile-device] .circle-panel .career-tabs { flex-direction: column; gap: 6px; }
+[data-mobile-device] .circle-panel .career-tabs button { flex: none; font-size: 11px; min-height: 32px; padding: 5px 8px; }
+[data-mobile-device] .circle-panel .circle-list { flex: 1; }
+[data-mobile-device] .circle-player { gap: 6px; }
+[data-mobile-device] .circle-identity { column-gap: 6px; }
+[data-mobile-device] .circle-identity .identity-primary { font-size: 11px; line-height: 10px; }
+[data-mobile-device] .circle-identity .circle-level { font-size: 9px; line-height: 9px; }
+[data-mobile-device] .circle-panel .ranking-score small { font-size: 9px; }
+[data-mobile-device] .circle-panel .circle-search { gap: 5px; }
+[data-mobile-device] .circle-search input, [data-mobile-device] .circle-search .button { min-height: 32px; padding: 4px 8px; font-size: 12px; }
+[data-mobile-device] .circle-panel .circle-requests { gap: 6px; }
+[data-mobile-device] .circle-request-group h3 { font-size: 11px; }
+[data-mobile-device] .circle-panel .circle-list > li { padding: 1px 3px; gap: 4px; }
+@media (max-width: 600px) {
+  .circle-panel .circle-search { grid-template-columns: minmax(0, 1fr) auto; }
+  .circle-search label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .circle-panel .circle-list:has(.buddy-actions) .ranking-score small { display: none; }
+  .circle-panel .circle-list:has(.buddy-actions) .ranking-score { font-size: 10px; }
+}
+[data-keyboard] .circle-panel .career-tabs { gap: 2px; }
+[data-keyboard] .circle-panel .career-tabs button { min-height: 23px; padding: 1px 5px; }

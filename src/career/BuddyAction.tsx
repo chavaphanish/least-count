@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import type { Relationship } from './model'
 export function BuddyAction({
@@ -6,23 +6,32 @@ export function BuddyAction({
   relationship = 'none',
   onChange,
   blocking = false,
+  circle = false,
+  onSuccess,
 }: {
   id: string
   relationship?: Relationship
   onChange: () => void
   blocking?: boolean
+  circle?: boolean
+  onSuccess?: (message: string) => void
 }) {
   const auth = useAuth()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [current, setCurrent] = useState(relationship)
+  useEffect(() => setCurrent(relationship), [relationship])
+  const status = circle ? current : relationship
   async function act(action: string) {
     setBusy(true)
     setError('')
     try {
-      await auth.services.api('/career', {
+      const result = await auth.services.api<{ relationship: Relationship }>('/career', {
         method: 'POST',
         body: JSON.stringify({ id, action }),
       })
+      setCurrent(result.relationship)
+      onSuccess?.(action === 'request' ? 'Friend request sent.' : action === 'accept' ? 'Friend request accepted.' : action === 'decline' ? 'Friend request declined.' : 'Friendship updated.')
       onChange()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Please retry.')
@@ -39,16 +48,16 @@ export function BuddyAction({
   if (`user:${id}` === auth.user.player.id) return null
   return (
     <div className="buddy-actions">
-      {relationship === 'none' && (
+      {status === 'none' && (
         <button
           className="button button-secondary compact-button"
           disabled={busy}
           onClick={() => void act('request')}
         >
-          Add Buddy
+          {circle ? 'Add Friend' : 'Add Buddy'}
         </button>
       )}
-      {relationship === 'incoming' && (
+      {status === 'incoming' && (
         <>
           <button
             className="button button-primary compact-button"
@@ -66,7 +75,12 @@ export function BuddyAction({
           </button>
         </>
       )}
-      {relationship === 'outgoing' && (
+      {circle && (status === 'outgoing' || status === 'accepted') && (
+        <button className="button button-secondary compact-button" disabled>
+          {status === 'outgoing' ? 'Request Sent' : 'Friends'}
+        </button>
+      )}
+      {!circle && status === 'outgoing' && (
         <button
           className="text-button"
           disabled={busy}
@@ -75,7 +89,7 @@ export function BuddyAction({
           Cancel request
         </button>
       )}
-      {relationship === 'accepted' && (
+      {!circle && status === 'accepted' && (
         <button
           className="text-button"
           disabled={busy}
@@ -84,7 +98,7 @@ export function BuddyAction({
           Remove Buddy
         </button>
       )}
-      {blocking && relationship !== 'blocked' && (
+      {blocking && status !== 'blocked' && (
         <button
           className="text-button"
           disabled={busy}
@@ -93,7 +107,7 @@ export function BuddyAction({
           Block player
         </button>
       )}
-      {relationship === 'blocked' && (
+      {status === 'blocked' && (
         <button
           className="text-button"
           disabled={busy}

@@ -59,7 +59,7 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await page.getByRole('link', { name: 'Buddies', exact: true }).click()
       await expect(page.getByRole('region', { name: 'Buddies', exact: true })).toBeVisible()
-      await page.getByRole('button', { name: 'Back to Lounge' }).click()
+      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await page.getByRole('link', { name: 'Local Practice', exact: true }).click()
       await expect(page.getByRole('button', { name: 'Start local game' })).toBeVisible()
     } finally { await context.close() }

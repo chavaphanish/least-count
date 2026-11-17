@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.28 — 2026-11-17
+
+- **Your Circle:** replaced the old sections and back link with four leaderboard-style tabs for all friends, ten most-played friends, live online friends, and friend requests. Added partial, case-insensitive username search with relationship-aware actions and compact public-profile rows. Reuses existing presence scheduling, privacy checks and shared-game statistics; no database migration required.
+
 ## 1.1.27 — 2026-11-17
 
 - **Room creation:** fixed registered room creation timing out when room initialization called back into the locked Directory to repeat its account-deletion check. Creation retains the Directory's existing check; later room operations retain their own safeguard. Directory transport failures now return a retryable JSON service error. Added serialized Worker/Directory/GameRoom regression coverage for player counts, cutoffs, timed/untimed settings and deletion locks.

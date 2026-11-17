@@ -20,3 +20,13 @@ export function usePresence(player:{id?:string;accountType?:string}){
   useEffect(()=>{if(store&&id&&ref.current)return store.watch(ref.current,id)},[store,id])
   return {ref,online}
 }
+
+const initialSnapshot=()=>0
+/** Track the full friend set, including offline players absent from the Online tab. */
+export function useFriendsPresence(players: {id?:string;accountType?:string}[]) {
+  const store=useContext(Context)
+  const key=[...new Set(players.map(presenceId).filter((id): id is string=>!!id))].sort().join(',')
+  useSyncExternalStore(store?.subscribe??empty,store?.getSnapshot??initialSnapshot,initialSnapshot)
+  useEffect(()=>{if(store&&key)return store.track(key.split(','))},[store,key])
+  return new Set(key.split(',').filter(id=>store?.isOnline(id)))
+}
