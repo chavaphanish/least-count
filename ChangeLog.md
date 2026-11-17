@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.27 — 2026-11-17
+
+- **Room creation:** fixed registered room creation timing out when room initialization called back into the locked Directory to repeat its account-deletion check. Creation retains the Directory's existing check; later room operations retain their own safeguard. Directory transport failures now return a retryable JSON service error. Added serialized Worker/Directory/GameRoom regression coverage for player counts, cutoffs, timed/untimed settings and deletion locks.
+
 ## 1.1.26 — 2026-11-17
 
 - **Leaderboards navigation:** moved the Lounge's Leaderboards button to a compact golden trophy icon between Lounge and Buddies in the shared header. Reuses the existing route and icon interaction styles, with a Leaderboards tooltip, accessible label and current-page indicator. A mobile header container sizing fix lets existing name truncation keep all controls within narrow viewports, without resizing the other icons or altering Lounge content.
