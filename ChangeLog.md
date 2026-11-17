@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.24 — 2026-11-17
+
+- **Premium Lounge:** redesigned the welcome area with prominent, responsive typography and a balanced two-by-two grid of illustrated action tiles. Refined the existing green-and-gold palette, spacing, borders and interaction states for desktop and mobile landscape without scrolling. Preserves every label, action and notice; the top header is unchanged.
+
 ## 1.1.23 — 2026-11-17
 
 - **Buddies navigation:** moved Buddies from the Lounge to a compact golden users icon between Lounge and Mailbox in the header. Reuses existing icon styles and buddy functionality; direct links, reloads and return navigation work across desktop and mobile landscape.
