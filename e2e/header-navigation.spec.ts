@@ -4,6 +4,7 @@ const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebK
 
 for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], [480, 320]]) {
   test(`header icons, profile targets and settings route work at ${width}x${height}`, async ({ browser }) => {
+    test.setTimeout(45_000)
     const context = await browser.newContext({ viewport: { width, height }, ...(width < 1000 ? { isMobile: true, hasTouch: true, userAgent: iphone } : {}) })
     try {
       const page = await context.newPage(), state = await mock(page)
@@ -11,10 +12,11 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       await page.goto('/')
       await expect(page.getByRole('heading', { name: 'Welcome back, Career!' })).toBeVisible()
       const header = page.getByRole('banner'), nav = header.getByRole('navigation')
-      await expect(nav.locator(':scope > a, :scope > button')).toHaveCount(4)
-      expect(await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => el.getAttribute('aria-label') || el.textContent?.trim()))).toEqual(['Rules', 'Lounge', 'Mailbox', 'Settings'])
+      await expect(nav.locator(':scope > a, :scope > button')).toHaveCount(5)
+      expect(await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => el.getAttribute('aria-label') || el.textContent?.trim()))).toEqual(['Rules', 'Lounge', 'Buddies', 'Mailbox', 'Settings'])
       await expect(page.locator('.lounge-navigation').getByRole('link', { name: 'My Profile' })).toHaveCount(0)
       await expect(page.locator('.lounge-navigation').getByText('Settings', { exact: true })).toHaveCount(0)
+      await expect(page.locator('.lounge-navigation').getByText('Buddies', { exact: true })).toHaveCount(0)
       const boxes = await nav.locator(':scope > a, :scope > button').evaluateAll(els => els.map(el => {
         const r = el.getBoundingClientRect()
         return { x: r.x, right: r.right, center: r.y + r.height / 2 }
@@ -26,6 +28,15 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
       const identity = header.getByRole('link', { name: 'Your profile' }), identityBox = await identity.boundingBox(), navBox = await nav.boundingBox()
       expect(identityBox!.x + identityBox!.width).toBeLessThanOrEqual(navBox!.x)
+      const buddies = nav.getByRole('link', { name: 'Buddies', exact: true })
+      await buddies.click()
+      await expect(page).toHaveURL(/#\/buddies$/)
+      await expect(page.getByRole('region', { name: 'Buddies', exact: true })).toBeVisible()
+      await expect(buddies).toHaveAttribute('aria-current', 'page')
+      await page.reload()
+      await expect(page.getByRole('region', { name: 'Buddies', exact: true })).toBeVisible()
+      await nav.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await expect(page.locator('.lounge-home')).toBeVisible()
       const mailbox = nav.getByRole('button', { name: 'Mailbox', exact: true }), url = page.url()
       await mailbox.click()
       const dialog = page.getByRole('dialog', { name: 'Mailbox', exact: true })

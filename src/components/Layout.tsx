@@ -50,6 +50,12 @@ export function Layout({
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
             Lounge
           </a>
+          <a className="header-icon" href="#/buddies" aria-label="Buddies" title="Buddies" aria-current={page === 'buddies' ? 'page' : undefined}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="9" cy="8" r="3" />
+              <path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-3-5.2" />
+            </svg>
+          </a>
           <TableOverlay label="Mailbox" triggerClass="header-icon" trigger={
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="5" width="18" height="14" rx="2" />

@@ -84,7 +84,7 @@ test('incoming buddy requests can be accepted, removed, blocked and unblocked', 
   const state = await mock(page)
   state.setRelationship('incoming')
   await page.goto('/#/profile')
-  await page.getByRole('button', { name: 'Buddies', exact: true }).click()
+  await page.getByRole('link', { name: 'Buddies', exact: true }).click()
   const buddies = page.getByRole('region', { name: 'Buddies', exact: true })
   await buddies.getByRole('button', { name: 'Accept', exact: true }).click()
   await expect(

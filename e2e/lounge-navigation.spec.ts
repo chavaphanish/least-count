@@ -43,7 +43,6 @@ for (const viewport of [
         buttons = group.locator('.lounge-nav-button')
       await expect(buttons).toHaveText([
         'Leaderboards',
-        'Buddies',
       ])
       await expect(group).toBeVisible()
       const base = await appearance(buttons.first())
@@ -102,7 +101,8 @@ for (const viewport of [
         ['Leaderboards', '.leaderboard'],
         ['Buddies', '.player-search'],
       ]) {
-        await group.getByRole('button', { name, exact: true }).click()
+        if (name === 'Buddies') await page.getByRole('link', { name, exact: true }).click()
+        else await group.getByRole('button', { name, exact: true }).click()
         await expect(page.locator(target)).toBeVisible()
         if (name === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
         else await page.getByRole('button', { name: 'Back to Lounge' }).click()
