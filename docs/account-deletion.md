@@ -30,7 +30,7 @@ Use **Workers & Pages → least-count → Settings → Variables and Secrets / R
 
 The read-only Cloudflare token allows the backend to enumerate every retained `GameRoom` Durable Object, including old closed casual rooms that no longer appear in the room directory. Actual room cleanup runs through the existing private Durable Object binding. No account-write or deployment permission is needed for this token.
 
-Never place either secret in Git, `wrangler.jsonc`, a `VITE_*` variable, or chat. Runtime secrets must be preserved during deployments. Keep these values in production; previews cannot initiate deletion on the production origin.
+Never place either secret in Git, `wrangler.jsonc`, a `VITE_*` variable, or chat. `wrangler.jsonc` sets `keep_vars: true` so deployments preserve dashboard-managed runtime variables; Cloudflare also preserves runtime secrets. Keep these values in production; previews cannot initiate deletion on the production origin.
 
 ## 3. Behavior and verification
 
