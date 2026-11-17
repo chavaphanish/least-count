@@ -1,3 +1,4 @@
+import { DeleteAccountDialog } from './DeleteAccountDialog'
 import { useId, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { SoundSettings } from '../feedback/SoundSettings'
@@ -8,6 +9,7 @@ const tabs = ['Account', 'Sounds', 'Profile'] as const
 
 export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => Promise<void> }) {
   const { user } = useAuth()
+  const [deleteOpen,setDeleteOpen] = useState(false)
   const id = useId()
   const [selected, setSelected] = useState(0)
   const [profileOpened, setProfileOpened] = useState(false)
@@ -35,10 +37,11 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
           }}>{tab}</button>)}
       </div>
       <div className="settings-content">
-        <div role="tabpanel" id={`${id}-panel-0`} aria-labelledby={`${id}-tab-0`} hidden={selected !== 0}>
+        <div className="account-actions" role="tabpanel" id={`${id}-panel-0`} aria-labelledby={`${id}-tab-0`} hidden={selected !== 0}>
           <button className="button button-primary" disabled={busy} onClick={() => void logout()}>
             {user?.player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
           </button>
+          {user?.player.accountType==='registered' && <button className="button button-danger" disabled={busy} onClick={()=>setDeleteOpen(true)}>Delete Account</button>}
         </div>
         <div role="tabpanel" id={`${id}-panel-1`} aria-labelledby={`${id}-tab-1`} hidden={selected !== 1}>
           <SoundSettings />
@@ -48,5 +51,6 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
         </div>
       </div>
     </div>
+    {deleteOpen && <DeleteAccountDialog close={()=>setDeleteOpen(false)} />}
   </section>
 }

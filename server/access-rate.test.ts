@@ -6,7 +6,7 @@ afterEach(()=>vi.useRealTimers())
 it('serializes per-client attempts, caps limits and expires only rate-limit state',async()=>{
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-11T18:00:00Z'))
  const storage=new Map<string,unknown>();let queue=Promise.resolve()
- const context={storage:{get:async(k:string)=>structuredClone(storage.get(k)),put:async(k:string,v:unknown)=>{storage.set(k,structuredClone(v))},delete:async(k:string)=>storage.delete(k),setAlarm:vi.fn(async()=>{})},blockConcurrencyWhile:(fn:()=>Promise<unknown>)=>{const run=queue.then(fn);queue=run.then(()=>{});return run}}
+ const context={storage:{list:async({prefix}:{prefix:string})=>new Map([...storage].filter(([k])=>k.startsWith(prefix))),deleteAlarm:vi.fn(async()=>{}),get:async(k:string)=>structuredClone(storage.get(k)),put:async(k:string,v:unknown)=>{storage.set(k,structuredClone(v))},delete:async(k:string)=>storage.delete(k),setAlarm:vi.fn(async()=>{})},blockConcurrencyWhile:(fn:()=>Promise<unknown>)=>{const run=queue.then(fn);queue=run.then(()=>{});return run}}
  const directory=new Directory(context as unknown as DurableObjectState,{} as Env)
  const attempt=()=>directory.fetch(new Request('https://directory/access-limit',{method:'POST',body:JSON.stringify({limit:99999})}))
  const responses=await Promise.all(Array.from({length:20},attempt));expect(responses.filter(r=>r.ok)).toHaveLength(12);expect(responses.filter(r=>r.status===429)).toHaveLength(8)

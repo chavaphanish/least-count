@@ -58,7 +58,7 @@ export class Services {
     signal?: AbortSignal,
   ): Promise<T> {
     const headers = new Headers(options.headers)
-    if (this.provider && path !== '/config' && path !== '/guest') {
+    if (this.provider && path !== '/config' && path !== '/guest' && path !== '/account/deletion-status') {
       const { data, error } = await this.provider.auth.getSession()
       if (error)
         throw new ServiceError(

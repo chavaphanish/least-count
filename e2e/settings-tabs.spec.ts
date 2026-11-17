@@ -7,6 +7,7 @@ async function setup(page: Page) {
   const profile = { username: 'cardmaster99', firstName: 'John', lastName: 'Smith', needsCompletion: false }
   Object.assign(state.user, { profile }); Object.assign(state.user.player, profile)
   await page.route('**/api/username?**', route => route.fulfill({ json: { available: true } }))
+  await page.route('**/api/profile/identity', route => { Object.assign(profile,route.request().postDataJSON()); Object.assign(state.user.player,profile); return route.fulfill({json:{user:state.user}}) })
   return { ...state, profile }
 }
 async function fits(page: Page) {
@@ -15,6 +16,8 @@ async function fits(page: Page) {
     return r.x < 0 || r.y < 0 || r.right > innerWidth + 1 || r.bottom > (parseFloat(getComputedStyle(root.closest('[data-mobile-device]') || document.documentElement).getPropertyValue('--app-height')) || innerHeight) + 1 ? [el.textContent || el.getAttribute('name') || el.tagName] : []
   }))
   expect(failures).toEqual([])
+  const overflow = await page.locator('.settings-profile-editor, .compact-profile-editor, .compact-profile-editor form').evaluateAll(els=>els.filter(el=>el.checkVisibility()).filter(el=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1).map(el=>el.className))
+  expect(overflow).toEqual([])
   const dimensions = await page.locator('.dashboard-page').evaluate(el => ({ height:el.clientHeight,scroll:el.scrollHeight, children:Array.from(el.querySelectorAll('.settings-panel,.settings-layout,.settings-content,[role=tabpanel],.settings-profile-editor,.screen-pages,.screen-page-content,.screen-page,.identity-editor,form')).filter(el=>el.checkVisibility()).map(el=>({class:el.className,height:el.clientHeight,scroll:el.scrollHeight,bottom:el.getBoundingClientRect().bottom,margin:getComputedStyle(el).margin,padding:getComputedStyle(el).padding})) }))
   if(dimensions.scroll>dimensions.height)await page.screenshot({path:'/tmp/settings-overflow.png'})
   expect(dimensions.scroll,JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.height)
@@ -49,10 +52,10 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       await expect(page.getByLabel('Username', { exact: true })).toBeVisible()
       await expect(page.getByLabel('Email', { exact: true })).toHaveCount(0)
       await expect(page.getByLabel('Display name', { exact: true })).toHaveCount(0)
-      await expect(page.getByRole('button', { name: 'Save identity', exact: true })).toBeEnabled()
+      await expect(page.getByRole('button', { name: 'Save Changes', exact: true })).toBeEnabled()
       await fits(page)
-      if (width < 1000) await page.getByRole('combobox', { name: 'Profile fields', exact: true }).selectOption('1')
-      await expect(page.getByLabel('Profile picture', { exact: true })).toBeVisible()
+      await expect(page.getByRole('combobox', { name: 'Profile fields', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Edit profile picture', exact: true })).toBeVisible()
       await fits(page)
       if (width === 568) await page.screenshot({ path:'/tmp/settings-profile-photo-568.png' })
       await page.getByRole('tab', { name: 'Account', exact: true }).click()
@@ -85,22 +88,22 @@ test('Settings identity validation and photo retry reuse owner endpoints and ref
     state.user.player.avatarUrl='/test-avatar-new.png'; return route.fulfill({json:{user:state.user}})
   })
   await page.goto('/#/settings'); await page.getByRole('tab',{name:'Profile',exact:true}).click()
-  const username = page.getByLabel('Username',{exact:true}), save = page.getByRole('button',{name:'Save identity',exact:true})
+  const username = page.getByLabel('Username',{exact:true}), save = page.getByRole('button',{name:'Save Changes',exact:true})
   await username.fill('bad_'); await expect(save).toBeDisabled()
   await username.fill('takenuser99'); await expect(page.getByText('Username already taken.',{exact:true})).toBeVisible(); await expect(save).toBeDisabled()
   await page.getByLabel('First Name',{exact:true}).fill(''); await username.fill('newmaster99'); await expect(save).toBeDisabled()
   await page.getByLabel('First Name',{exact:true}).fill(' Jane '); await expect(save).toBeEnabled(); await save.click()
-  await expect(page.getByText('Your public name and username are saved.',{exact:true})).toBeVisible()
+  await expect(page.getByText('Your profile is saved.',{exact:true})).toBeVisible()
   await expect(page.locator('.header-profile-lines')).toContainText('Jane Smith'); await expect(page.locator('.header-profile-lines')).toContainText('@newmaster99')
   expect(identityRequests).toBe(1)
   const picture = page.getByLabel('Profile picture',{exact:true})
   await picture.setInputFiles({name:'bad.txt',mimeType:'text/plain',buffer:Buffer.from('bad')}); await expect(page.getByRole('alert')).toBeVisible()
   await picture.setInputFiles({name:'photo.png',mimeType:'image/png',buffer:png})
-  await expect(page.locator('.settings-profile-editor .profile-avatar img')).toHaveAttribute('src',/^blob:/)
+  await expect(page.locator('.compact-profile-editor .profile-avatar img')).toHaveAttribute('src',/^blob:/)
   await page.getByRole('tab',{name:'Account',exact:true}).click(); await page.getByRole('tab',{name:'Profile',exact:true}).click()
-  await expect(page.locator('.settings-profile-editor .profile-avatar img')).toHaveAttribute('src',/^blob:/)
-  await page.getByRole('button',{name:'Save profile',exact:true}).click(); await expect(page.getByRole('alert')).toContainText('Upload temporarily unavailable')
-  failUpload=false; await page.getByRole('button',{name:'Retry save',exact:true}).click(); await expect(page.getByText('Your profile is saved.',{exact:true})).toBeVisible()
+  await expect(page.locator('.compact-profile-editor .profile-avatar img')).toHaveAttribute('src',/^blob:/)
+  await page.getByRole('button',{name:'Save Changes',exact:true}).click(); await expect(page.getByRole('alert')).toContainText('Upload temporarily unavailable')
+  failUpload=false; await page.getByRole('button',{name:'Save Changes',exact:true}).click(); await expect(page.getByText('Your profile is saved.',{exact:true})).toBeVisible()
   expect(uploads).toBe(2); await expect(page.locator('.header-profile .profile-avatar img')).toHaveAttribute('src','/test-avatar-new.png')
   await page.getByRole('button',{name:'Remove picture',exact:true}).click(); await expect(page.locator('.header-profile .profile-avatar img')).toHaveCount(0)
 })
@@ -137,20 +140,19 @@ test('small landscape photo errors, retries and success messages remain within t
       state.user.player.avatarUrl='/test-avatar-new.png';return route.fulfill({json:{user:state.user}})
     })
     await page.goto('/#/settings');await page.getByRole('tab',{name:'Profile',exact:true}).click()
-    await page.getByRole('combobox',{name:'Profile fields',exact:true}).selectOption('1')
     const input=page.getByLabel('Profile picture',{exact:true})
     await input.setInputFiles({name:'bad.txt',mimeType:'text/plain',buffer:Buffer.from('bad')})
     await expect(page.getByRole('alert')).toBeVisible();await fits(page)
     await input.setInputFiles({name:'photo.png',mimeType:'image/png',buffer:png})
-    await page.getByRole('button',{name:'Save profile',exact:true}).click()
+    await page.getByRole('button',{name:'Save Changes',exact:true}).click()
     await expect(page.getByRole('alert')).toContainText('Upload temporarily unavailable');await fits(page)
-    fail=false;await page.getByRole('button',{name:'Retry save',exact:true}).click()
+    fail=false;await page.getByRole('button',{name:'Save Changes',exact:true}).click()
     await expect(page.getByText('Your profile is saved.',{exact:true})).toBeVisible();await fits(page)
     await page.screenshot({path:'/tmp/settings-profile-saved-480.png'})
   } finally {await context.close()}
 })
 
-test('Profile retains compact field navigation when the mobile keyboard is open', async ({ browser }) => {
+test('Profile shows all fields together when the mobile keyboard is open', async ({ browser }) => {
   const context=await browser.newContext({viewport:{width:667,height:375},isMobile:true,hasTouch:true,userAgent:iphone})
   try {
     const page=await context.newPage();await setup(page);await page.goto('/#/settings')
@@ -158,7 +160,39 @@ test('Profile retains compact field navigation when the mobile keyboard is open'
     await page.evaluate(()=>{Object.defineProperty(visualViewport!,'height',{configurable:true,get:()=>170});visualViewport!.dispatchEvent(new Event('resize'))})
     await expect(page.locator('[data-keyboard=true]')).toHaveCount(1)
     await expect(page.getByLabel('First Name',{exact:true})).toBeVisible();await fits(page)
-    await page.getByRole('button',{name:'Next field',exact:true}).click()
+    await expect(page.getByRole('button',{name:'Next field',exact:true})).toHaveCount(0)
+    await expect(page.getByLabel('Username',{exact:true})).toBeVisible()
+    await expect(page.getByRole('button',{name:'Save Changes',exact:true})).toBeVisible()
     await expect(page.getByLabel('Last Name',{exact:true})).toBeVisible();await fits(page)
   } finally {await context.close()}
+})
+
+test('avatar and overlapping pencil open the existing image chooser',async({page})=>{
+  await setup(page);await page.goto('/#/settings');await page.getByRole('tab',{name:'Profile',exact:true}).click()
+  const edit=page.getByRole('button',{name:'Edit profile picture',exact:true})
+  for(const target of [edit,edit.locator('.profile-photo-pencil')]){
+    const chooser=page.waitForEvent('filechooser');await target.click();expect((await chooser).isMultiple()).toBe(false)
+  }
+  const avatar=await edit.locator('.profile-avatar').boundingBox(),pencil=await edit.locator('.profile-photo-pencil').boundingBox()
+  expect(pencil!.x).toBeGreaterThan(avatar!.x+avatar!.width/2);expect(pencil!.y).toBeGreaterThan(avatar!.y+avatar!.height/2)
+  expect(pencil!.x).toBeLessThan(avatar!.x+avatar!.width);expect(pencil!.y).toBeLessThan(avatar!.y+avatar!.height)
+})
+
+test('account deletion requires explicit confirmation, handles errors and clears the session only after completion',async({page})=>{
+  const state=await setup(page);let started=0,complete=false,fail=true
+  await page.route('**/api/account',route=>{
+    started++;expect(route.request().method()).toBe('DELETE');expect(route.request().postDataJSON()).toEqual({password:'current-password',confirmation:'DELETE'})
+    return fail?route.fulfill({status:401,json:{error:'The current password could not be verified.'}}):route.fulfill({status:202,json:{pending:true}})
+  })
+  await page.route('**/api/account/deletion-status',route=>route.fulfill({json:complete?{complete:true}:{pending:true,retrying:true}}))
+  await page.route('**/api/session',route=>route.fulfill({json:{user:complete?null:state.user,room:null}}))
+  await page.goto('/#/settings');const trigger=page.getByRole('button',{name:'Delete Account',exact:true});await trigger.click()
+  const dialog=page.getByRole('dialog',{name:'Delete Account',exact:true}),submit=dialog.getByRole('button',{name:'Permanently Delete Account',exact:true})
+  await expect(dialog).toContainText('permanent and cannot be undone');await expect(submit).toBeDisabled();expect(started).toBe(0)
+  await dialog.getByRole('button',{name:'Cancel',exact:true}).click();await expect(dialog).toHaveCount(0);await expect(trigger).toBeFocused()
+  await trigger.click();await dialog.getByLabel('Current password',{exact:true}).fill('current-password');await expect(submit).toBeDisabled()
+  await dialog.getByLabel('Type DELETE to confirm',{exact:true}).fill('DELETE');await submit.click();await expect(dialog.getByRole('alert')).toContainText('current password')
+  fail=false;await submit.click();await expect(dialog.getByRole('status')).toContainText('retrying automatically');await expect(page.locator('.header-profile')).toBeVisible()
+  complete=true;await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible({timeout:10000})
+  await expect(page.locator('.header-profile')).toHaveCount(0);expect(new URL(page.url()).hash).toBe('#/')
 })

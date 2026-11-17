@@ -4,7 +4,7 @@ import { ScreenPages } from '../components/ScreenPages'
 import { useMobileLandscape } from '../components/MobileOrientation'
 import { CompactForm } from '../components/CompactForm'
 import { CareerProfile } from '../career/CareerProfile'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { Avatar } from '../components/Avatar'
 import {
@@ -21,6 +21,7 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
   )
   const user = auth.user!
   const [name, setName] = useState(user.player.displayName)
+  const fileInput = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -140,12 +141,7 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
       setProcessing(false)
     }
   }
-  async function save(event: React.FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    setError('')
-    setNotice('')
-    try {
+  async function persistPhoto() {
       if (!user.profile && !editingOnly)
         await auth.services.api('/profile', {
           method: 'PATCH',
@@ -157,6 +153,14 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
           body: file,
           headers: { 'Content-Type': file.type },
         })
+  }
+  async function save(event: React.FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await persistPhoto()
       await auth.refresh()
       setFile(null)
       setPreview(null)
@@ -267,10 +271,21 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
     </div>
   )
   if (editingOnly) return <div className="settings-profile-editor">
-    <ScreenPages label="Profile fields" pages={[
-      { label: 'Identity', content: <IdentityEditor /> },
-      { label: 'Photo', content: photoEditor },
-    ]} />
+    <IdentityEditor photo={{
+      busy: busy || processing, error, notice,
+      save: persistPhoto,
+      saved: () => { setFile(null); setPreview(null); setNotice(''); setError('') },
+      render: (saving, edited) => <div className="profile-photo-control">
+        <button type="button" className="profile-photo-trigger" aria-label="Edit profile picture" disabled={saving || busy || processing}
+          onClick={() => { edited(); setNotice(''); if (fileInput.current) { fileInput.current.value = ''; fileInput.current.click() } }}>
+          <Avatar player={{ ...user.player, avatarUrl: preview ?? user.player.avatarUrl }} />
+          <span className="profile-photo-pencil" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 5 4 4M4 20l4-1 12-12a2.8 2.8 0 0 0-4-4L4 15Z" /></svg></span>
+        </button>
+        <input ref={fileInput} type="file" hidden aria-label="Profile picture" accept="image/jpeg,image/png,image/webp" disabled={saving || busy || processing} onChange={event => { edited(); void choose(event.target.files?.[0]) }} />
+        <small>{processing ? 'Preparing photo…' : 'JPG, PNG, WebP · max 5 MB'}</small>
+        {user.player.avatarUrl && <button type="button" className="text-button profile-photo-remove" disabled={saving || busy || processing} onClick={() => { edited(); void remove() }}>Remove picture</button>}
+      </div>,
+    }} />
   </div>
   return (
     <section className="profile-panel">

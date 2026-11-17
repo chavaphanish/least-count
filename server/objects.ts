@@ -1,3 +1,6 @@
+import { stepErasure } from './account-deletion'
+import type { ErasureJob, ErasureResult } from './account-deletion'
+import { eraseRoomIdentity, erasureBlocked } from './erasure'
 import { syncCareer } from './career'
 import { normalizeLegacyTurn } from '../src/game/engine'
 import type { Env, Identity } from './types'
@@ -33,6 +36,24 @@ export class Directory {
       try {
         const data = await body(request)
         const path = new URL(request.url).pathname
+        if (path === '/erasure/start') {
+          const uid=String(data.uid),namespace=String(data.namespace)
+          if(!/^[0-9a-f-]{36}$/.test(uid)||!/^[0-9a-f]{32}$/.test(namespace))throw new ApiError(400,'Invalid deletion request.')
+          const ownerKey=`erasure-owner:${await hash(uid)}`
+          const old=await this.ctx.storage.get<string>(ownerKey)
+          if(old)return json({token:old})
+          const token=randomToken(),key=`erasure-job:${await hash(token)}`
+          await this.ctx.storage.put({[ownerKey]:token,[key]:{uid,namespace,phase:'check',objects:[],index:0,nextAt:Date.now(),attempts:0} satisfies ErasureJob})
+          await this.ctx.storage.setAlarm(Date.now()+100)
+          return json({token})
+        }
+        if(path==='/erasure/status') {
+          if(!/^[a-f0-9]{64}$/.test(String(data.token)))throw new ApiError(404,'Deletion status unavailable.')
+          const job=await this.ctx.storage.get<ErasureResult>(`erasure-job:${await hash(String(data.token))}`)
+          if(!job)throw new ApiError(404,'Deletion status unavailable.')
+          return json('complete' in job?{complete:true}:'blocked' in job?{blocked:true}:{pending:true,retrying:job.retrying===true})
+        }
+        if(path==='/erasure/locked')return json({locked:!!(await this.ctx.storage.get(`erasure-owner:${await hash(String(data.uid))}`))})
         if (path === '/access-limit') {
           const now=Date.now(),limit=data.limit===40?40:12
           let bucket=await this.ctx.storage.get<{count:number;expires:number}>('access-rate')
@@ -92,6 +113,7 @@ export class Directory {
               null,
           )
         if (path === '/track') {
+          if(String(data.id).startsWith('user:') && await this.ctx.storage.get(`erasure-owner:${await hash(String(data.id).slice(5))}`))throw new ApiError(409,'Account deletion is in progress.')
           const old = await this.ctx.storage.get<Reservation>(
             `member:${data.id}`,
           )
@@ -116,6 +138,7 @@ export class Directory {
         }
         if (path === '/create') {
           const identity = data.identity as Identity
+          if(identity.accountType==='registered' && await this.ctx.storage.get(`erasure-owner:${await hash(identity.id.slice(5))}`))throw new ApiError(409,'Account deletion is in progress.')
           if (await this.ctx.storage.get(`member:${identity.id}`))
             throw new ApiError(
               409,
@@ -179,7 +202,53 @@ export class Directory {
       }
     })
   }
-  async alarm(){await this.ctx.blockConcurrencyWhile(async()=>{const bucket=await this.ctx.storage.get<{expires:number}>('access-rate');if(!bucket||bucket.expires<=Date.now())await this.ctx.storage.delete('access-rate');else await this.ctx.storage.setAlarm(bucket.expires)})}
+  private erasing = false
+  async alarm() {
+    if(this.erasing)return
+    this.erasing=true
+    try {
+      const now=Date.now(),jobs=await this.ctx.storage.list<ErasureResult>({prefix:'erasure-job:'})
+      let next=Infinity,processed=0
+      for(const [key,value] of [...jobs].sort(([,a],[,b])=>('nextAt' in a?a.nextAt:a.expires)-('nextAt' in b?b.nextAt:b.expires))) {
+        if('complete' in value || 'blocked' in value) {
+          if(value.expires<=now)await this.ctx.storage.delete(key)
+          else next=Math.min(next,value.expires)
+          continue
+        }
+        const job=value
+        if(job.nextAt>now){next=Math.min(next,job.nextAt);continue}
+        if(processed++>=1){next=Math.min(next,now+100);continue}
+        try {
+          const result=await stepErasure(job,this.env)
+          if(result!=='continue') {
+            const ownerKey=`erasure-owner:${await hash(job.uid)}`
+            await this.ctx.storage.transaction(async storage=>{
+              await storage.put(key,result==='complete'?{complete:true,expires:now+86400000}:{blocked:true,expires:now+86400000})
+              await storage.delete(ownerKey)
+              if(result==='complete')await storage.delete(`member:user:${job.uid}`)
+            })
+            next=Math.min(next,now+86400000)
+          } else {
+            job.attempts=0;job.retrying=false;job.nextAt=now+100
+            await this.ctx.storage.put(key,job);next=Math.min(next,job.nextAt)
+          }
+        } catch {
+          job.attempts++;job.retrying=true;job.nextAt=now+Math.min(60000,1000*2**Math.min(job.attempts,6))
+          await this.ctx.storage.put(key,job);next=Math.min(next,job.nextAt)
+        }
+      }
+      await this.ctx.blockConcurrencyWhile(async()=>{
+        next=Infinity
+        const latest=await this.ctx.storage.list<ErasureResult>({prefix:'erasure-job:'})
+        for(const value of latest.values())next=Math.min(next,'nextAt' in value?value.nextAt:value.expires)
+        const bucket=await this.ctx.storage.get<{expires:number}>('access-rate')
+        if(bucket && bucket.expires>now)next=Math.min(next,bucket.expires)
+        else if(bucket)await this.ctx.storage.delete('access-rate')
+        if(Number.isFinite(next))await this.ctx.storage.setAlarm(Math.max(Date.now()+100,next))
+        else await this.ctx.storage.deleteAlarm()
+      })
+    } finally {this.erasing=false}
+  }
 }
 
 type Ticket = { identity: Identity; expiresAt: number }
@@ -275,6 +344,31 @@ export class GameRoom {
     return this.ctx.blockConcurrencyWhile(async () => {
       try {
         const url = new URL(request.url)
+        if(url.pathname.startsWith('/account-erasure/')) {
+          const data=await body(request),uid=String(data.uid)
+          if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uid))throw new ApiError(400,'Invalid account identity.')
+          const found=!!this.record && JSON.stringify(this.record).includes(uid)
+          if(this.record && erasureBlocked(this.record,uid))return json({blocked:true})
+          if(url.pathname==='/account-erasure/check')return json({found})
+          if(url.pathname!=='/account-erasure/erase')throw new ApiError(404,'Unknown cleanup operation.')
+          // Retry ticket/socket cleanup even if an earlier attempt already saved the anonymized room.
+          const tickets=await this.ctx.storage.list<Ticket>({prefix:'ticket:'})
+          for(const [key,ticket] of tickets)if(ticket.identity.id===`user:${uid}`)await this.ctx.storage.delete(key)
+          const alias=`deleted:${(await hash(`${this.record?.id}:${uid}`)).slice(0,32)}`
+          for(const ws of this.ctx.getWebSockets(`user:${uid}`)) {
+            ws.serializeAttachment({playerId:alias,expiresAt:0});ws.close(4003,'Account deleted')
+          }
+          if(found && this.record) {
+            const before=structuredClone(this.record),seenBefore=[...this.seen]
+            try {
+              await eraseRoomIdentity(this.record,uid)
+              this.seen=this.seen.filter(id=>!id.includes(uid))
+              await this.directory('/untrack',{id:`user:${uid}`,roomId:this.record.id})
+              await this.persist()
+            } catch(error) { this.record=before;this.seen=seenBefore;throw error }
+          }
+          return json({found})
+        }
         if (url.pathname === '/ws') {
           const token = url.searchParams.get('ticket') ?? ''
           if (!/^[a-f0-9]{64}$/.test(token))
@@ -288,6 +382,7 @@ export class GameRoom {
             ticket.identity.expiresAt <= Date.now()
           )
             throw new ApiError(401, 'Connection ticket expired.')
+          if(ticket.identity.accountType==='registered' && (await (await this.directory('/erasure/locked',{uid:ticket.identity.id.slice(5)})).json() as {locked:boolean}).locked)throw new ApiError(403,'Account deletion is in progress.')
           if (!this.record || this.record.status === 'closed')
             throw new ApiError(410, 'Room closed.')
           const m = member(this.record, ticket.identity.id)
@@ -311,6 +406,7 @@ export class GameRoom {
         }
         const data = await body(request)
         const identity = data.identity as Identity
+        if(identity?.accountType==='registered' && (await (await this.directory('/erasure/locked',{uid:identity.id.slice(5)})).json() as {locked:boolean}).locked)throw new ApiError(403,'Account deletion is in progress.')
         if (url.pathname === '/initialize') {
           if (this.record) throw new ApiError(409, 'Room already exists.')
           this.record = createRoom(
@@ -364,6 +460,7 @@ export class GameRoom {
             return json({ ticket: token })
           }
           if (url.pathname === '/start') {
+            for(const participant of r.members.filter(m=>m.accountType==='registered'&&!m.left))if((await (await this.directory('/erasure/locked',{uid:participant.id.slice(5)})).json() as {locked:boolean}).locked)throw new ApiError(409,'A player is deleting their account.')
             for (const m of r.members)
               if (
                 m.connected &&
