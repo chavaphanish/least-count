@@ -1,4 +1,4 @@
-import { SoundSettings } from '../feedback/SoundSettings'
+import { SettingsPanel } from '../components/SettingsPanel'
 import { useNavigationLoading } from '../components/NavigationLoading'
 import { useCareer } from '../career/useCareer'
 import type { CareerData } from '../career/model'
@@ -7,7 +7,6 @@ import { CompactForm } from '../components/CompactForm'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { playerIdentity } from '../shared/playerIdentity'
-import { PlayerIdentity } from '../components/PlayerIdentity'
 import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import {
   DEFAULT_ROOM_SETTINGS,
@@ -118,9 +117,9 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
       )}
       {['buddies', 'settings'].includes(mode) ? (
         <div className="dashboard-focused">
-          <button className="text-button" onClick={() => go('home')}>
+          {mode === 'buddies' && <button className="text-button" onClick={() => go('home')}>
             ← Back to Lounge
-          </button>
+          </button>}
           {mode === 'buddies' ? (
             player.accountType === 'registered' ? (
               <Buddies />
@@ -131,27 +130,7 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
               </p>
             )
           ) : (
-            <div className="account-menu">
-              <h2>Settings</h2>
-              <SoundSettings />
-              <p>
-                <PlayerIdentity player={player} compact /> ·{' '}
-                {player.accountType === 'guest'
-                  ? 'Guest player'
-                  : 'Verified account'}
-              </p>
-              <a className="button button-secondary" href="#/profile">
-                Profile Settings
-              </a>
-              <a className="button button-secondary" href="#/rules">
-                How to Play
-              </a>
-              <button className="text-button" disabled={busy} onClick={logout}>
-                {player.accountType === 'guest'
-                  ? 'Leave Guest Session'
-                  : 'Sign Out'}
-              </button>
-            </div>
+            <SettingsPanel busy={busy} logout={logout} />
           )}
         </div>
       ) : mode === 'home' ? (
@@ -282,9 +261,6 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
           {error}
         </p>
       )}
-      <button className="text-button" disabled={busy} onClick={logout}>
-        {player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
-      </button>
       {guestNotice && (
         <GuestNoticeDialog onDismiss={() => setGuestNotice(false)} />
       )}

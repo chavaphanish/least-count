@@ -39,7 +39,7 @@ for(const mobile of [false,true])test.describe(mobile?'Android feedback':'deskto
  test.use({viewport:mobile?{width:667,height:320}:{width:1440,height:900},...(mobile?{userAgent:android,isMobile:true,hasTouch:true}:{})})
  test('settings default independently, persist, and unsupported vibration is clear',async({page})=>{
   await harness(page,mobile);await clock(page);await backend(page);await page.goto('/');await expect(page.locator('.startup-screen')).toHaveAttribute('data-ready','true');await page.clock.runFor(3500)
-  await page.getByRole('link',{name:'Settings',exact:true}).click();await page.clock.runFor(1600)
+  await page.getByRole('link',{name:'Settings',exact:true}).click();await page.clock.runFor(1600);await page.getByRole('tab',{name:'Sounds',exact:true}).click()
   const settings=page.getByRole('group',{name:'Sound & Haptics'})
   await expect(settings.getByLabel('Sound Effects',{exact:true})).toBeChecked();await expect(settings.getByLabel('Turn Notifications',{exact:true})).toBeChecked()
   if(mobile)await expect(settings.getByLabel('Vibration',{exact:true})).toBeChecked()
@@ -47,7 +47,7 @@ for(const mobile of [false,true])test.describe(mobile?'Android feedback':'deskto
   await settings.getByLabel('Sound Effects',{exact:true}).uncheck();await settings.getByLabel('Turn Notifications',{exact:true}).uncheck()
   if(mobile)await settings.getByLabel('Vibration',{exact:true}).uncheck()
   const before=await page.evaluate(()=>localStorage.getItem('least-count:feedback:v1'))
-  await page.reload();await expect(page.locator('.startup-screen')).toHaveAttribute('data-ready','true');await page.clock.runFor(3500);await page.getByRole('link',{name:'Settings',exact:true}).click();await page.clock.runFor(1600)
+  await page.reload();await expect(page.locator('.startup-screen')).toHaveAttribute('data-ready','true');await page.clock.runFor(3500);await page.getByRole('link',{name:'Settings',exact:true}).click();await page.clock.runFor(1600);await page.getByRole('tab',{name:'Sounds',exact:true}).click()
   expect(await page.evaluate(()=>localStorage.getItem('least-count:feedback:v1'))).toBe(before)
   await expect(settings.getByLabel('Sound Effects',{exact:true})).not.toBeChecked();await expect(settings.getByLabel('Turn Notifications',{exact:true})).not.toBeChecked()
   const outside=await settings.evaluate(el=>{const r=el.getBoundingClientRect();return r.left<0||r.right>innerWidth||r.bottom>innerHeight})

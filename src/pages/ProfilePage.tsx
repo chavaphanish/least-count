@@ -12,7 +12,7 @@ import {
   avatarType,
   displayName,
 } from '../shared/multiplayer'
-export function ProfilePage() {
+export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) {
   const navigation = useNavigationLoading()
   const mobile = useMobileLandscape()
   const auth = useAuth()
@@ -68,7 +68,7 @@ export function ProfilePage() {
     [preview],
   )
   if (user.player.accountType !== 'registered')
-    return (
+    return editingOnly ? <p>Profile editing is available to registered accounts.</p> : (
       <section className="profile-panel">
         <h1>Guest player</h1>
         <p>Profile settings are available to registered accounts.</p>
@@ -146,7 +146,7 @@ export function ProfilePage() {
     setError('')
     setNotice('')
     try {
-      if (!user.profile)
+      if (!user.profile && !editingOnly)
         await auth.services.api('/profile', {
           method: 'PATCH',
           body: JSON.stringify({ displayName: displayName(name) }),
@@ -187,7 +187,7 @@ export function ProfilePage() {
     }
   }
   const photoEditor = (
-    <div id={user.profile ? "profile-photo-editor" : "profile-editor"} className="career-section profile-editor">
+    <div id={user.profile || editingOnly ? "profile-photo-editor" : "profile-editor"} className="career-section profile-editor">
       <h2>Edit Profile</h2>
       <Avatar
         player={{
@@ -203,7 +203,7 @@ export function ProfilePage() {
             : 'All changes saved'}
       </p>
       <CompactForm onSubmit={save}>
-        {!user.profile && (
+        {!user.profile && !editingOnly && (
           <label>
             Display name
             <input
@@ -266,6 +266,12 @@ export function ProfilePage() {
       )}
     </div>
   )
+  if (editingOnly) return <div className="settings-profile-editor">
+    <ScreenPages label="Profile fields" pages={[
+      { label: 'Identity', content: <IdentityEditor /> },
+      { label: 'Photo', content: photoEditor },
+    ]} />
+  </div>
   return (
     <section className="profile-panel">
       <a className="text-link" href="#/">
