@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { requireAuth, publicConfig } from './auth'
 import { ApiError, body, json } from './http'
 import type { Env } from './types'
+import { circleGames, searchCircle } from './circle'
 
 export async function careerApi(request: Request, env: Env) {
   const auth = await requireAuth(request, env)
@@ -64,7 +65,10 @@ export async function careerApi(request: Request, env: Env) {
   if (typeof args.username === 'string')
     args.username = args.username.replace(/^@/, '').toLowerCase()
   if (typeof args.query === 'string') args.query = args.query.replace(/^@/, '')
-  const result = await client.rpc('career_api', { operation, args })
+  const circle = args.scope === 'circle' && !!auth.uid
+  const result = circle && operation === 'search'
+    ? { data: await searchCircle(client, env, config.url, auth.uid!, String(args.query ?? '')), error: null }
+    : await client.rpc('career_api', { operation, args })
   if (result.error)
     throw new ApiError(
       result.error.code === 'PGRST202' ? 503 : 400,
@@ -72,6 +76,8 @@ export async function careerApi(request: Request, env: Env) {
         ? 'Player careers need the latest database migration. Please retry after setup.'
         : 'This player or action is unavailable. Refresh and retry.',
     )
+  if (circle && operation === 'buddies' && result.data?.players)
+    result.data.players = await circleGames(env, config.url, auth.uid!, result.data.players)
   const ids = new Set<string>()
   function collect(value: unknown) {
     if (Array.isArray(value)) return value.forEach(collect)

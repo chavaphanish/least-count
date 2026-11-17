@@ -2,6 +2,8 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { careerApi } from './career-api'
 import { requireAuth, publicConfig } from './auth'
 import type { Env } from './types'
+import { circleGames, searchCircle } from './circle'
+vi.mock('./circle', () => ({circleGames:vi.fn(),searchCircle:vi.fn()}))
 vi.mock('./auth', () => ({requireAuth:vi.fn(),publicConfig:vi.fn()}))
 afterEach(()=>vi.resetAllMocks())
 const id = '11111111-1111-4111-8111-111111111111'
@@ -25,4 +27,25 @@ it('keeps usernames and historical labels usable before the migration is applied
   const {data}=await setup(true)
   expect(data.profile.displayName).toBe('@cardmaster99')
   expect(data.players[0].name).toBe('historical')
+})
+
+it('routes circle username searches through the authenticated public projection and identity hydration',async()=>{
+  const rpc=vi.fn(async()=>({data:[{id,username:'cardmaster99',first_name:'John',last_name:'Smith'}],error:null}))
+  vi.mocked(requireAuth).mockResolvedValue({client:{rpc},uid:id} as never)
+  vi.mocked(publicConfig).mockReturnValue({supabase:{url:'https://test.supabase.co',publishableKey:'public'}})
+  vi.mocked(searchCircle).mockResolvedValue([{id,username:'cardmaster99',xp:123,relationship:'incoming'}])
+  const response=await careerApi(new Request('https://game.test/api/career?op=search&scope=circle&query=MaStEr'),env)
+  expect(searchCircle).toHaveBeenCalledWith(expect.objectContaining({rpc}),env,'https://test.supabase.co',id,'MaStEr')
+  expect(await response.json()).toMatchObject([{username:'cardmaster99',firstName:'John',lastName:'Smith',relationship:'incoming',xp:123}])
+  expect(rpc).not.toHaveBeenCalledWith('career_api',expect.anything())
+})
+it('only enriches the requested circle friend list with owner-scoped shared-game counts',async()=>{
+  const players=[{id,username:'cardmaster99',relationship:'accepted'}]
+  const rpc=vi.fn(async(name:string)=>name==='career_api'?{data:{players,blocked:[]},error:null}:{data:[],error:null})
+  vi.mocked(requireAuth).mockResolvedValue({client:{rpc},uid:id} as never)
+  vi.mocked(publicConfig).mockReturnValue({supabase:{url:'https://test.supabase.co',publishableKey:'public'}})
+  vi.mocked(circleGames).mockResolvedValue([{...players[0],gamesTogether:25}])
+  const response=await careerApi(new Request('https://game.test/api/career?op=buddies&scope=circle'),env)
+  expect(circleGames).toHaveBeenCalledWith(env,'https://test.supabase.co',id,players)
+  expect(await response.json()).toMatchObject({players:[{gamesTogether:25}]})
 })

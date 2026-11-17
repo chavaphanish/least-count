@@ -61,7 +61,7 @@ test('public profiles hide private tabs and support buddy requests', async ({
   await mock(page)
   await page.goto('/#/player/lc_other')
   await expect(
-    page.getByRole('heading', { name: 'Other Player', exact: true }),
+    page.getByRole('heading', { name: /^Other Player @lc_other$/ }),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Game History', exact: true }),
@@ -78,28 +78,16 @@ test('public profiles hide private tabs and support buddy requests', async ({
     page.getByRole('button', { name: 'Add Buddy', exact: true }),
   ).toBeVisible()
 })
-test('incoming buddy requests can be accepted, removed, blocked and unblocked', async ({
-  page,
-}) => {
+test('incoming friend requests can be accepted from Your Circle', async ({ page }) => {
   const state = await mock(page)
   state.setRelationship('incoming')
-  await page.goto('/#/profile')
-  await page.getByRole('link', { name: 'Buddies', exact: true }).click()
+  await page.goto('/#/buddies')
   const buddies = page.getByRole('region', { name: 'Buddies', exact: true })
+  await buddies.getByRole('button', { name: 'Friend Requests', exact: true }).click()
   await buddies.getByRole('button', { name: 'Accept', exact: true }).click()
-  await expect(
-    buddies.getByRole('button', { name: 'Remove Buddy', exact: true }),
-  ).toBeVisible()
-  await buddies
-    .getByRole('button', { name: 'Block player', exact: true })
-    .click()
-  await expect(
-    buddies.getByRole('button', { name: 'Unblock', exact: true }),
-  ).toBeVisible()
-  await buddies.getByRole('button', { name: 'Unblock', exact: true }).click()
-  await expect(
-    buddies.getByRole('button', { name: 'Unblock', exact: true }),
-  ).toHaveCount(0)
+  await expect(buddies.getByRole('status')).toHaveText('Friend request accepted.')
+  await buddies.getByRole('button', { name: 'All Friends', exact: true }).click()
+  await expect(buddies.getByRole('link', { name: /Other Player/ })).toBeVisible()
 })
 test('photo preview, failed upload retry, replacement and removal work immediately', async ({
   page,

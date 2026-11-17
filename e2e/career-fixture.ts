@@ -36,6 +36,8 @@ export async function mock(page: Page) {
     id: other,
     username: 'lc_other',
     displayName: 'Other Player',
+    firstName: 'Other',
+    lastName: 'Player',
     xp: 1500,
     rank: 1,
   }

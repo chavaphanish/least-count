@@ -117,9 +117,6 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
       )}
       {['buddies', 'settings'].includes(mode) ? (
         <div className="dashboard-focused">
-          {mode === 'buddies' && <button className="text-button" onClick={() => go('home')}>
-            ← Back to Lounge
-          </button>}
           {mode === 'buddies' ? (
             player.accountType === 'registered' ? (
               <Buddies />

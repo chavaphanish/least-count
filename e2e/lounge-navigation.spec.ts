@@ -99,12 +99,11 @@ for (const viewport of [
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       for (const [name, target] of [
         ['Leaderboards', '.leaderboard'],
-        ['Buddies', '.player-search'],
+        ['Buddies', '.circle-panel'],
       ]) {
         await page.getByRole('link', { name, exact: true }).click()
         await expect(page.locator(target)).toBeVisible()
-        if (name === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
-        else await page.getByRole('button', { name: 'Back to Lounge' }).click()
+        await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       }
       expect(
         await page.locator('.dashboard-action.lounge-nav-button').count(),
