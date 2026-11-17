@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.21 — 2026-11-17
+
+- **Tabbed Settings:** added vertical Account, Sounds, and Profile tabs using the existing golden career-tab styling. Sign Out now lives only in Account instead of the Lounge; Sounds reuses all existing sound, haptic, and turn-notification controls. Profile reuses the existing identity and photo editors, validation, upload optimization, and save behavior, without exposing other editable account fields. Removed Settings’ Back to Lounge button; the header remains the return navigation. Compact profile sections keep mobile landscape layouts within the viewport.
+
 ## 1.1.20 — 2026-11-16
 
 - **Header navigation:** Rules and Lounge are followed by compact mailbox and settings icons. Mailbox opens the existing themed popup with “Under Construction.”; Settings opens the existing settings panel at `#/settings`, including direct links and reloads. Removed My Profile and Settings from the Lounge; the entire header identity still opens My Profile. Mobile landscape alignment, keyboard focus, and existing settings controls are preserved.

@@ -68,7 +68,7 @@ test('one guard covers routes and dashboard screens without replacing mounted co
     ).toBeVisible()
     await expect(page.locator('main')).toBeHidden()
     await page.setViewportSize(landscape)
-    if (name === 'Leaderboards') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+    if (name === 'Leaderboards' || name === 'Settings') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
     else await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
 })

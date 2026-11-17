@@ -1,0 +1,39 @@
+/* Reuse career-tab colors, typography, and selected/focus states. */
+.settings-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; min-width: 0; min-height: 0; }
+.settings-panel > h2 { margin: 0; }
+.settings-layout { display: grid; grid-template-columns: minmax(110px,1fr) minmax(0,3fr); gap: 20px; min-height: 0; }
+.settings-panel .career-tabs { flex-direction: column; flex-wrap: nowrap; gap: 12px; margin: 0; align-self: start; }
+.settings-panel .career-tabs button { width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; font-size: 13px; }
+.settings-content, .settings-content > [role=tabpanel] { min-width: 0; min-height: 0; }
+.settings-content > [role=tabpanel] { height: 100%; }
+.settings-panel .sound-haptics { margin: 0; }
+.settings-panel .feedback-options { flex-direction: column; gap: 4px; }
+.settings-profile-editor { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; align-items: start; }
+.settings-profile-editor .career-section { margin: 0; padding: 12px; }
+.settings-profile-editor .profile-editor > .profile-avatar { width: 56px; height: 56px; margin: 8px 0; }
+[data-mobile-device] .settings-panel { flex: 1; gap: 8px; }
+[data-mobile-device] .settings-layout { flex: 1; gap: 12px; }
+[data-mobile-device] .settings-panel .career-tabs { gap: 8px; }
+[data-mobile-device] .settings-panel .career-tabs button { padding: 8px; }
+[data-mobile-device] .settings-profile-editor { display: flex; min-height: 0; height: 100%; }
+[data-mobile-device] .settings-profile-editor .career-section { padding: 4px; border: 0; background: transparent; }
+[data-mobile-device] .settings-profile-editor .identity-editor > h2 { font-size: 16px; margin-bottom: 4px; }
+[data-mobile-device] .settings-profile-editor .profile-editor { grid-template-columns: 60px minmax(0,1fr); gap: 4px 8px; }
+[data-mobile-device] .settings-profile-editor .profile-editor > .profile-avatar { width: 48px; height: 48px; margin: 0; }
+[data-mobile-device] .settings-profile-editor .profile-editor > h2 { font-size: 13px; }
+[data-mobile-device] .settings-profile-editor .profile-editor .field-hint { font-size: 10px; line-height: 1.25; }
+[data-keyboard] .settings-panel > h2, [data-keyboard] .settings-profile-editor .screen-page-tabs,
+[data-keyboard] .settings-profile-editor .identity-editor > h2,
+[data-keyboard] .settings-profile-editor .identity-editor > .field-hint { display: none; }
+[data-keyboard] .settings-panel .career-tabs { gap: 4px; }
+[data-keyboard] .settings-panel .career-tabs button { min-height: 32px; padding: 4px; }
+[data-mobile-device] .settings-profile-editor .identity-editor form { gap: 6px; }
+[data-mobile-device] .settings-profile-editor form label { gap: 4px; }
+[data-mobile-device] .settings-profile-editor .profile-editor > form { gap: 4px; }
+[data-mobile-device] .settings-profile-editor .profile-editor form > .field-hint { margin: 2px 0; }
+[data-mobile-device] .settings-profile-editor .profile-editor > .game-alert,
+[data-mobile-device] .settings-profile-editor .profile-editor > .form-notice { margin: 0; padding: 6px; font-size: 11px; line-height: 1.25; }
+@media (max-height: 350px) {
+  [data-mobile-device] .settings-profile-editor .identity-editor > h2,
+  [data-mobile-device] .settings-profile-editor .identity-editor > .field-hint { display: none; }
+}

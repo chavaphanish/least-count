@@ -55,6 +55,7 @@ test('restores a server guest across refresh and clears it on sign out', async (
   expect(
     (await (await page.request.get('/api/session')).json()).user.player.id,
   ).toBe(before.user.player.id)
+  await page.getByRole('link', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: 'Leave Guest Session' }).click()
   await expect(
     page.getByRole('button', { name: 'Continue as Guest', exact: true }),

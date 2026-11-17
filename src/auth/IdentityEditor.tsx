@@ -6,7 +6,12 @@ import { identityFields } from '../components/IdentityFields'
 import { personalName, username } from '../shared/identity'
 export function IdentityEditor() {
   const auth = useAuth(),
-    profile = auth.user!.profile!
+    profile = auth.user!.profile ?? {
+      username: auth.user!.player.username ?? '',
+      firstName: auth.user!.player.firstName ?? '',
+      lastName: auth.user!.player.lastName ?? '',
+      needsCompletion: true,
+    }
   const [values, setValues] = useState({
     username: profile.username,
     firstName: profile.firstName,

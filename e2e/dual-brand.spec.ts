@@ -91,7 +91,7 @@ test.describe('small mobile dual branding',()=>{
     await page.getByRole('link',{name:'Settings',exact:true}).click()
     await expect(cover).toHaveCount(1)
     await page.clock.runFor(1200)
-    await page.getByRole('button',{name:/Back to Lounge/}).click()
+    await page.getByRole('link',{name:'Lounge',exact:true}).click()
     await expect(cover).toHaveCount(1)
     // Rapid superseding route requests still leave just one bounded cover.
     await page.evaluate(()=>{location.hash='#/profile'})
