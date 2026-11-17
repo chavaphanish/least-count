@@ -15,7 +15,7 @@ import {
   roomSettings,
 } from '../shared/multiplayer'
 import type { RoomSettings } from '../shared/multiplayer'
-export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' | 'settings' }) {
+export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' | 'settings' | 'buddies' }) {
   const navigation = useNavigationLoading()
   const auth = useAuth()
   const player = auth.user!.player
@@ -46,7 +46,7 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
       setGuestNotice(true)
       return
     }
-    if (value === 'home' && initialMode === 'settings') location.hash = '#/'
+    if (value === 'home' && initialMode !== 'home') location.hash = '#/'
     if (value !== mode) navigation.start()
     setMode(value)
     setError('')
@@ -155,7 +155,6 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
                 <button className="button button-primary lounge-nav-button" onClick={() => { location.hash = '#/leaderboards' }}>
                   Leaderboards
                 </button>
-                <button className="button button-primary lounge-nav-button" onClick={() => go('buddies')}>Buddies</button>
               </div>
             </div>
           </div>
