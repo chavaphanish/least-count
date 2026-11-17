@@ -144,7 +144,11 @@ export default {
         )
           throw new ApiError(403, GUEST_MULTIPLAYER_NOTICE)
         const settings = roomSettings(await body(request))
-        return directory(env, '/create', { identity: auth.identity, settings })
+        try {
+          return await directory(env, '/create', { identity: auth.identity, settings })
+        } catch {
+          throw new ApiError(503, 'Room creation is temporarily unavailable. Please retry.')
+        }
       }
       const match =
         /^\/api\/rooms\/([A-Za-z0-9]{6})(?:\/(join|ticket|start|leave|close|ws))?$/.exec(

@@ -408,7 +408,9 @@ export class GameRoom {
         }
         const data = await body(request)
         const identity = data.identity as Identity
-        if(identity?.accountType==='registered' && (await (await this.directory('/erasure/locked',{uid:identity.id.slice(5)})).json() as {locked:boolean}).locked)throw new ApiError(403,'Account deletion is in progress.')
+        // Directory /create already checked deletion eligibility while holding its input gate.
+        // Initialization must acknowledge before any callback into that same Directory;
+        // otherwise both objects wait for one another until the browser request times out.
         if (url.pathname === '/initialize') {
           if (this.record) throw new ApiError(409, 'Room already exists.')
           this.record = createRoom(
@@ -421,6 +423,7 @@ export class GameRoom {
           await this.persist()
           return json({ ok: true })
         }
+        if(identity?.accountType==='registered' && (await (await this.directory('/erasure/locked',{uid:identity.id.slice(5)})).json() as {locked:boolean}).locked)throw new ApiError(403,'Account deletion is in progress.')
         const r = this.record
         if (!r) throw new ApiError(404, 'Room not found.')
         const beforeSweep = r.members.map((m) => m.id)
