@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.25 — 2026-11-17
+
+- **Online presence:** shared avatars now show a subtle green online dot across buddies, rankings, profiles and multiplayer rooms. Authenticated session heartbeats run about every 30 seconds and expire after 60 seconds, with multi-session aggregation, session-scoped sign-out and deletion cleanup. One app-level scheduler batches visible-avatar lookups using existing Durable Objects; no database migration, profile polling or public session details.
+
 ## 1.1.24 — 2026-11-17
 
 - **Premium Lounge:** redesigned the welcome area with prominent, responsive typography and a balanced two-by-two grid of illustrated action tiles. Refined the existing green-and-gold palette, spacing, borders and interaction states for desktop and mobile landscape without scrolling. Preserves every label, action and notice; the top header is unchanged.

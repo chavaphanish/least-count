@@ -1,3 +1,4 @@
+import { presenceDirectory } from './presence'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, directory, publicConfig } from './auth'
 import { accessLimit } from './access'
@@ -132,6 +133,8 @@ export async function stepErasure(job:ErasureJob,env:Env):Promise<'continue'|'co
     const result=await admin.rpc('anonymize_account_history',{account_id:job.uid});if(result.error)throw result.error
     job.phase='auth';return 'continue'
   }
+  const presence=await presenceDirectory(env,'erase',{uid:job.uid})
+  if(!presence.ok)throw new Error('Presence cleanup unavailable')
   const removed=await admin.auth.admin.deleteUser(job.uid)
   if(removed.error && removed.error.status!==404)throw removed.error
   return 'complete'

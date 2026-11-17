@@ -12,8 +12,10 @@ import './branding.css'
 import './auth/access.css'
 import './career/leaderboard.css'
 import './pages/lounge.css'
+import { PresenceProvider } from './presence/PresenceProvider'
+import './presence/presence.css'
 import { AuthProvider } from './auth/AuthProvider'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><FeedbackProvider><AuthProvider><App /></AuthProvider></FeedbackProvider></React.StrictMode>,
+  <React.StrictMode><FeedbackProvider><AuthProvider><PresenceProvider><App /></PresenceProvider></AuthProvider></FeedbackProvider></React.StrictMode>,
 )

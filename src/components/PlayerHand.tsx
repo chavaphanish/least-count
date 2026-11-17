@@ -30,7 +30,7 @@ export function PlayerHand({
     <div className="your-live-seat">
       <div className="hand-heading">
         <div className={`hand-player ${active ? 'active-hand-player' : ''}`}>
-          <Avatar player={identity} />
+          <Avatar player={player} />
           <div>
             <h2>Your hand</h2>
             <span className="hand-player-name"><PlayerIdentity player={identity} compact /></span>

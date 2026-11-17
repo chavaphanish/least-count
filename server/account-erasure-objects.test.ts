@@ -33,7 +33,7 @@ it('erases archived room snapshots, tickets and socket attachments, then stays e
   const restart=new GameRoom(h.ctx,env);await h.ready();expect(await (await restart.fetch(request('/account-erasure/check',{uid}))).json()).toEqual({found:false})
 })
 it('durably retries failed steps, locks only the owner and cleans job identity on completion',async()=>{
-  const h=memory(),env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_CAREER_KEY:'server-only'} as Env
+  const h=memory(),env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_CAREER_KEY:'server-only',DIRECTORY:{idFromName:()=>'',get:()=>({fetch:async()=>new Response('{"online":{}}')})}} as unknown as Env
   let directory=new Directory(h.ctx,env)
   const response=await directory.fetch(request('/erasure/start',{uid,namespace:'a'.repeat(32)})),{token}=await response.json() as {token:string}
   expect(await (await directory.fetch(request('/erasure/start',{uid,namespace:'a'.repeat(32)}))).json()).toEqual({token})

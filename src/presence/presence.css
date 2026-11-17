@@ -1,0 +1,4 @@
+/* Keep avatar dimensions unchanged; the image remains circular while the dot overlaps its edge. */
+.profile-avatar { position: relative; overflow: visible; }
+.profile-avatar img { border-radius: inherit; }
+.profile-avatar .presence-dot { position: absolute; right: -2px; bottom: -2px; width: 23%; height: 23%; min-width: 8px; min-height: 8px; max-width: 13px; max-height: 13px; border: 2px solid #0c2e26; border-radius: 50%; background: #75c497; pointer-events: none; transform: none; }
