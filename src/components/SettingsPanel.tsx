@@ -10,6 +10,10 @@ const tabs = ['Account', 'Sounds', 'Profile'] as const
 export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => Promise<void> }) {
   const { user } = useAuth()
   const [deleteOpen,setDeleteOpen] = useState(false)
+  const createdAt = new Date(user?.createdAt ?? '')
+  const registrationDate = Number.isNaN(createdAt.getTime()) ? null : new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).format(createdAt)
   const id = useId()
   const [selected, setSelected] = useState(0)
   const [profileOpened, setProfileOpened] = useState(false)
@@ -18,9 +22,9 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
     if (index === 2) setProfileOpened(true)
     setSelected(index)
   }
-  return <section className="settings-panel" aria-label="Settings">
+  return <section className="settings-panel career-section leaderboard circle-panel" aria-label="Settings">
     <h2>Settings</h2>
-    <div className="settings-layout">
+    <div className="settings-layout leaderboard-layout circle-layout">
       <div className="career-tabs" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
         {tabs.map((tab, index) => <button key={tab} type="button" role="tab"
           id={`${id}-tab-${index}`} aria-controls={`${id}-panel-${index}`}
@@ -36,8 +40,10 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
             event.preventDefault(); select(next); buttons.current[next]?.focus()
           }}>{tab}</button>)}
       </div>
-      <div className="settings-content">
+      <div className="settings-content leaderboard-results circle-results">
         <div className="account-actions" role="tabpanel" id={`${id}-panel-0`} aria-labelledby={`${id}-tab-0`} hidden={selected !== 0}>
+          {user?.player.accountType === 'registered' && <p className="account-created">Account Created: {registrationDate
+            ? <time dateTime={user.createdAt}>{registrationDate}</time> : 'Unavailable'}</p>}
           <button className="button button-primary" disabled={busy} onClick={() => void logout()}>
             {user?.player.accountType === 'guest' ? 'Leave Guest Session' : 'Sign Out'}
           </button>
