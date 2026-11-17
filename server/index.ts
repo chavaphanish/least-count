@@ -1,3 +1,4 @@
+import { startDeletion, deletionStatus } from './account-deletion'
 import { accessLimit, availability, login, register } from './access'
 import { checkUsername, saveIdentity } from './identity'
 import { careerOriginAllowed } from './career'
@@ -73,6 +74,8 @@ export default {
           },
         })
       }
+      if(url.pathname==='/api/account' && request.method==='DELETE')return await startDeletion(request,env)
+      if(url.pathname==='/api/account/deletion-status' && request.method==='POST')return await deletionStatus(request,env)
       if (url.pathname === '/api/logout' && request.method === 'POST') {
         const auth = await authenticate(request, env)
         if (auth) {

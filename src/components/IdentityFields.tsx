@@ -2,6 +2,7 @@ export function identityFields({
   values,
   onChange,
   message,
+  disabled = false,
 }: {
   values: { username: string; firstName: string; lastName: string }
   onChange: (
@@ -9,12 +10,14 @@ export function identityFields({
     value: string,
   ) => void
   message: string
+  disabled?: boolean
 }) {
   return (
     <>
       <label>
         Username
         <input
+          disabled={disabled}
           id="identity-username"
           required
           minLength={8}
@@ -31,6 +34,7 @@ export function identityFields({
       <label>
         First Name
         <input
+          disabled={disabled}
           required
           maxLength={80}
           autoComplete="given-name"
@@ -41,6 +45,7 @@ export function identityFields({
       <label>
         Last Name
         <input
+          disabled={disabled}
           required
           maxLength={80}
           autoComplete="family-name"

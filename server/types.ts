@@ -6,6 +6,10 @@ export interface Env {
   ROOMS: DurableObjectNamespace
   SUPABASE_URL?: string
   SUPABASE_PUBLISHABLE_KEY?: string
+  SUPABASE_ACCOUNT_ADMIN_KEY?: string
+  ACCOUNT_DELETION_CF_ACCOUNT_ID?: string
+  ACCOUNT_DELETION_CF_TOKEN?: string
+  ACCOUNT_DELETION_WORKER_NAME?: string
   SUPABASE_CAREER_KEY?: string
   CAREER_ENABLED?: string
   CAREER_ORIGIN?: string

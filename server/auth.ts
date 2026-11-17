@@ -96,6 +96,7 @@ export async function authenticate(
         'Verify your email before using this account.',
         'EMAIL_UNVERIFIED',
       )
+    if(auth.app_metadata?.account_deletion_pending===true && !(new URL(request.url).pathname==='/api/account' && request.method==='DELETE'))throw new ApiError(401,'This account is being deleted.','ACCOUNT_DELETION_PENDING')
     let proposed = 'Player'
     try {
       proposed = displayName(

@@ -85,3 +85,10 @@ describe('initialization', () => {
     expect(services.guestMultiplayerEnabled).toBe(false)
   })
 })
+
+it('polls account-erasure completion even after the provider session is revoked',async()=>{
+  const original=globalThis.fetch,services=new Services(),getSession=vi.fn(async()=>{throw new Error('revoked')})
+  services.provider={auth:{getSession}} as unknown as NonNullable<Services['provider']>
+  globalThis.fetch=vi.fn(async()=>new Response(JSON.stringify({complete:true})))
+  try {expect(await services.api('/account/deletion-status',{method:'POST'})).toEqual({complete:true});expect(getSession).not.toHaveBeenCalled()}finally{globalThis.fetch=original}
+})

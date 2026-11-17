@@ -152,6 +152,11 @@ function useAuthentication() {
     })
     await refresh()
   }
+  const completeAccountDeletion = useCallback(async () => {
+    generation.current++; sessionRevision.current++; activeBoot.current?.abort()
+    try { await services.provider?.auth.signOut({ scope: 'local' }) } catch { /* The server has already revoked the deleted account. */ }
+    setState(s=>({...s,user:null,room:null,error:'',status:'ready'}))
+  }, [services])
   const signOut = async () => {
     await services.api('/logout', { method: 'POST' })
     if (services.provider) {
@@ -175,6 +180,7 @@ function useAuthentication() {
     retry: boot,
     guest,
     signOut,
+    completeAccountDeletion,
   }
 }
 export type AuthContextValue = ReturnType<typeof useAuthentication>
