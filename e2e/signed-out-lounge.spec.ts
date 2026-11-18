@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mock } from './career-fixture'
+import { auditGame } from './ux-fixture'
+import { SESSION_KEY } from '../src/lib/session'
 const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'
 async function signedOut(page: Page) {
   await page.route('**/api/config', route => route.fulfill({ json: { service: 'least-count', supabase: { url: 'https://mock-project.supabase.co', publishableKey: 'sb_publishable_test' } } }))
@@ -22,14 +25,27 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
   try {
     const page = await context.newPage(); await signedOut(page); await page.goto('/')
     await expect(page.getByRole('heading', { name: 'YAYDU, The Game of Sevens.', exact: true })).toBeVisible()
-    await expect(page.getByText('Seven cards. One goal. The lowest score wins!', { exact: true })).toBeVisible()
-    await expect(page.getByText('Challenge your friends, outsmart your opponents, and master the game of sevens, where every card counts and every move matters.', { exact: true })).toBeVisible()
+    await expect(page.locator('.access-promise span')).toHaveText(['Seven Cards.', 'One Goal.', 'Lowest Score Wins!'])
+    await expect(page.getByText(/Challenge your friends, outsmart your opponents/)).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Play Game', exact: true })).toHaveCount(0)
     await expect(page.getByText('Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!', { exact: true })).toBeVisible()
     const nav = page.getByRole('navigation', { name: 'Main navigation' })
     await expect(nav.getByRole('link')).toHaveText(['Rules'])
     await expect(nav.getByRole('button')).toHaveCount(0)
     await expect(page.locator('.access-footer .brand-copyright')).toHaveText(/^© 2026 Chavium Games Pvt\. Ltd\. \| ver\. /)
     await fits(page)
+    const proportions = await page.locator('.signed-out-lounge').evaluate(root => {
+      const heading = root.querySelector('h1')!.getBoundingClientRect(), tagline = root.querySelector('.access-promise')!.getBoundingClientRect()
+      const box = root.getBoundingClientRect(), footer = root.querySelector('.access-footer')!.getBoundingClientRect()
+      const logo = document.querySelector('.site-header .studio-logo')!.getBoundingClientRect(), word = document.querySelector('.header-wordmark')!.getBoundingClientRect(), header = document.querySelector('.site-header')!.getBoundingClientRect()
+      return { headingHeight: heading.height, taglineHeight: tagline.height, aligned: Math.abs(heading.y - tagline.y) < 1,
+        right: tagline.x > heading.x + heading.width, textLogoMatch: Math.abs(word.height - logo.height) < 1,
+        logoGap: header.bottom - logo.bottom, square: getComputedStyle(root).borderRadius,
+        box: box.bottom <= innerHeight, footer: footer.bottom <= box.bottom, nestedBorder: getComputedStyle(root.querySelector('.access-card')!).borderTopWidth }
+    })
+    expect(proportions.headingHeight).toBeCloseTo(proportions.taglineHeight, 0)
+    expect(proportions).toMatchObject({ aligned: true, right: true, textLogoMatch: true, square: '0px', box: true, footer: true, nestedBorder: '0px' })
+    expect(proportions.logoGap).toBeGreaterThan(4)
     await page.getByRole('button', { name: 'Continue as Guest', exact: true }).click(); await fits(page)
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
     await page.getByRole('button', { name: 'Forgot password?', exact: true }).click(); await fits(page)
@@ -39,7 +55,7 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
     await page.getByLabel('Username', { exact: true }).fill('CardMaster99'); await page.getByLabel('Email address', { exact: true }).fill('john@example.test')
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await expect(page.getByLabel('Confirm Password', { exact: true })).toBeVisible(); await fits(page)
-    if (width === 568) await page.screenshot({ path: '/tmp/yaydu-signed-out-568.png' })
+    if (width === 568) await page.screenshot({ path: '/tmp/yaydu-entry-box-568.png' })
     await page.getByRole('link', { name: 'Rules', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Know your table.' })).toBeVisible()
     await expect(nav.getByRole('link')).toHaveText(['Rules'])
@@ -80,4 +96,69 @@ test('keyboard keeps the focused form usable without exposing signed-out navigat
     const controls = await page.locator('.access-card input, .access-card button').evaluateAll(els => els.filter(el => el.checkVisibility() && !el.closest('[hidden]')).map(el => ({ text: el.textContent, bottom: el.getBoundingClientRect().bottom })))
     expect(controls.every(el => el.bottom <= 170)).toBe(true)
   } finally { await context.close() }
+})
+
+
+for (const path of ['/#/game', '/#/room/ABC234']) test(`direct gameplay route ${path} requires a confirmed session`, async ({ page }) => {
+  await signedOut(page)
+  if (path === '/#/game') await page.addInitScript(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game:auditGame(2,7)})
+  await page.goto(path)
+  await expect(page.locator('.signed-out-lounge')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toHaveCount(0)
+  await expect(page.locator('.active-game')).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.signed-out-lounge')).toBeVisible()
+})
+
+test('guest creation must succeed and session verification must finish before local gameplay opens', async ({ page }) => {
+  await signedOut(page)
+  const user = { player: { id: 'guest:test', displayName: 'Guest Tester', accountType: 'guest', avatarUrl: null }, email: null, createdAt: '2026-11-18T00:00:00Z', lastActiveAt: '2026-11-18T00:00:00Z' }
+  let active = false, fail = true, verify = false
+  await page.route('**/api/guest', route => {
+    if (fail) return route.fulfill({ status: 503, json: { error: 'Guest creation unavailable.' } })
+    active = true; return route.fulfill({ json: { user } })
+  })
+  await page.route('**/api/session', async route => {
+    if (active) await new Promise(resolve => { const timer = setInterval(() => { if (verify) { clearInterval(timer); resolve(null) } }, 20) })
+    return route.fulfill({ json: { user: active ? user : null, room: null } })
+  })
+  await page.goto('/#/game')
+  await page.getByRole('button', { name: 'Continue as Guest', exact: true }).click()
+  await page.getByLabel('Display name', { exact: true }).fill('Guest Tester')
+  await page.getByRole('button', { name: 'Enter as guest', exact: true }).click()
+  await expect(page.getByRole('alert')).toHaveText('Guest creation unavailable.')
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toHaveCount(0)
+  fail = false
+  await page.getByRole('button', { name: 'Enter as guest', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Please wait…', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toHaveCount(0)
+  verify = true
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Start local game', exact: true }).click()
+  await expect(page.getByRole('group', { name: 'Your hand', exact: true })).toBeVisible()
+})
+
+test('failed session initialization cannot fall back to unauthenticated offline gameplay', async ({ page }) => {
+  await signedOut(page)
+  await page.route('**/api/session', route => route.fulfill({ status: 503, json: { error: 'Session service unavailable.' } }))
+  await page.goto('/#/game')
+  await expect(page.getByRole('alert')).toContainText('Session service unavailable.')
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Play offline practice', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Read the rules', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Know your table.', exact: true })).toBeVisible()
+})
+
+
+for (const accountType of ['guest', 'registered']) test(`confirmed ${accountType} session can open local practice without changing the signed-in header`, async ({ page }) => {
+  const state = await mock(page)
+  state.user.player.accountType = accountType
+  await page.goto('/#/game')
+  await expect(page.getByRole('button', { name: 'Start local game', exact: true })).toBeVisible()
+  await expect(page.locator('.signed-out-lounge')).toHaveCount(0)
+  await expect(page.locator('.site-header')).toHaveCSS('min-height', '108px')
+  await expect(page.locator('.header-profile')).toBeVisible()
+  await expect(page.locator('.signed-out-brand')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Start local game', exact: true }).click()
+  await expect(page.getByRole('group', { name: 'Your hand', exact: true })).toBeVisible()
 })

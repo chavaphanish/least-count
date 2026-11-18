@@ -70,11 +70,11 @@ function Application() {
   const local = useLocalGame()
   const auth = useAuth()
   const [current, setCurrent] = useState(route)
-  const [startupDone, setStartupDone] = useState(() => ['game', 'rules'].includes(route().page))
+  const [startupDone, setStartupDone] = useState(() => route().page === 'rules')
   const finishStartup = useCallback(() => setStartupDone(true), [])
   useEffect(() => {
-    // Offline practice/rules remain immediately accessible, including after a boot error.
-    if (['game', 'rules'].includes(current.page)) setStartupDone(true)
+    // Rules remain public; gameplay waits for the existing verified session.
+    if (current.page === 'rules') setStartupDone(true)
   }, [current.page])
   const [invite, setInvite] = useState(invitation)
   const previous = useRef(current.page)
@@ -119,11 +119,11 @@ function Application() {
     location.pathname === '/auth/callback' &&
     new URLSearchParams(location.search).get('flow') === 'recovery'
   let content
-  if (current.page === 'game') content = <GamePage local={local} />
-  else if (current.page === 'rules') content = <RulesPage />
+  if (current.page === 'rules') content = <RulesPage />
   else if (auth.status !== 'ready') content = null
   else if (!auth.user) content = <AccessPage invitation={invite} />
   else if (recovery) content = <RecoveryPage />
+  else if (current.page === 'game') content = <GamePage local={local} />
   else if (current.page === 'player')
     content = (
       <CareerProfile key={current.username} username={current.username} />
@@ -157,11 +157,11 @@ function Application() {
     if (startupDone && previousIdentity.current !== identity && auth.status === 'ready') navigation.start()
     previousIdentity.current = identity
   }, [identity, auth.status, startupDone, navigation.start])
-  const atGame = current.page === 'game' || (current.page === 'room' && navigation.gameplay)
+  const atGame = auth.status === 'ready' && !!auth.user && (current.page === 'game' || (current.page === 'room' && navigation.gameplay))
   useEffect(() => {
     if (atGame) { navigation.finish(); setStartupDone(true) }
   }, [atGame, navigation.finish])
-  const showStartup = !atGame && !['game', 'rules'].includes(current.page) && (auth.status !== 'ready' || !startupDone)
+  const showStartup = !atGame && current.page !== 'rules' && (auth.status !== 'ready' || !startupDone)
   const showNavigation = !atGame && !showStartup && !!navigation.pending
   const covered = showStartup || showNavigation
   return (

@@ -12,7 +12,7 @@ for(const mobile of [false,true])test.describe(mobile?'mobile account access':'d
   await expect(page.locator('.access-card > h2')).toHaveCount(0)
   await expect(page.getByPlaceholder('Email or username')).toHaveValue('')
   await expect(page.getByRole('heading',{name:'YAYDU, The Game of Sevens.',exact:true})).toBeVisible()
-  await expect(page.getByText('Seven cards. One goal. The lowest score wins!',{exact:true})).toBeVisible()
+  await expect(page.locator('.access-promise span')).toHaveText(['Seven Cards.', 'One Goal.', 'Lowest Score Wins!'])
   const password=page.getByLabel('Password',{exact:true});await password.fill('test-password');await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await expect(password).toHaveValue('test-password');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password')
   await page.getByLabel('Email or Username',{exact:true}).fill('PERSON@Example.test');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('Invalid email/username or password.');expect(emailRequest).toMatchObject({email:'person@example.test',password:'test-password'})
   await page.getByLabel('Email or Username',{exact:true}).fill('CardMaster99');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect.poll(()=>handleRequest).toMatchObject({identifier:'CardMaster99',password:'test-password'});await expect(page.getByRole('alert')).toHaveText('Invalid email/username or password.')

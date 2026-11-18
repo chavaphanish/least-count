@@ -20,8 +20,12 @@
   align-items: center;
   gap: clamp(24px, 5vw, 72px);
   padding: clamp(24px, 4vw, 56px);
-  border: 1px solid var(--border);
   border-radius: 24px;
+}
+/* Share the existing felt surface without changing the authenticated Lounge layout. */
+.dashboard-page[data-mode=home] .lounge-home,
+.access-page.signed-out-lounge {
+  border: 1px solid var(--border);
   background: radial-gradient(ellipse at 0 100%, #21634c50, transparent 65%), #103e3266;
   box-shadow: inset 0 1px 0 #e9cd910d, 0 18px 60px #00000012;
 }

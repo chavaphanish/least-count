@@ -16,7 +16,7 @@ export function Layout({
   const { mobile, keyboard } = useAppViewport()
   const { user } = useAuth()
   return (
-    <div className="app-shell" data-access={!user && !['rules', 'game'].includes(page) || undefined}>
+    <div className="app-shell" data-access={!user && page !== 'rules' || undefined}>
       <a
         className="skip-link"
         href="#main"
@@ -31,13 +31,11 @@ export function Layout({
         {user ? (
           <HeaderProfile />
         ) : (
-          <a className="brand" href="#/" aria-label="YAYDU home">
+          <a className="brand signed-out-brand" href="#/" aria-label="YAYDU home">
             <span className="brand-mark" aria-hidden="true">
               <StudioLogo />
             </span>
-            <span>
-              YAYDU<span className="brand-caption">The Game of Sevens</span>
-            </span>
+            <span className="header-wordmark">YAYDU</span>
           </a>
         )}
         <nav aria-label="Main navigation">

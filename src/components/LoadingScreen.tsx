@@ -85,7 +85,7 @@ export function LoadingScreen({
       {error && (
         <div className="auth-actions">
           <button className="button button-primary" onClick={restart}>Retry initialization</button>
-          <a className="button button-secondary" href="#/game">Play offline practice</a>
+          <a className="button button-secondary" href="#/rules">Read the rules</a>
         </div>
       )}
     </section>
