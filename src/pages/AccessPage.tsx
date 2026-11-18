@@ -28,7 +28,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
         const provider = auth.services.provider
         if (!provider)
           throw new Error(
-            'Registered sign-in is not configured yet. Continue as a guest or play local practice.',
+            'Registered sign-in is not configured yet. Continue as a guest to play.',
           )
         if (mode === 'reset') {
           const { error } = await provider.auth.resetPasswordForEmail(email, {
@@ -63,9 +63,10 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
       aria-labelledby="access-title"
     >
       <div className="access-story">
-        <h1 id="access-title"><span className="brand-wordmark">YAYDU</span>, The Game of Sevens.</h1>
-        <p className="access-promise">Seven cards. One goal. The lowest score wins!</p>
-        <p>Challenge your friends, outsmart your opponents, and master the game of sevens, where every card counts and every move matters.</p>
+        <div className="access-welcome-row">
+          <h1 id="access-title"><span className="brand-wordmark">YAYDU,</span>{' '}<span>The Game of Sevens.</span></h1>
+          <p className="access-promise"><span>Seven Cards.</span><span>One Goal.</span><span>Lowest Score Wins!</span></p>
+        </div>
         <p>Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
         {invitation && (
           <p className="invitation-banner">
@@ -98,8 +99,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
         {mode==='reset'&&<h2>Reset your password.</h2>}
         {!auth.configured && mode !== 'guest' && (
           <p className="service-note">
-            Registered accounts need Supabase configuration. Guest rooms and
-            local practice are available now.
+            Registered sign-in is unavailable. Continue as Guest to play.
           </p>
         )}
         {mode === 'signup' ? (
@@ -111,8 +111,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             />
           ) : (
             <p className="field-hint">
-              Continue as Guest or play local practice while registration is
-              configured.
+              Continue as Guest while registration is configured.
             </p>
           )
         ) : (
@@ -170,8 +169,8 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             </button>
           </CompactForm>
         )}
-        <div className="access-options">
         {mode === 'signin' && (
+        <div className="access-options">
           <button
             className="text-button"
             onClick={() => {
@@ -182,10 +181,8 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           >
             Forgot password?
           </button>
-        )}
-          <a className="text-link" href="#/game">Play Game <span aria-hidden="true">→</span></a>
-          <small>Local practice with simulated opponents is always available.</small>
         </div>
+        )}
         {mode === 'guest' && (
           <p className="account-fineprint">
             No email required. Your server-verified guest session lasts up to

@@ -1,3 +1,4 @@
+import { mockLocalSession } from './local-session'
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import { createCard } from '../src/game/cards'
@@ -6,6 +7,8 @@ import { applyAction, createGame } from '../src/game/engine'
 import type { GameState } from '../src/game/engine'
 import { SESSION_KEY } from '../src/lib/session'
 import { botView, chooseBotAction } from '../src/game/bot'
+
+test.beforeEach(async ({ page }) => { await mockLocalSession(page) })
 
 let id = 0
 const card = (rank: Rank) => ({
@@ -74,8 +77,7 @@ for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 })
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
-    await page.goto('/')
-    await page.getByRole('link', { name: 'Play Game', exact: true }).click()
+    await page.goto('/#/game')
     await expect(
       page.getByRole('heading', { name: 'Pull up a chair.' }),
     ).toBeVisible()
@@ -669,6 +671,7 @@ test('touch users can select and deselect adjacent overlapping cards', async ({ 
   const context = await browser.newContext({ baseURL, viewport: { width: 320, height: 900 }, hasTouch: true, isMobile: true })
   try {
     const page = await context.newPage()
+    await mockLocalSession(page)
     const game = fixture(2)
     game.players[0].hand = Array.from({ length: 7 }, () => card('10'))
     await load(page, game)
@@ -807,6 +810,7 @@ for (const mobile of [false, true]) test(`local practice selects bots plus one h
   try {
     for (const bots of [1, 3, 7]) {
       const page = await context.newPage()
+    await mockLocalSession(page)
       await page.goto('/#/game')
       const selector = page.getByLabel('Number of Bots')
       await expect(selector).toHaveValue('3')

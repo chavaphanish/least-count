@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.31 — 2026-11-18
+
+- **Lounge entry:** refined signed-out header proportions and logo clearance, added a rectangular shared Lounge surface, and aligned the welcome heading with a three-line tagline. Removed anonymous Play Game access; local practice now waits for a confirmed guest or registered session, including direct URLs and initialization failures. Existing authenticated Lounge, gameplay rules and auth validations remain unchanged.
+
 ## 1.1.30 — 2026-11-18
 
 - **Signed-out Lounge:** added a full-width welcome above the existing authentication forms and reused the rotation screen's copyright footer. Signed-out headers show only Rules; guest and registered sessions retain the existing navigation and Lounge. Responsive form rows preserve validation, recovery and invitation handling without backend changes.
