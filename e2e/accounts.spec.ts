@@ -47,7 +47,7 @@ test('startup failure has retry and retry performs real initialization', async (
   offline = false
   await page.getByRole('button', { name: 'Retry' }).click()
   await expect(
-    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+    page.getByRole('button', { name: 'Login as Guest', exact: true }),
   ).toBeVisible()
 })
 

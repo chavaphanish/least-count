@@ -2,14 +2,16 @@
 .app-shell[data-access] { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100svh; }
 .app-shell[data-access] > #main { min-height: 0; padding: 16px 0; }
 .app-shell[data-access] > .site-footer { display: none; }
-.access-page.signed-out-lounge { height: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; align-content: stretch; align-items: stretch; gap: clamp(8px, 2vh, 20px); padding: clamp(12px, 2vw, 28px); border-radius: 0; }
+.access-page.signed-out-lounge { height: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(min-content, 1fr) auto auto; align-content: stretch; align-items: stretch; gap: clamp(8px, 2vh, 20px); padding: clamp(12px, 2vw, 28px); border-radius: 24px; }
 .signed-out-lounge .access-story { width: 100%; padding: 0; text-align: left; display: grid; gap: 10px; }
 .signed-out-lounge .access-welcome-row { --welcome-height: clamp(52px, 12vh, 120px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
-.signed-out-lounge .access-story h1 { display: flex; flex-direction: column; justify-content: center; height: var(--welcome-height); margin: 0; font-size: calc(var(--welcome-height) / 2); line-height: 1; white-space: nowrap; }
+/* DM Sans 700 uses approximately 2.95 times the subtitle size for equal text widths. */
+.signed-out-lounge .access-story h1 { display: flex; flex-direction: column; justify-content: center; height: var(--welcome-height); margin: 0; font-family: 'DM Sans', sans-serif; font-style: normal; font-weight: 700; font-size: calc((var(--welcome-height) - 4px) / 3.95); line-height: 1; gap: 4px; align-items: flex-start; white-space: nowrap; }
 .signed-out-lounge .access-welcome-row .access-promise { display: grid; grid-template-rows: repeat(3, 1fr); height: var(--welcome-height); margin: 0; font-size: calc(var(--welcome-height) / 3); line-height: 1; font-weight: 500; text-align: right; color: var(--gold); white-space: nowrap; }
-.signed-out-lounge .access-story .brand-wordmark { font-family: 'DM Sans', sans-serif; font-weight: 700; color: var(--gold); }
+.signed-out-lounge .access-story .brand-wordmark { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 2.95em; color: var(--gold); }
 .signed-out-lounge .access-story > p { max-width: none; margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .signed-out-lounge .access-story .invitation-banner { padding: 4px 10px; }
+.signed-out-lounge .access-invitation { display: flex; align-items: center; margin: 0; min-height: 0; color: var(--muted); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
 .signed-out-lounge .access-card { width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; display: grid; align-content: center; gap: 12px; }
 .signed-out-lounge .access-tabs { justify-content: center; padding-bottom: 8px; }
 .signed-out-lounge .access-card form:not([data-form-steps]),
@@ -34,7 +36,8 @@
 .signed-out-lounge .brand-copyright { position: static; display: block; }
 [data-mobile-device] .app-shell[data-access] { height: var(--app-height); grid-template-rows: 40px minmax(0, 1fr); }
 [data-mobile-device] .app-shell[data-access] > #main { padding: 4px 0; }
-[data-mobile-device] .access-page.signed-out-lounge { gap: 6px; padding: 8px 10px; }
+[data-mobile-device] .access-page.signed-out-lounge { gap: 6px; padding: 8px 10px; border-radius: 18px; }
+[data-mobile-device] .signed-out-lounge .access-invitation { font-size: 12px; line-height: 1.25; }
 [data-mobile-device] .signed-out-lounge .access-story { gap: 4px; }
 [data-mobile-device] .signed-out-lounge .access-story > p { font-size: 11px; line-height: 1.25; max-width: none; }
 [data-mobile-device] .signed-out-lounge .access-card { padding: 0; gap: 4px; }
@@ -47,7 +50,7 @@
 [data-keyboard] .app-shell[data-access] { grid-template-rows: 28px minmax(0, 1fr); }
 [data-keyboard] .access-page.signed-out-lounge { display: grid; grid-template-rows: minmax(0, 1fr) auto; padding: 2px 6px; gap: 2px; }
 [data-keyboard] .signed-out-lounge .access-card { padding: 2px 8px; align-content: center; }
-[data-keyboard] .signed-out-lounge .access-options { display: none; }
+[data-keyboard] .signed-out-lounge .access-options, [data-keyboard] .signed-out-lounge .access-invitation { display: none; }
 
 [data-mobile-device] .signed-out-lounge .access-card form:not([data-form-steps]) { gap: 4px 8px; }
 [data-mobile-device] .signed-out-lounge.access-page .signup-wizard:not([data-signup-step="3"]) .signup-form:not([data-form-steps]) > .form-field > label { grid-column: auto; }

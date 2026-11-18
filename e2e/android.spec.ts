@@ -219,7 +219,7 @@ test('offline navigation shows connection guidance without caching a session or 
   await context.setOffline(false)
   await page.getByRole('link', { name: 'Try again' }).click()
   await expect(
-    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+    page.getByRole('button', { name: 'Login as Guest', exact: true }),
   ).toBeVisible()
 })
 
@@ -292,7 +292,7 @@ async function guest(page: Page, name: string) {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await page
-    .getByRole('button', { name: 'Continue as Guest', exact: true })
+    .getByRole('button', { name: 'Login as Guest', exact: true })
     .click()
   await page.getByLabel('Display name', { exact: true }).fill(name)
   await page

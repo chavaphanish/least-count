@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test'
 async function guest(page: Page, name: string) {
   await page.goto('/')
   await page
-    .getByRole('button', { name: 'Continue as Guest', exact: true })
+    .getByRole('button', { name: 'Login as Guest', exact: true })
     .click()
   await page.getByLabel('Display name', { exact: true }).fill(name)
   await page
@@ -58,7 +58,7 @@ test('restores a server guest across refresh and clears it on sign out', async (
   await page.getByRole('link', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: 'Leave Guest Session' }).click()
   await expect(
-    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+    page.getByRole('button', { name: 'Login as Guest', exact: true }),
   ).toBeVisible()
   expect(
     (await (await page.request.get('/api/session')).json()).user,
@@ -244,7 +244,7 @@ test('invitations preserve a room through guest access and host departure transf
       friend.getByText(`Your invitation to room`, { exact: false }),
     ).toBeVisible()
     await friend
-      .getByRole('button', { name: 'Continue as Guest', exact: true })
+      .getByRole('button', { name: 'Login as Guest', exact: true })
       .click()
     await friend
       .getByLabel('Display name', { exact: true })

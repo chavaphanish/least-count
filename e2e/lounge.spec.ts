@@ -18,7 +18,7 @@ for (const mobile of [false, true]) {
     }) => {
       await page.goto('/')
       await page
-        .getByRole('button', { name: 'Continue as Guest', exact: true })
+        .getByRole('button', { name: 'Login as Guest', exact: true })
         .click()
       await page
         .getByLabel('Display name', { exact: true })

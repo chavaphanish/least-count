@@ -93,14 +93,14 @@ test('portrait guard covers initial loading and unauthenticated entry', async ({
   )
   await page.reload()
   await expect(
-    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+    page.getByRole('button', { name: 'Login as Guest', exact: true }),
   ).toBeVisible()
   await page.setViewportSize(portrait)
   await expect(
     page.getByRole('dialog', { name: 'Rotate Your Phone' }),
   ).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+    page.getByRole('button', { name: 'Login as Guest', exact: true }),
   ).toHaveCount(0)
 })
 test('portrait hides an already-open modal and preserves selection, state and deadline', async ({

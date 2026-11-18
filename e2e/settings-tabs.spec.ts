@@ -141,7 +141,7 @@ test('Account sign-out retains error recovery and clears the existing session', 
   await page.goto('/#/settings'); await page.getByRole('button',{name:'Sign Out',exact:true}).click()
   await expect(page.getByRole('alert')).toContainText('Please retry sign out'); fail=false
   await page.getByRole('button',{name:'Sign Out',exact:true}).click()
-  await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Login as Guest',exact:true})).toBeVisible()
   await page.reload(); await expect(page.getByRole('link',{name:'Your profile',exact:true})).toHaveCount(0)
 })
 
@@ -216,7 +216,7 @@ test('account deletion requires explicit confirmation, handles errors and clears
   await trigger.click();await dialog.getByLabel('Current password',{exact:true}).fill('current-password');await expect(submit).toBeDisabled()
   await dialog.getByLabel('Type DELETE to confirm',{exact:true}).fill('DELETE');await submit.click();await expect(dialog.getByRole('alert')).toContainText('current password')
   fail=false;await submit.click();await expect(dialog.getByRole('status')).toContainText('retrying automatically');await expect(page.locator('.header-profile')).toBeVisible()
-  complete=true;await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible({timeout:10000})
+  complete=true;await expect(page.getByRole('button',{name:'Login as Guest',exact:true})).toBeVisible({timeout:10000})
   await expect(page.locator('.header-profile')).toHaveCount(0);expect(new URL(page.url()).hash).toBe('#/')
 })
 

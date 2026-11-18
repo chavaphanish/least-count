@@ -204,10 +204,10 @@ test.describe('landscape mobile presentation', () => {
     await page.setViewportSize(sizes[1])
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(
-      page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+      page.getByRole('button', { name: 'Login as Guest', exact: true }),
     ).toBeVisible()
     await page
-      .getByRole('button', { name: 'Continue as Guest', exact: true })
+      .getByRole('button', { name: 'Login as Guest', exact: true })
       .tap()
     await expect(page.getByLabel('Display name', { exact: true })).toBeVisible()
     expect(
@@ -327,7 +327,7 @@ test('real multiplayer retains its socket, selection and deadline through rotati
   const guest = async (page: Page, name: string) => {
     await page.goto('/')
     await page
-      .getByRole('button', { name: 'Continue as Guest', exact: true })
+      .getByRole('button', { name: 'Login as Guest', exact: true })
       .tap()
     await page.getByLabel('Display name', { exact: true }).fill(name)
     await page

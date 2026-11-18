@@ -74,7 +74,7 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
       await expect(logo).toBeVisible()
     }
     release()
-    await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
+    await expect(page.getByRole('button',{name:'Login as Guest',exact:true})).toBeVisible()
     await expect(loading).toHaveCount(0)
     await expect(page.getByRole('link',{name:'YAYDU home'})).toBeVisible()
     await expect(page.locator('.access-story')).toContainText('The Game of Sevens')

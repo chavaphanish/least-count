@@ -47,7 +47,7 @@ test('one app-level heartbeat continues at 30 seconds and stops after sign out',
  await page.clock.install();await page.goto('/#/settings');await expect(page.locator('.startup-screen')).not.toBeVisible();await expect(page.locator('.header-profile .presence-dot')).toBeVisible()
  const before=p.calls.filter(c=>c.heartbeat).length;await page.clock.fastForward(30000)
  await expect.poll(()=>p.calls.filter(c=>c.heartbeat).length).toBe(before+1)
- await page.getByRole('button',{name:'Sign Out',exact:true}).click();await expect(page.getByRole('button',{name:'Continue as Guest',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'Sign Out',exact:true}).click();await expect(page.getByRole('button',{name:'Login as Guest',exact:true})).toBeVisible()
  const after=p.calls.filter(c=>c.heartbeat).length;await page.clock.fastForward(60000);expect(p.calls.filter(c=>c.heartbeat).length).toBe(after)
 })
 test('registered room avatars share presence in the lobby and during gameplay; guests stay unmarked',async({page})=>{
