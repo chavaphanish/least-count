@@ -34,6 +34,17 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
     await expect(nav.getByRole('link')).toHaveText(['Rules'])
     await expect(nav.getByRole('button')).toHaveCount(0)
     await expect(page.locator('.access-footer .brand-copyright')).toHaveText(/^© 2026 Chavium Games Pvt\. Ltd\. \| ver\. /)
+    await expect(page.locator('.nav-brand')).toHaveText('YAYDU · The Game of Sevens')
+    await expect(page.locator('.header-wordmark')).toHaveCSS('color', 'rgb(233, 205, 145)')
+    await expect(page.locator('.header-brand-tagline')).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(page.locator('.header-brand-tagline')).toHaveCSS('font-weight', '700')
+    const brand = await page.locator('.nav-brand').evaluate(el => {
+      const logo = el.querySelector('.studio-logo')!.getBoundingClientRect(), text = el.querySelector('.header-wordmark')!.getBoundingClientRect()
+      return { ratio: text.height / logo.height, alignment: Math.abs(text.y + text.height / 2 - logo.y - logo.height / 2), gap: parseFloat(getComputedStyle(el).gap) }
+    })
+    expect(brand.ratio).toBeCloseTo(.9, 1)
+    expect(brand.alignment).toBeLessThan(1)
+    expect(brand.gap).toBeLessThan(4)
     await fits(page)
     await page.evaluate(() => document.fonts.ready)
     const proportions = await page.locator('.signed-out-lounge').evaluate(root => {

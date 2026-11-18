@@ -27,9 +27,8 @@ export function Layout({
       >
         Skip to content
       </a>
-      <header className="site-header" data-authenticated={user ? true : undefined}>
-        <HeaderBrand signedOut={!user} />
-        {user && <HeaderProfile />}
+      <header className="site-header">
+        {user ? <HeaderProfile /> : <HeaderBrand signedOut />}
         <nav aria-label="Main navigation">
           <a
             href="#/rules"
