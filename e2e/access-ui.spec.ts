@@ -1,6 +1,7 @@
 import {expect,test} from '@playwright/test'
 for(const mobile of [false,true])test.describe(mobile?'mobile account access':'desktop account access',()=>{
  test.use({viewport:mobile?{width:844,height:390}:{width:1280,height:800},...(mobile?{userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',hasTouch:true,isMobile:true}:{})})
+ test.beforeEach(async({page})=>{await page.route('**/api/presence',r=>r.fulfill({json:{online:{}}}))})
  test('branding typography, placeholders, password toggle and generic credential failures',async({page})=>{
   await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:{url:'https://mock-project.supabase.co',publishableKey:'sb_publishable_test'}}}))
   await page.route('**/api/session',r=>r.fulfill({json:{user:null,room:null}}))
@@ -10,12 +11,8 @@ for(const mobile of [false,true])test.describe(mobile?'mobile account access':'d
   await page.goto('/');await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible()
   await expect(page.locator('.access-card > h2')).toHaveCount(0)
   await expect(page.getByPlaceholder('Email or username')).toHaveValue('')
-  const typography=await page.locator('.access-story').evaluate(el=>{
-   const tag=el.querySelector('.brand-tagline')!,copy=Array.from(el.querySelectorAll('p')).find(p=>p.textContent?.startsWith('Bring a name'))!,heading=el.querySelector('h1')!
-   const style=(n:Element)=>{const s=getComputedStyle(n);return[s.fontFamily,s.fontSize,s.fontWeight,s.fontStyle]}
-   return {tag:style(tag),copy:style(copy),gap:tag.getBoundingClientRect().top-heading.getBoundingClientRect().bottom}
-  })
-  expect(typography.tag).toEqual(typography.copy);expect(typography.gap).toBeLessThanOrEqual(6)
+  await expect(page.getByRole('heading',{name:'YAYDU, The Game of Sevens.',exact:true})).toBeVisible()
+  await expect(page.getByText('Seven cards. One goal. The lowest score wins!',{exact:true})).toBeVisible()
   const password=page.getByLabel('Password',{exact:true});await password.fill('test-password');await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await expect(password).toHaveValue('test-password');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password')
   await page.getByLabel('Email or Username',{exact:true}).fill('PERSON@Example.test');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('Invalid email/username or password.');expect(emailRequest).toMatchObject({email:'person@example.test',password:'test-password'})
   await page.getByLabel('Email or Username',{exact:true}).fill('CardMaster99');await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect.poll(()=>handleRequest).toMatchObject({identifier:'CardMaster99',password:'test-password'});await expect(page.getByRole('alert')).toHaveText('Invalid email/username or password.')
@@ -49,8 +46,10 @@ for(const mobile of [false,true])test.describe(mobile?'mobile account access':'d
   await page.route('**/api/auth/register',r=>{registrations++;return r.fulfill({status:400,json:{error:'Unexpected registration'}})})
   await page.route('**/api/auth/login',r=>{signedIn=true;return r.fulfill({json:{session:{access_token:token,refresh_token:'test-refresh'}}})})
   await page.route('https://mock-project.supabase.co/auth/v1/token**',r=>{signedIn=true;expect(r.request().postDataJSON().email).toBe('owner@example.test');return r.fulfill({json:session})})
-  await page.goto('/');await page.getByLabel('Email or Username',{exact:true}).fill(byUsername?'CardMaster99':'OWNER@EXAMPLE.TEST');await page.getByLabel('Password',{exact:true}).fill('verified-password');await page.getByRole('button',{name:'Sign in',exact:true}).click()
+  await page.goto('/');await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link')).toHaveText(['Rules']);await page.getByLabel('Email or Username',{exact:true}).fill(byUsername?'CardMaster99':'OWNER@EXAMPLE.TEST');await page.getByLabel('Password',{exact:true}).fill('verified-password');await page.getByRole('button',{name:'Sign in',exact:true}).click()
   await expect(page.getByRole('heading',{name:/Welcome(?: back)?, John(?: Smith)?!/})).toBeVisible();expect(registrations).toBe(0)
+  await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Settings',exact:true})).toBeVisible()
+  await expect(page.locator('.signed-out-lounge')).toHaveCount(0)
   await page.reload();await expect(page.getByRole('heading',{name:/Welcome(?: back)?, John(?: Smith)?!/})).toBeVisible();expect(registrations).toBe(0)
  })
 

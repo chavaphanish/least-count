@@ -1,3 +1,4 @@
+import { BrandCopyright } from '../components/DualBrand'
 import { PasswordField } from '../components/PasswordField'
 import { registrationEmail } from '../shared/identity'
 import { SignupForm } from '../auth/SignupForm'
@@ -57,28 +58,21 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
   }
   return (
     <section
-      className="access-page"
+      className="access-page signed-out-lounge"
       data-access-mode={mode}
       aria-labelledby="access-title"
     >
       <div className="access-story">
-        <h1 id="access-title" className="brand-wordmark">
-          YAYDU
-        </h1>
-        <p className="eyebrow brand-tagline">The Game of Sevens</p>
-        <p>Bring a name. Bring a little strategy. We’ll bring the cards.</p>
+        <h1 id="access-title"><span className="brand-wordmark">YAYDU</span>, The Game of Sevens.</h1>
+        <p className="access-promise">Seven cards. One goal. The lowest score wins!</p>
+        <p>Challenge your friends, outsmart your opponents, and master the game of sevens, where every card counts and every move matters.</p>
+        <p>Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
         {invitation && (
           <p className="invitation-banner">
             Your invitation to room <strong>{invitation}</strong> will be kept
             while you sign in.
           </p>
         )}
-        <a className="text-link" href="#/game">
-          Play Game <span aria-hidden="true">→</span>
-        </a>
-        <small>
-          Local practice with simulated opponents is always available.
-        </small>
       </div>
       <div className="access-card">
         <div className="access-tabs" role="group" aria-label="Account access">
@@ -101,7 +95,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             </button>
           ))}
         </div>
-        {(mode==='guest'||mode==='reset')&&<h2>{mode==='guest'?'Make yourself at home.':'Reset your password.'}</h2>}
+        {mode==='reset'&&<h2>Reset your password.</h2>}
         {!auth.configured && mode !== 'guest' && (
           <p className="service-note">
             Registered accounts need Supabase configuration. Guest rooms and
@@ -176,6 +170,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             </button>
           </CompactForm>
         )}
+        <div className="access-options">
         {mode === 'signin' && (
           <button
             className="text-button"
@@ -188,6 +183,9 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             Forgot password?
           </button>
         )}
+          <a className="text-link" href="#/game">Play Game <span aria-hidden="true">→</span></a>
+          <small>Local practice with simulated opponents is always available.</small>
+        </div>
         {mode === 'guest' && (
           <p className="account-fineprint">
             No email required. Your server-verified guest session lasts up to
@@ -195,6 +193,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           </p>
         )}
       </div>
+      <footer className="access-footer"><BrandCopyright /></footer>
     </section>
   )
 }
