@@ -60,12 +60,11 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
     <section
       className="access-page signed-out-lounge"
       data-access-mode={mode}
-      aria-labelledby="access-title"
+      aria-label="Welcome to YAYDU"
     >
       <div className="access-story">
         <div className="access-welcome-row">
-          <h1 id="access-title"><span className="brand-wordmark">YAYDU</span>{' '}<span className="brand-subtitle">The Game of Sevens</span></h1>
-          <p className="access-promise"><span>Seven Cards.</span><span>One Goal.</span><span>Lowest Score Wins!</span></p>
+          <h1 className="access-promise"><span>Seven Cards.</span><span>One Goal.</span><span>Lowest Score Wins!</span></h1>
         </div>
         {invitation && (
           <p className="invitation-banner">

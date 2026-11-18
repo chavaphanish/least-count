@@ -19,7 +19,7 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     const logo = loading.getByRole('img',{name:'YAYDU',exact:true})
     await expect(logo).toBeVisible()
     await expect(loading.locator('.yaydu-wordmark').first()).toBeVisible()
-    await expect(loading.getByText('The Game of Sevens',{exact:true})).toBeVisible()
+    await expect(loading.getByText('The Game of Sevens',{exact:true})).toHaveCount(0)
     await expect(loading.getByRole('progressbar')).toHaveCount(1)
     const pixels = await loading.locator('.loading-logo .brand-filled img').evaluate(async (element) => {
       const image = element as HTMLImageElement
@@ -77,7 +77,7 @@ for (const mobile of [true, false]) test.describe(mobile ? 'mobile studio brandi
     await expect(page.getByRole('button',{name:'Login as Guest',exact:true})).toBeVisible()
     await expect(loading).toHaveCount(0)
     await expect(page.getByRole('link',{name:'YAYDU home'})).toBeVisible()
-    await expect(page.locator('.access-story')).toContainText('The Game of Sevens')
-    await expect(page.locator('.access-story')).toContainText('YAYDU')
+    await expect(page.locator('.nav-brand')).toContainText('The Game of Sevens')
+    await expect(page.locator('.access-story')).toContainText('Seven Cards.')
   })
 })

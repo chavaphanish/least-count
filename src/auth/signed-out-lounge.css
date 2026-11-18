@@ -4,11 +4,8 @@
 .app-shell[data-access] > .site-footer { display: none; }
 .access-page.signed-out-lounge { height: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(min-content, 1fr) auto auto; align-content: stretch; align-items: stretch; gap: clamp(8px, 2vh, 20px); padding: clamp(12px, 2vw, 28px); border-radius: 24px; }
 .signed-out-lounge .access-story { width: 100%; padding: 0; text-align: left; display: grid; gap: 10px; }
-.signed-out-lounge .access-welcome-row { --welcome-height: clamp(52px, 12vh, 120px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
-/* DM Sans 700 uses approximately 2.95 times the subtitle size for equal text widths. */
-.signed-out-lounge .access-story h1 { display: flex; flex-direction: column; justify-content: center; height: var(--welcome-height); margin: 0; font-family: 'DM Sans', sans-serif; font-style: normal; font-weight: 700; font-size: calc((var(--welcome-height) - 4px) / 3.95); line-height: 1; gap: 4px; align-items: flex-start; white-space: nowrap; }
-.signed-out-lounge .access-welcome-row .access-promise { display: grid; grid-template-rows: repeat(3, 1fr); height: var(--welcome-height); margin: 0; font-size: calc(var(--welcome-height) / 3); line-height: 1; font-weight: 500; text-align: right; color: var(--gold); white-space: nowrap; }
-.signed-out-lounge .access-story .brand-wordmark { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 2.95em; color: var(--gold); }
+.signed-out-lounge .access-welcome-row { --welcome-height: clamp(76px, 20vh, 168px); display: flex; align-items: center; }
+.signed-out-lounge .access-welcome-row .access-promise { display: grid; grid-template-rows: repeat(3, 1fr); height: var(--welcome-height); margin: 0; font: 500 calc(var(--welcome-height) / 3)/1 'DM Sans', sans-serif; text-align: left; color: var(--gold); white-space: nowrap; }
 .signed-out-lounge .access-story > p { max-width: none; margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .signed-out-lounge .access-story .invitation-banner { padding: 4px 10px; }
 .signed-out-lounge .access-invitation { display: flex; align-items: center; margin: 0; min-height: 0; color: var(--muted); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
@@ -39,6 +36,7 @@
 [data-mobile-device] .access-page.signed-out-lounge { gap: 6px; padding: 8px 10px; border-radius: 18px; }
 [data-mobile-device] .signed-out-lounge .access-invitation { font-size: 12px; line-height: 1.25; }
 [data-mobile-device] .signed-out-lounge .access-story { gap: 4px; }
+[data-mobile-device] .signed-out-lounge .access-welcome-row { --welcome-height: clamp(64px, 19vh, 88px); }
 [data-mobile-device] .signed-out-lounge .access-story > p { font-size: 11px; line-height: 1.25; max-width: none; }
 [data-mobile-device] .signed-out-lounge .access-card { padding: 0; gap: 4px; }
 [data-mobile-device] .signed-out-lounge .access-tabs { padding-bottom: 4px; }
@@ -65,11 +63,7 @@
   [data-mobile-device] .signed-out-lounge .access-tabs button { min-height: 28px; }
 }
 
-/* The signed-out brand link; authenticated header geometry is unchanged. */
+/* Signed-out header height stays independent of the authenticated controls row. */
 .site-header:has(> .signed-out-brand) { --header-brand-size: 36px; min-height: 60px; height: auto; padding: 12px 0; }
-.site-header > .signed-out-brand { gap: 10px; line-height: 1; }
-.site-header > .signed-out-brand .brand-mark { display: flex; align-items: center; }
-.site-header > .signed-out-brand .studio-logo { width: var(--header-brand-size); height: var(--header-brand-size); }
-.site-header > .signed-out-brand .header-wordmark { font-size: var(--header-brand-size); line-height: 1; letter-spacing: .03em; }
 [data-mobile-device] .site-header:has(> .signed-out-brand) { --header-brand-size: 24px; min-height: 40px; height: 40px; padding: 8px 0; }
 [data-keyboard] .site-header:has(> .signed-out-brand) { --header-brand-size: 18px; min-height: 28px; height: 28px; padding: 5px 0; }

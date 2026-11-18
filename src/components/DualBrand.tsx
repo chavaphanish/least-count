@@ -27,7 +27,6 @@ export function DualBrand({ progress }: { progress?: number }) {
       <BrandFill label="YAYDU wordmark" progress={progress} left={0} right={100}>
         <span className="yaydu-wordmark">YAYDU</span>
       </BrandFill>
-      <p className="brand-tagline">The Game of Sevens</p>
     </div>
     <span className="brand-separator" aria-hidden="true" />
     <div className="dual-studio">

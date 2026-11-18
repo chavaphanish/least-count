@@ -25,6 +25,8 @@ test('three artwork layers share zero, midpoint and full progress; captions stay
   const loading=page.locator('.startup-screen'), fills=loading.locator('.brand-fill')
   await expect(loading).toHaveAttribute('data-ready','true')
   await expect(fills).toHaveCount(3)
+  await expect(loading.locator('.brand-tagline')).toHaveCount(0)
+  await expect(loading.getByText('Powered by',{exact:true})).toBeVisible()
   const copyright=loading.getByText(/© 2026 Chavium Games Pvt\. Ltd\./)
   await expect(copyright).toBeVisible()
   const position=await copyright.boundingBox()
