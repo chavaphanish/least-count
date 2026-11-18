@@ -16,7 +16,7 @@ export function Layout({
   const { mobile, keyboard } = useAppViewport()
   const { user } = useAuth()
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-access={!user && !['rules', 'game'].includes(page) || undefined}>
       <a
         className="skip-link"
         href="#main"
@@ -47,6 +47,7 @@ export function Layout({
           >
             Rules
           </a>
+          {user && <>
           <a href="#/" aria-current={page === 'home' ? 'page' : undefined}>
             Lounge
           </a>
@@ -75,7 +76,8 @@ export function Layout({
               <circle cx="12" cy="12.6" r="3" />
             </svg>
           </a>
-          {mobile && keyboard && (
+          </>}
+          {user && mobile && keyboard && (
             <button
               type="button"
               className="text-button keyboard-done"

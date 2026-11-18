@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.30 — 2026-11-18
+
+- **Signed-out Lounge:** added a full-width welcome above the existing authentication forms and reused the rotation screen's copyright footer. Signed-out headers show only Rules; guest and registered sessions retain the existing navigation and Lounge. Responsive form rows preserve validation, recovery and invitation handling without backend changes.
+
 ## 1.1.29 — 2026-11-17
 
 - **Settings:** reused Your Circle's panel and vertical-tab layout across desktop and mobile landscape. Account now shows the registration date from the existing session, with matching Sign Out/Delete Account button dimensions and a subtle destructive style. Existing settings, profile editing and account confirmation workflows are preserved.
