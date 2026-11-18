@@ -1,4 +1,4 @@
-import { StudioLogo } from './StudioLogo'
+import { HeaderBrand } from './HeaderBrand'
 import type { ReactNode } from 'react'
 import { useAppViewport } from './MobileOrientation'
 import { useAuth } from '../auth/AuthProvider'
@@ -27,17 +27,9 @@ export function Layout({
       >
         Skip to content
       </a>
-      <header className="site-header">
-        {user ? (
-          <HeaderProfile />
-        ) : (
-          <a className="brand signed-out-brand" href="#/" aria-label="YAYDU home">
-            <span className="brand-mark" aria-hidden="true">
-              <StudioLogo />
-            </span>
-            <span className="header-wordmark">YAYDU</span>
-          </a>
-        )}
+      <header className="site-header" data-authenticated={user ? true : undefined}>
+        <HeaderBrand signedOut={!user} />
+        {user && <HeaderProfile />}
         <nav aria-label="Main navigation">
           <a
             href="#/rules"

@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.33 — 2026-11-18
+
+- **Shared branding:** added the gold “YAYDU ·” and white “The Game of Sevens” header identity in signed-out and signed-in views while preserving profile, XP and navigation controls. Enlarged and left-aligned the Lounge's three-line tagline, removing its duplicated app heading. Balanced the shared dual-logo composition without its tagline; existing assets, Powered by label and synchronized gold-fill animation are preserved.
+
 ## 1.1.32 — 2026-11-18
 
 - **Lounge welcome:** restored rounded frame corners, matched both welcome lines to bold YAYDU typography with similar rendered widths, enlarged and centered the invitation between the heading and forms, and renamed the guest access action to Login as Guest. Existing signed-in layout, session requirements and authentication/gameplay behavior are preserved.

@@ -24,7 +24,8 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
   const context = await browser.newContext({ viewport: { width, height }, ...(width < 1000 ? { isMobile: true, hasTouch: true, userAgent: iphone } : {}) })
   try {
     const page = await context.newPage(); await signedOut(page); await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'YAYDU The Game of Sevens', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Seven Cards/ })).toBeVisible()
+    await expect(page.locator('.signed-out-lounge .brand-wordmark, .signed-out-lounge .brand-subtitle')).toHaveCount(0)
     await expect(page.locator('.access-promise span')).toHaveText(['Seven Cards.', 'One Goal.', 'Lowest Score Wins!'])
     await expect(page.getByText(/Challenge your friends, outsmart your opponents/)).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Play Game', exact: true })).toHaveCount(0)
@@ -36,27 +37,19 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
     await fits(page)
     await page.evaluate(() => document.fonts.ready)
     const proportions = await page.locator('.signed-out-lounge').evaluate(root => {
-      const heading = root.querySelector('h1')!.getBoundingClientRect(), tagline = root.querySelector('.access-promise')!.getBoundingClientRect()
-      const box = root.getBoundingClientRect(), footer = root.querySelector('.access-footer')!.getBoundingClientRect()
-      const logo = document.querySelector('.site-header .studio-logo')!.getBoundingClientRect(), word = document.querySelector('.header-wordmark')!.getBoundingClientRect(), header = document.querySelector('.site-header')!.getBoundingClientRect()
-      const title = root.querySelector('.brand-wordmark')!, subtitle = root.querySelector('.brand-subtitle')!, invitation = root.querySelector('.access-invitation')!
-      const a = title.getBoundingClientRect(), b = subtitle.getBoundingClientRect(), text = invitation.getBoundingClientRect(), form = root.querySelector('.access-card')!.getBoundingClientRect()
-      return { textWidthRatio: a.width / b.width, sameFont: ['fontFamily', 'fontWeight', 'fontStyle'].every(key => getComputedStyle(title)[key as 'fontFamily'] === getComputedStyle(subtitle)[key as 'fontFamily']),
-        titleLeft: a.x === b.x, invitationCenter: Math.abs((text.y + text.height / 2) - (heading.bottom + form.top) / 2),
-        invitationFont: parseFloat(getComputedStyle(invitation).fontSize), headingHeight: heading.height, taglineHeight: tagline.height, aligned: Math.abs(heading.y - tagline.y) < 1,
-        right: tagline.x > heading.x + heading.width, textLogoMatch: Math.abs(word.height - logo.height) < 1,
-        logoGap: header.bottom - logo.bottom, square: getComputedStyle(root).borderRadius,
+      const tagline = root.querySelector('.access-promise')!.getBoundingClientRect(), box = root.getBoundingClientRect(), footer = root.querySelector('.access-footer')!.getBoundingClientRect()
+      const logo = document.querySelector('.site-header .studio-logo')!.getBoundingClientRect(), header = document.querySelector('.site-header')!.getBoundingClientRect()
+      const text = root.querySelector('.access-invitation')!.getBoundingClientRect(), form = root.querySelector('.access-card')!.getBoundingClientRect()
+      return { left: Math.abs(tagline.left - root.querySelector('.access-story')!.getBoundingClientRect().left) < 1,
+        fontSize: parseFloat(getComputedStyle(root.querySelector('.access-promise')!).fontSize),
+        invitationCenter: Math.abs((text.y + text.height / 2) - (tagline.bottom + form.top) / 2),
+        logoGap: header.bottom - logo.bottom, corners: getComputedStyle(root).borderRadius,
         box: box.bottom <= innerHeight, footer: footer.bottom <= box.bottom, nestedBorder: getComputedStyle(root.querySelector('.access-card')!).borderTopWidth }
     })
-    expect(proportions.headingHeight).toBeCloseTo(proportions.taglineHeight, 0)
-    expect(proportions).toMatchObject({ aligned: true, right: true, textLogoMatch: true, square: width < 1000 ? '18px' : '24px', box: true, footer: true, nestedBorder: '0px' })
+    expect(proportions).toMatchObject({ left: true, corners: width < 1000 ? '18px' : '24px', box: true, footer: true, nestedBorder: '0px' })
     expect(proportions.logoGap).toBeGreaterThan(4)
-    expect(proportions.textWidthRatio).toBeGreaterThan(.92)
-    expect(proportions.textWidthRatio).toBeLessThan(1.08)
-    expect(proportions).toMatchObject({ sameFont: true, titleLeft: true })
+    expect(proportions.fontSize).toBeGreaterThan(width < 1000 ? 20 : 45)
     expect(proportions.invitationCenter).toBeLessThan(1)
-    expect(proportions.invitationFont).toBeGreaterThan(width < 1000 ? 11 : 14)
-    await expect(page.locator('.access-story h1 span')).toHaveText(['YAYDU', 'The Game of Sevens'])
     await page.getByRole('button', { name: 'Login as Guest', exact: true }).click(); await fits(page)
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
     await page.getByRole('button', { name: 'Forgot password?', exact: true }).click(); await fits(page)
@@ -66,7 +59,7 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
     await page.getByLabel('Username', { exact: true }).fill('CardMaster99'); await page.getByLabel('Email address', { exact: true }).fill('john@example.test')
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await expect(page.getByLabel('Confirm Password', { exact: true })).toBeVisible(); await fits(page)
-    if (width === 568) await page.screenshot({ path: '/tmp/yaydu-rounded-welcome-568.png' })
+    if (width === 568) await page.screenshot({ path: '/tmp/yaydu-shared-branding-lounge-568.png' })
     await page.getByRole('link', { name: 'Rules', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Know your table.' })).toBeVisible()
     await expect(nav.getByRole('link')).toHaveText(['Rules'])
