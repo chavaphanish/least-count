@@ -313,7 +313,7 @@ test('visual audit of all existing mobile surfaces', async ({
   await access.goto('/')
   await expect(access.getByLabel('Email address')).toBeVisible()
   await shot('sign-in', access)
-  for (const mode of ['Sign Up', 'Continue as Guest']) {
+  for (const mode of ['Sign Up', 'Login as Guest']) {
     await access.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
     await shot(mode === 'Sign Up' ? 'sign-up' : 'guest', access)
   }

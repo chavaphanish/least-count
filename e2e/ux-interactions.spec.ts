@@ -249,7 +249,7 @@ test('complete guest room journey reaches results, then existing career screens'
     await p.emulateMedia({ reducedMotion: 'reduce' })
     await p.goto('/')
     await p
-      .getByRole('button', { name: 'Continue as Guest', exact: true })
+      .getByRole('button', { name: 'Login as Guest', exact: true })
       .click()
     await p.getByLabel('Display name', { exact: true }).fill(name)
     await p.getByRole('button', { name: 'Enter as guest', exact: true }).click()

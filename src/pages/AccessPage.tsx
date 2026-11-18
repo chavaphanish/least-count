@@ -28,7 +28,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
         const provider = auth.services.provider
         if (!provider)
           throw new Error(
-            'Registered sign-in is not configured yet. Continue as a guest to play.',
+            'Registered sign-in is not configured yet. Use Login as Guest to play.',
           )
         if (mode === 'reset') {
           const { error } = await provider.auth.resetPasswordForEmail(email, {
@@ -64,10 +64,9 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
     >
       <div className="access-story">
         <div className="access-welcome-row">
-          <h1 id="access-title"><span className="brand-wordmark">YAYDU,</span>{' '}<span>The Game of Sevens.</span></h1>
+          <h1 id="access-title"><span className="brand-wordmark">YAYDU</span>{' '}<span className="brand-subtitle">The Game of Sevens</span></h1>
           <p className="access-promise"><span>Seven Cards.</span><span>One Goal.</span><span>Lowest Score Wins!</span></p>
         </div>
-        <p>Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
         {invitation && (
           <p className="invitation-banner">
             Your invitation to room <strong>{invitation}</strong> will be kept
@@ -75,6 +74,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           </p>
         )}
       </div>
+      <p className="access-invitation">Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
       <div className="access-card">
         <div className="access-tabs" role="group" aria-label="Account access">
           {(['signin', 'signup', 'guest'] as const).map((value) => (
@@ -92,14 +92,14 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
                 ? 'Sign In'
                 : value === 'signup'
                   ? 'Sign Up'
-                  : 'Continue as Guest'}
+                  : 'Login as Guest'}
             </button>
           ))}
         </div>
         {mode==='reset'&&<h2>Reset your password.</h2>}
         {!auth.configured && mode !== 'guest' && (
           <p className="service-note">
-            Registered sign-in is unavailable. Continue as Guest to play.
+            Registered sign-in is unavailable. Login as Guest to play.
           </p>
         )}
         {mode === 'signup' ? (
@@ -111,7 +111,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
             />
           ) : (
             <p className="field-hint">
-              Continue as Guest while registration is configured.
+              Login as Guest while registration is configured.
             </p>
           )
         ) : (

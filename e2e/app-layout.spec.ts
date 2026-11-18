@@ -182,12 +182,12 @@ for (const size of sizes)
     )
     await page.goto('/')
     await expect(
-      page.getByRole('button', { name: 'Continue as Guest', exact: true }),
+      page.getByRole('button', { name: 'Login as Guest', exact: true }),
     ).toBeVisible()
     await fits(page)
     if (size.width === 667)
       await page.screenshot({ path: 'docs/mobile-layout/sign-in.png' })
-    for (const mode of ['Sign Up', 'Continue as Guest']) {
+    for (const mode of ['Sign Up', 'Login as Guest']) {
       await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
       await fits(page)
     }
