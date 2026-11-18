@@ -20,18 +20,21 @@ export function DualBrand({ progress }: { progress?: number }) {
   return <div className="dual-brand" data-mode={progress === undefined ? 'static' : 'loading'}>
     <div className="dual-yaydu">
       <div className="loading-logo" data-fill={progress}>
-        <BrandFill label="YAYDU" progress={progress} left={13.3} right={87.8}>
+        <BrandFill label="YAYDU" progress={progress} left={0} right={100}>
           {yayduFailed ? <span className="studio-logo-fallback">YAYDU</span> : <StudioLogo onError={() => setYayduFailed(true)} />}
         </BrandFill>
       </div>
       <BrandFill label="YAYDU wordmark" progress={progress} left={0} right={100}>
-        <span className="yaydu-wordmark">YAYDU</span>
+        {/* DM Sans 700 ink bounds, excluding font leading and advance-space padding. */}
+        <svg className="yaydu-wordmark" viewBox="0 -703.125 3464.996 718.75" aria-hidden="true">
+          <text x="0" y="0">YAYDU</text>
+        </svg>
       </BrandFill>
     </div>
     <span className="brand-separator" aria-hidden="true" />
     <div className="dual-studio">
       <p className="powered-by">Powered by</p>
-      <BrandFill label="Chavium Games" progress={progress} left={176 / 1536 * 100} right={1360 / 1536 * 100}>
+      <BrandFill label="Chavium Games" progress={progress} left={0} right={100}>
         {studioFailed ? <span className="studio-logo-fallback">Chavium Games</span> : <img className="chavium-logo" src="/branding/chavium-games-gold.png" alt="" width="1536" height="1024" onError={() => setStudioFailed(true)} />}
       </BrandFill>
     </div>
