@@ -1,3 +1,4 @@
+import { TableOverlay } from '../components/TableOverlay'
 import { SettingsPanel } from '../components/SettingsPanel'
 import { useNavigationLoading } from '../components/NavigationLoading'
 import { useCareer } from '../career/useCareer'
@@ -151,6 +152,12 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
                 <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="8" y="3" width="12" height="17" rx="2" /><path d="m5 6-2 1 3 14a2 2 0 0 0 2 1l6-1M14 8l3 4-3 4-3-4Z" /></svg>
                 Local Practice
               </a>
+              <TableOverlay label="Tutorial" dismissLabel="OK" triggerClass="button button-primary lounge-nav-button" trigger={<>
+                <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v16M3 3h5a4 4 0 0 1 4 2 4 4 0 0 1 4-2h5v16h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3Z" /></svg>
+                Tutorial
+              </>}>
+                <p>Under construction</p>
+              </TableOverlay>
             </div>
           </div>
         </>

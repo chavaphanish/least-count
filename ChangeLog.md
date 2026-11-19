@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.36 — 2026-11-20
+
+- **Lounge Tutorial:** completed the authenticated Lounge’s existing 2×2 action grid with a matching Tutorial button and an “Under construction” popup dismissed with OK. Existing actions, header and landscape layout are unchanged.
+
 ## 1.1.35 — 2026-11-18
 
 - **Dual-logo alignment:** matched the complete visible YAYDU and Chavium Games compositions in height and vertical alignment across loading, transition and rotation screens. Transparent artwork padding and Powered by are excluded; original proportions, gold fills and header branding are preserved.

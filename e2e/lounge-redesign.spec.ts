@@ -18,11 +18,11 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       await expect(lounge.getByRole('link', { name: 'How to Play', exact: true })).toHaveCount(0)
       await expect(lounge.getByRole('link', { name: /Local Practice/i })).toHaveCount(1)
       const actions = lounge.getByRole('group', { name: 'Game options' })
-      const controls = actions.locator('.button'), boxes = await controls.evaluateAll(els => els.map(el => {
+      const controls = actions.locator('.lounge-nav-button'), boxes = await controls.evaluateAll(els => els.map(el => {
         const r = el.getBoundingClientRect()
         return { x: r.x, y: r.y, width: r.width, height: r.height, color: getComputedStyle(el).backgroundColor }
       }))
-      expect(boxes).toHaveLength(3)
+      expect(boxes).toHaveLength(4)
       expect(Math.max(...boxes.map(r => r.width))-Math.min(...boxes.map(r => r.width)),JSON.stringify(boxes)).toBeLessThan(1)
       expect(Math.max(...boxes.map(r => r.height))-Math.min(...boxes.map(r => r.height)),JSON.stringify(boxes)).toBeLessThan(1)
       expect(new Set(boxes.slice(1).map(r => r.color)).size).toBe(1)
@@ -31,6 +31,15 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       expect(boxes[1].y).toBe(boxes[0].y)
       expect(boxes[1].x).toBeGreaterThan(boxes[0].x + boxes[0].width)
       expect(boxes[2].y).toBeGreaterThan(boxes[0].y + boxes[0].height)
+      expect(boxes[3].y).toBe(boxes[2].y)
+      expect(boxes[3].x).toBe(boxes[1].x)
+      const tutorial = lounge.getByRole('button', { name: 'Tutorial', exact: true })
+      await tutorial.click()
+      const dialog = page.getByRole('dialog', { name: 'Tutorial', exact: true })
+      await expect(dialog.getByText('Under construction', { exact: true })).toBeVisible()
+      await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+      await expect(dialog).not.toBeVisible()
+      await expect(tutorial).toBeFocused()
       const welcome = await lounge.locator('.lounge-welcome').boundingBox()
       expect(welcome!.x + welcome!.width).toBeLessThan(boxes[0].x)
       await expect(lounge.getByRole('button', { name: 'Leaderboards', exact: true })).toHaveCount(0)
@@ -81,6 +90,11 @@ test('guest room restrictions and Local Practice entry are preserved', async ({ 
   const state = await mock(page); state.user.player.accountType = 'guest'
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Welcome, Career Tester!' })).toBeVisible()
+  await page.getByRole('button', { name: 'Tutorial', exact: true }).click()
+  const tutorial = page.getByRole('dialog', { name: 'Tutorial', exact: true })
+  await expect(tutorial.getByText('Under construction', { exact: true })).toBeVisible()
+  await tutorial.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(tutorial).not.toBeVisible()
   for (const action of ['Create Game Room', 'Join Game Room']) {
     await page.getByRole('button', { name: action, exact: true }).click()
     const notice = page.getByRole('alertdialog')
