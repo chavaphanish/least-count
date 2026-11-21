@@ -1,0 +1,24 @@
+.guided-lesson { display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:clamp(8px,2vw,26px);height:min(64dvh,560px);min-height:0;margin:12px auto;color:var(--cream); }
+.lesson-guide { align-self:center;min-width:0;display:grid;justify-items:start;gap:8px; }
+.lesson-guide small,.lesson-score { color:var(--gold); }
+.lesson-guide h1 { font:400 clamp(20px,3vw,40px)/1 'Libre Caslon Display',serif;margin:0; }
+.lesson-guide p { margin:0;font-size:clamp(12px,1.4vw,17px);line-height:1.35; }
+.lesson-guide nav { display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center; }
+.lesson-guide nav>* { background:none;border:0;color:var(--gold);text-decoration:underline;padding:3px 0;font:inherit;font-size:12px;cursor:pointer; }
+.lesson-guide nav button:disabled { opacity:.4; }
+.game-table.lesson-table { position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:3px;min-height:0;height:100%;padding:6px;container-type:size; }
+.lesson-seats,.lesson-piles,.lesson-hand { display:flex;align-items:center;justify-content:center;gap:clamp(4px,1vw,16px); }
+.lesson-table button,.lesson-piles>div { display:grid;justify-items:center;gap:2px;color:inherit;background:none;padding:0;border:0;font:inherit;font-size:12px; }
+.lesson-table .playing-card { --card-width:min(9cqw,17cqh,72px);animation:mobile-card-arrival .24s ease-out; }
+.lesson-table button:enabled .playing-card { outline:2px solid var(--gold);cursor:pointer; }
+.lesson-table button[aria-pressed=true] { transform:translateY(-5px); }
+.lesson-hand:has(button:enabled) button:disabled { opacity:.52; }
+.lesson-table .result-scores { width:96%; }
+.lesson-seats,.lesson-clock,.lesson-score,.lesson-piles>div { font-size:clamp(10px,1.5vw,16px); }
+[data-mobile-device] .guided-lesson { height:100%;margin:0;padding:4px; }
+@media(max-height:420px) { .lesson-guide { gap:4px; } .lesson-guide .button { padding:4px 9px;min-height:30px; } }
+@media(prefers-reduced-motion:reduce){.lesson-table .playing-card {animation:none;}}
+.game-table.lesson-table { margin:0;border-radius:clamp(22px,6vw,90px); }
+.lesson-seats>div { display:flex;align-items:center;gap:4px; }
+.lesson-seats .playing-card { --card-width:min(3cqw,5cqh,20px);border-radius:3px; }
+.guided-lesson[data-step="6"] .lesson-piles>div .playing-card,.guided-lesson[data-step="7"] .lesson-clock { outline:2px solid var(--gold);outline-offset:2px; }

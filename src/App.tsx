@@ -1,3 +1,4 @@
+import { Tutorial } from './tutorial/Tutorial'
 import { Leaderboard } from './career/Leaderboard'
 import { NavigationLoadingProvider, useNavigationLoading } from './components/NavigationLoading'
 import { CareerProfile, GameHistoryReport } from './career/CareerProfile'
@@ -27,7 +28,7 @@ function route() {
         ? 'history'
         : room
           ? 'room'
-          : hash === '#/game'
+          : hash === '#/tutorial' ? 'tutorial' : hash === '#/game'
             ? 'game'
             : hash === '#/rules'
               ? 'rules'
@@ -97,7 +98,7 @@ function Application() {
     return () => removeEventListener('hashchange', navigate)
   }, [current, navigation.start])
   useEffect(() => {
-    document.title = `YAYDU — ${current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'leaderboards' ? 'Leaderboards' : current.page === 'home' ? 'Lounge' : current.page === 'settings' ? 'Settings' : current.page === 'buddies' ? 'Buddies' : 'Your card table'}`
+    document.title = `YAYDU — ${current.page === 'tutorial' ? 'Tutorial' : current.page === 'game' ? 'Local practice' : current.page === 'room' ? 'Game room' : current.page === 'rules' ? 'How to play' : current.page === 'leaderboards' ? 'Leaderboards' : current.page === 'home' ? 'Lounge' : current.page === 'settings' ? 'Settings' : current.page === 'buddies' ? 'Buddies' : 'Your card table'}`
     if (previous.current !== current.page) {
       document.getElementById('main')?.focus()
       scrollTo(0, 0)
@@ -124,6 +125,7 @@ function Application() {
   else if (auth.status !== 'ready') content = null
   else if (!auth.user) content = <AccessPage invitation={invite} />
   else if (recovery) content = <RecoveryPage />
+  else if (current.page === 'tutorial') content = <Tutorial />
   else if (current.page === 'game') content = <GamePage local={local} />
   else if (current.page === 'player')
     content = (
