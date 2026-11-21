@@ -31,6 +31,8 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   timedGame: true,
   turnDurationSeconds: 45,
 }
+export const LOBBY_THRESHOLDS = [50, 100, 150, 200, 250] as const
+export type LobbySettingsUpdate = { maxPlayers?: number; eliminationThreshold?: number }
 export const LOBBY_GRACE_MS = 90_000
 export const HEARTBEAT_MS = 45_000
 /**
@@ -145,7 +147,8 @@ export type RoomView = {
 }
 export type ClientGameAction = {
   type:
-    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round' | 'transfer-host'
+    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round' | 'transfer-host' | 'update-settings'
+  settings?: LobbySettingsUpdate
   targetId?: string
   transferId?: string
   cardIds?: string[]

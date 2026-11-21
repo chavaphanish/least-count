@@ -14,18 +14,17 @@ async function guest(page: Page, name: string) {
   ).toBeVisible()
 }
 async function create(page: Page, capacity = 2, timed = false, cutoff = 100) {
-  await page.getByRole('button', { name: /Create Game Room/ }).click()
-  await page.getByLabel('Number of players').selectOption(String(capacity))
-  await page.getByLabel('Elimination cutoff').fill(String(cutoff))
-  if (!timed) await page.getByLabel('Timed game').uncheck()
-  await page.getByRole('button', { name: 'Create Room', exact: true }).click()
-  await expect(
-    page.getByRole('heading', { name: 'Waiting lobby' }),
-  ).toBeVisible()
-  await expect(
-    page.getByText(`1 connected · 1 of ${capacity} seats reserved`),
-  ).toBeVisible()
-  return (await page.locator('.room-code-panel strong').textContent())!
+  // Scenario setup preserves coverage of legacy untimed/custom-cutoff rooms.
+  const response = await page.request.post('/api/rooms', {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { maxPlayers: capacity, eliminationThreshold: cutoff, timedGame: timed, turnDurationSeconds: timed ? 45 : null },
+  })
+  expect(response.ok()).toBe(true)
+  const { code } = await response.json()
+  await page.goto(`/#/room/${code}`)
+  await expect(page.getByRole('heading', { name: 'Waiting lobby' })).toBeVisible()
+  await expect(page.getByText(`1/${capacity} Players`, { exact: true })).toBeVisible()
+  return code
 }
 async function enter(page: Page, code: string) {
   await page.getByRole('button', { name: /Join Game Room/ }).click()
@@ -64,15 +63,17 @@ test('restores a server guest across refresh and clears it on sign out', async (
     (await (await page.request.get('/api/session')).json()).user,
   ).toBeNull()
 })
-test('default room form is four players, 100 points, and timed; invalid codes fail clearly', async ({
+test('direct hosting defaults to four players, 100 points, and timed; invalid codes fail clearly', async ({
   page,
 }) => {
   await guest(page, 'Settings Guest')
-  await page.getByRole('button', { name: /Create Game Room/ }).click()
+  await page.getByRole('button', { name: 'Host a Game', exact: true }).click()
   await expect(page.getByLabel('Number of players')).toHaveValue('4')
-  await expect(page.getByLabel('Elimination cutoff')).toHaveValue('100')
-  await expect(page.getByLabel('Timed game')).toBeChecked()
-  await page.getByRole('button', { name: '← Back to Lounge' }).click()
+  await expect(page.getByLabel('Elimination threshold')).toHaveValue('100')
+  const code = await page.locator('.room-code-panel strong').textContent()
+  const room = await (await page.request.get(`/api/rooms/${code}`)).json()
+  expect(room.settings).toMatchObject({ maxPlayers: 4, eliminationThreshold: 100, timedGame: true, turnDurationSeconds: 45 })
+  await page.getByRole('button', { name: 'Leave Room', exact: true }).click()
   await page.getByRole('button', { name: /Join Game Room/ }).click()
   await page.getByLabel('Room code', { exact: true }).fill('ZZZZZZ')
   await page.getByRole('button', { name: 'Join Room', exact: true }).click()
@@ -99,7 +100,7 @@ test('two isolated guest browsers synchronize a lobby and host starts a private 
     await guest(other, 'Friend Two')
     await enter(other, code)
     await expect(
-      page.getByText('2 connected · 2 of 2 seats reserved'),
+      page.getByText('2/2 Players'),
     ).toBeVisible()
     await expect(
       other.getByText('Waiting for host to start', { exact: true }),
@@ -291,7 +292,7 @@ test('reconnects without a duplicate seat and rejects an extra player when full'
       friend.getByRole('heading', { name: 'Waiting lobby' }),
     ).toBeVisible()
     await expect(
-      page.getByText('2 connected · 2 of 2 seats reserved'),
+      page.getByText('2/2 Players'),
     ).toBeVisible()
     await guest(extra, 'Extra Guest')
     await extra.getByRole('button', { name: /Join Game Room/ }).click()

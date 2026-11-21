@@ -56,10 +56,10 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       await page.getByRole('link',{name:'Lounge',exact:true}).click()
       await expect(page.locator('.startup-screen')).not.toBeVisible()
       await page.screenshot({ path: `/tmp/lounge-redesign-${width}.png` })
-      await lounge.getByRole('button', { name: 'Create Game Room', exact: true }).click()
-      await expect(page.getByRole('heading', { name: 'Your room, your card night.' })).toBeVisible()
-      await expect(page.getByLabel('Number of players')).toBeVisible()
-      await page.getByRole('button', { name: 'Back to Lounge' }).click()
+      await page.route('**/api/rooms', route => route.fulfill({ status: 503, json: { error: 'Please retry hosting.' } }))
+      await lounge.getByRole('button', { name: 'Host a Game', exact: true }).click()
+      await expect(page.getByRole('alert')).toContainText('Please retry hosting.')
+      await expect(page.getByRole('button', { name: 'Create Room', exact: true })).toHaveCount(0)
       await page.getByRole('button', { name: 'Join Game Room', exact: true }).click()
       await expect(page.getByLabel('Room code')).toBeVisible()
       await page.getByRole('button', { name: 'Back to Lounge' }).click()
@@ -95,7 +95,7 @@ test('guest room restrictions and Local Practice entry are preserved', async ({ 
   await expect(tutorial.getByText('Under construction', { exact: true })).toBeVisible()
   await tutorial.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(tutorial).not.toBeVisible()
-  for (const action of ['Create Game Room', 'Join Game Room']) {
+  for (const action of ['Host a Game', 'Join Game Room']) {
     await page.getByRole('button', { name: action, exact: true }).click()
     const notice = page.getByRole('alertdialog')
     await expect(notice).toContainText('Multiplayer Online Mode for Guests is currently under testing.')

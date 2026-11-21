@@ -27,8 +27,8 @@ Vibration is disabled with an explanation when unsupported (including most iPhon
 ## Playing
 
 - Use Login as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh; a guest or registered session is required before gameplay.
-- From the Lounge, create a room or join using a six-character code or invitation link.
-- Room defaults are four players, a 100-point cumulative elimination cutoff, and 45-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
+- From the Lounge, select **Host a Game** to create a room directly, or join using a six-character code or invitation link.
+- Room defaults are four players, a 100-point cumulative elimination cutoff, and 45-second turns. In the waiting lobby, only the host can select 2–8 players and a cutoff of 50, 100, 150, 200 or 250. Settings update live and lock at game start; disconnected reserved seats cannot be removed by shrinking capacity. Existing API-created custom-cutoff or untimed rooms remain supported.
 - Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
 - The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
 - Each round opens with a visible card. For a non-7, the starter drops first, then picks up the eligible opening card or draws one closed replacement when required. Match and Drop and playing 7s skip that replacement. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
