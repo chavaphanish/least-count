@@ -94,7 +94,7 @@ for (const viewport of [
         for (const style of states) expect(style).toEqual(states[0])
       await page.getByRole('link', { name: 'Your profile', exact: true }).click()
       await expect(
-        page.getByRole('region', { name: 'Player career' }),
+        page.getByRole('region', { name: 'My Profile' }),
       ).toBeVisible()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       for (const [name, target] of [
@@ -128,6 +128,6 @@ test('desktop retains profile navigation', async ({
   await expect(page.getByRole('link', { name: 'Leaderboards', exact: true })).toBeVisible()
   await profile.click()
   await expect(
-    page.getByRole('region', { name: 'Player career' }),
+    page.getByRole('region', { name: 'My Profile' }),
   ).toBeVisible()
 })

@@ -35,11 +35,12 @@ function route() {
                 ? 'leaderboards'
                 : hash === '#/profile'
                   ? 'profile'
-                  : hash === '#/settings'
+                  : (hash === '#/settings' || hash === '#/settings/profile')
                     ? 'settings'
                     : hash === '#/buddies'
                       ? 'buddies'
                       : 'home',
+    settingsProfile: hash === '#/settings/profile',
     code: room?.[1] ?? null,
     username: player?.[1],
     gameId: history?.[1],
@@ -133,7 +134,7 @@ function Application() {
   else if (current.page === 'leaderboards') content = <Leaderboard />
   else if (current.page === 'profile') content = <ProfilePage />
   else if (current.page === 'buddies') content = <DashboardPage key="buddies" initialMode="buddies" />
-  else if (current.page === 'settings') content = <DashboardPage key="settings" initialMode="settings" />
+  else if (current.page === 'settings') content = <DashboardPage key={current.settingsProfile ? 'settings-profile' : 'settings'} initialMode="settings" />
   else if (current.page === 'room' && current.code) {
     try {
       content = (

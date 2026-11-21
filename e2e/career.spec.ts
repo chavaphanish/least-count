@@ -1,12 +1,20 @@
 import { deflateSync, crc32 } from 'node:zlib'
 import { expect, test } from '@playwright/test'
 import { mock, png } from './career-fixture'
+async function editingProfile(page: import('@playwright/test').Page) {
+  const state = await mock(page)
+  const profile = { username: 'cardmaster99', firstName: 'Career', lastName: 'Tester', needsCompletion: false }
+  Object.assign(state.user, { profile }); Object.assign(state.user.player, profile)
+  await page.route('**/api/username?**', route => route.fulfill({ json: { available: true } }))
+  await page.route('**/api/profile/identity', route => route.fulfill({ json: { user: state.user } }))
+  return state
+}
 for (const width of [320, 1440])
   test(`career profile, history, and ranking work at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 })
-    await mock(page)
+    const state = await mock(page)
     await page.goto('/#/leaderboards')
     await expect(
       page.getByRole('heading', { name: 'Leaderboards' }),
@@ -17,13 +25,11 @@ for (const width of [320, 1440])
       .click()
     await expect(page.getByText(/Your Buddies Rank/)).toBeVisible()
     await page.goto('/#/profile')
-    await expect(
-      page.getByRole('region', { name: 'Player career' }),
-    ).toContainText('LEVEL 5')
-    await expect(page.locator('#career-xp')).toHaveAttribute('value', '250')
-    await expect(
-      page.getByText('owner-private@example.test', { exact: true }),
-    ).toBeVisible()
+    const profile = page.getByRole('region', { name: 'My Profile', exact: true })
+    await expect(profile.getByRole('tab')).toHaveText(['Overview', 'Stats'])
+    await expect(page.getByRole('banner').getByRole('progressbar')).toHaveAttribute('value', '250')
+    await expect(profile).not.toContainText('XP')
+    await expect(page.getByText('owner-private@example.test', { exact: true })).toHaveCount(0)
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -33,14 +39,10 @@ for (const width of [320, 1440])
       path: `/tmp/least-count-profile-overview-${width}.png`,
       fullPage: true,
     })
-    await page.getByRole('button', { name: 'Statistics', exact: true }).click()
-    await expect(
-      page.getByText('Total round penalty points', { exact: true }),
-    ).toBeVisible()
-    await page
-      .getByRole('button', { name: 'Game History', exact: true })
-      .click()
-    await page.locator('.history-list a').first().click()
+    await profile.getByRole('tab', { name: 'Stats', exact: true }).click()
+    await expect(profile.getByText('Games played', { exact: true })).toBeVisible()
+    // Private game reports remain addressable; My Profile no longer lists history.
+    await page.goto(`/#/history/${state.game.id}`)
     await expect(
       page.getByRole('heading', { name: 'Game report' }),
     ).toBeVisible()
@@ -92,7 +94,7 @@ test('incoming friend requests can be accepted from Your Circle', async ({ page 
 test('photo preview, failed upload retry, replacement and removal work immediately', async ({
   page,
 }) => {
-  const state = await mock(page)
+  const state = await editingProfile(page)
   state.user.player.avatarUrl = '/test-avatar-old.png'
   let fail = true,
     uploads = 0
@@ -112,41 +114,41 @@ test('photo preview, failed upload retry, replacement and removal work immediate
     state.user.player.avatarUrl = `/test-avatar-v${uploads}.png`
     return route.fulfill({ json: { user: state.user } })
   })
-  await page.goto('/#/profile')
+  await page.goto('/#/settings/profile')
   await page
     .getByLabel('Profile picture', { exact: true })
     .setInputFiles({ name: 'phone.png', mimeType: 'image/png', buffer: png })
   await expect(
-    page.locator('.profile-editor .profile-avatar img'),
+    page.locator('.compact-profile-editor .profile-avatar img'),
   ).toHaveAttribute('src', /^blob:/)
-  await page.getByRole('button', { name: 'Save profile', exact: true }).click()
+  await page.getByRole('button', { name: 'Save Changes', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText(
     'Upload temporarily unavailable',
   )
-  await expect(page.locator('.career-profile-header img')).toHaveAttribute(
+  await expect(page.locator('.header-profile img')).toHaveAttribute(
     'src',
     '/test-avatar-old.png',
   )
   fail = false
-  await page.getByRole('button', { name: 'Retry save', exact: true }).click()
-  await expect(page.locator('.career-profile-header img')).toHaveAttribute(
+  await page.getByRole('button', { name: 'Save Changes', exact: true }).click()
+  await expect(page.locator('.header-profile img')).toHaveAttribute(
     'src',
     '/test-avatar-v2.png',
   )
   await page
     .getByRole('button', { name: 'Remove picture', exact: true })
     .click()
-  await expect(page.locator('.career-profile-header img')).toHaveCount(0)
+  await expect(page.locator('.header-profile img')).toHaveCount(0)
   await expect(
-    page.locator('.career-profile-header .profile-avatar'),
-  ).toHaveText('CA')
+    page.locator('.header-profile .profile-avatar'),
+  ).toHaveText('CT')
 })
 
 test('phone photos above the former 2 MB limit are optimized, while files above 5 MB are rejected', async ({
   page,
 }) => {
-  await mock(page)
-  await page.goto('/#/profile')
+  await editingProfile(page)
+  await page.goto('/#/settings/profile')
   const width = 768,
     height = 1024,
     raw = Buffer.alloc(height * (width * 4 + 1))
@@ -183,10 +185,10 @@ test('phone photos above the former 2 MB limit are optimized, while files above 
     buffer: photo,
   })
   await expect(
-    page.locator('.profile-editor .profile-avatar img'),
+    page.locator('.compact-profile-editor .profile-avatar img'),
   ).toHaveAttribute('src', /^blob:/)
   await expect(
-    page.getByRole('button', { name: 'Save profile', exact: true }),
+    page.getByRole('button', { name: 'Save Changes', exact: true }),
   ).toBeEnabled()
   await page.getByLabel('Profile picture', { exact: true }).setInputFiles({
     name: 'too-large.png',

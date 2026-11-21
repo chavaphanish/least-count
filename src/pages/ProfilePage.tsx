@@ -1,26 +1,39 @@
-import { useNavigationLoading } from '../components/NavigationLoading'
 import { IdentityEditor } from '../auth/IdentityEditor'
-import { ScreenPages } from '../components/ScreenPages'
-import { useMobileLandscape } from '../components/MobileOrientation'
-import { CompactForm } from '../components/CompactForm'
-import { CareerProfile } from '../career/CareerProfile'
+import { MyProfile } from '../career/MyProfile'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { Avatar } from '../components/Avatar'
 import {
   AVATAR_MAX_BYTES,
   avatarType,
-  displayName,
 } from '../shared/multiplayer'
 export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) {
-  const navigation = useNavigationLoading()
-  const mobile = useMobileLandscape()
   const auth = useAuth()
-  const [section, setSection] = useState(() =>
-    auth.user?.profile?.needsCompletion ? 1 : 0,
-  )
   const user = auth.user!
-  const [name, setName] = useState(user.player.displayName)
+  if (user.player.accountType !== 'registered')
+    return editingOnly ? <p>Profile editing is available to registered accounts.</p> : (
+      <section className="profile-panel">
+        <h1>Guest player</h1>
+        <p>Profile settings are available to registered accounts.</p>
+        <button
+          className="button button-secondary"
+          onClick={() =>
+            void auth.signOut().then(() => {
+              location.hash = '#/'
+            })
+          }
+        >
+          Leave guest session to register
+        </button>
+        <a href="#/">Return to Lounge</a>
+      </section>
+    )
+  return editingOnly ? <ProfileEditor /> : <MyProfile />
+}
+
+function ProfileEditor() {
+  const auth = useAuth()
+  const user = auth.user!
   const fileInput = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -28,7 +41,7 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [processing, setProcessing] = useState(false)
-  const pending = !!file || (!user.profile && name !== user.player.displayName)
+  const pending = !!file
   useEffect(() => {
     if (!pending) return
     const unload = (event: BeforeUnloadEvent) => {
@@ -49,7 +62,6 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
         return
       const url = new URL(link.href, location.href)
       if (
-        url.hash === '#profile-editor' ||
         (url.hash === location.hash && url.pathname === location.pathname)
       )
         return
@@ -68,24 +80,6 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
     },
     [preview],
   )
-  if (user.player.accountType !== 'registered')
-    return editingOnly ? <p>Profile editing is available to registered accounts.</p> : (
-      <section className="profile-panel">
-        <h1>Guest player</h1>
-        <p>Profile settings are available to registered accounts.</p>
-        <button
-          className="button button-secondary"
-          onClick={() =>
-            void auth.signOut().then(() => {
-              location.hash = '#/'
-            })
-          }
-        >
-          Leave guest session to register
-        </button>
-        <a href="#/">Return to Lounge</a>
-      </section>
-    )
   async function choose(image: File | undefined) {
     setError('')
     setFile(null)
@@ -142,38 +136,12 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
     }
   }
   async function persistPhoto() {
-      if (!user.profile && !editingOnly)
-        await auth.services.api('/profile', {
-          method: 'PATCH',
-          body: JSON.stringify({ displayName: displayName(name) }),
-        })
-      if (file)
-        await auth.services.api('/profile/avatar', {
-          method: 'POST',
-          body: file,
-          headers: { 'Content-Type': file.type },
-        })
-  }
-  async function save(event: React.FormEvent) {
-    event.preventDefault()
-    setBusy(true)
-    setError('')
-    setNotice('')
-    try {
-      await persistPhoto()
-      await auth.refresh()
-      setFile(null)
-      setPreview(null)
-      setNotice('Your profile is saved.')
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'The profile could not be saved.',
-      )
-    } finally {
-      setBusy(false)
-    }
+    if (file)
+      await auth.services.api('/profile/avatar', {
+        method: 'POST',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
   }
   async function remove() {
     setBusy(true)
@@ -190,87 +158,7 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
       setBusy(false)
     }
   }
-  const photoEditor = (
-    <div id={user.profile || editingOnly ? "profile-photo-editor" : "profile-editor"} className="career-section profile-editor">
-      <h2>Edit Profile</h2>
-      <Avatar
-        player={{
-          ...user.player,
-          avatarUrl: preview ?? user.player.avatarUrl,
-        }}
-      />
-      <p className="field-hint">
-        {processing
-          ? 'Preparing your preview…'
-          : pending
-            ? 'Unsaved changes'
-            : 'All changes saved'}
-      </p>
-      <CompactForm onSubmit={save}>
-        {!user.profile && !editingOnly && (
-          <label>
-            Display name
-            <input
-              id="profile-name"
-              required
-              minLength={2}
-              maxLength={24}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-        )}
-        <label>
-          Profile picture
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            disabled={busy || processing}
-            onChange={(e) => void choose(e.target.files?.[0])}
-          />
-        </label>
-        <p className="field-hint">
-          JPG, PNG, or WebP · up to 5 MB. Photos are center-cropped and
-          optimized to 512 × 512. Profile pictures are visible to other players.
-        </p>
-        <div className="auth-actions">
-          <button
-            className="button button-primary"
-            disabled={busy || processing || !pending}
-          >
-            {busy
-              ? 'Uploading / saving…'
-              : processing
-                ? 'Preparing photo…'
-                : error && pending
-                  ? 'Retry save'
-                  : 'Save profile'}
-          </button>
-          {user.player.avatarUrl && (
-            <button
-              type="button"
-              className="button button-secondary"
-              disabled={busy}
-              onClick={remove}
-            >
-              Remove picture
-            </button>
-          )}
-        </div>
-      </CompactForm>
-      {error && (
-        <p className="game-alert" role="alert">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p className="form-notice" role="status">
-          {notice}
-        </p>
-      )}
-    </div>
-  )
-  if (editingOnly) return <div className="settings-profile-editor">
+  return <div className="settings-profile-editor">
     <IdentityEditor photo={{
       busy: busy || processing, error, notice,
       save: persistPhoto,
@@ -287,60 +175,4 @@ export function ProfilePage({ editingOnly = false }: { editingOnly?: boolean }) 
       </div>,
     }} />
   </div>
-  return (
-    <section className="profile-panel">
-      <a className="text-link" href="#/">
-        ← Lounge
-      </a>
-      <p className="eyebrow">YOUR SEAT AT THE TABLE</p>
-      <h1>
-        Player <em>profile.</em>
-      </h1>
-      <ScreenPages
-        navigation="on-detail"
-        label="Profile views"
-        value={section}
-        onChange={(value) => { if (value !== section) navigation.start(); setSection(value) }}
-        pages={[
-          {
-            label: 'Career',
-            content: (
-              <CareerProfile
-                onEdit={mobile ? () => { navigation.start(); setSection(1) } : undefined}
-              />
-            ),
-          },
-          {
-            label: 'Settings',
-            content: user.profile ? (
-              <ScreenPages
-                label="Profile settings sections"
-                pages={[
-                  { label: 'Identity', content: <IdentityEditor /> },
-                  { label: 'Photo', content: photoEditor },
-                ]}
-              />
-            ) : (
-              photoEditor
-            ),
-          },
-          {
-            label: 'Account',
-            content: (
-              <dl className="account-details">
-                <dt>Email (private)</dt>
-                <dd>{user.email}</dd>
-                <dt>Account created</dt>
-                <dd>{new Date(user.createdAt).toLocaleDateString()}</dd>
-                <dt>Last activity</dt>
-                <dd>{new Date(user.lastActiveAt).toLocaleString()}</dd>
-                <dt>Player ID</dt>
-                <dd>{user.player.id}</dd>
-              </dl>
-            ),
-          },
-        ]}
-      />
-    </section>
-  )
 }

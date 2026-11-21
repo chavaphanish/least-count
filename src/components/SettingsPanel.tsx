@@ -15,8 +15,8 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
   }).format(createdAt)
   const id = useId()
-  const [selected, setSelected] = useState(0)
-  const [profileOpened, setProfileOpened] = useState(false)
+  const [selected, setSelected] = useState(() => location.hash === '#/settings/profile' ? 2 : 0)
+  const [profileOpened, setProfileOpened] = useState(() => location.hash === '#/settings/profile')
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
   const select = (index: number) => {
     if (index === 2) setProfileOpened(true)
