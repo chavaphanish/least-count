@@ -5,7 +5,7 @@ import { useCareer } from '../career/useCareer'
 import type { CareerData } from '../career/model'
 import { Buddies } from '../career/Buddies'
 import { CompactForm } from '../components/CompactForm'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { playerIdentity } from '../shared/playerIdentity'
 import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
@@ -13,9 +13,7 @@ import {
   DEFAULT_ROOM_SETTINGS,
   guestMultiplayerBlocked,
   roomCode,
-  roomSettings,
 } from '../shared/multiplayer'
-import type { RoomSettings } from '../shared/multiplayer'
 export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' | 'settings' | 'buddies' }) {
   const navigation = useNavigationLoading()
   const auth = useAuth()
@@ -27,18 +25,16 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
   const returning = (career?.profile.gamesPlayed ?? 0) > 0 || (career?.statistics?.gamesStarted ?? 0) > 0
   const greetingName = returning ? player.firstName || playerIdentity(player).primary : playerIdentity(player).primary
   const [mode, setMode] = useState<
-    'home' | 'create' | 'join' | 'buddies' | 'settings'
+    'home' | 'join' | 'buddies' | 'settings'
   >(initialMode)
-  const [settings, setSettings] = useState<RoomSettings>({
-    ...DEFAULT_ROOM_SETTINGS,
-  })
+  const creating = useRef(false)
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [guestNotice, setGuestNotice] = useState(false)
   const [busy, setBusy] = useState(false)
   const go = (value: typeof mode) => {
     if (
-      (value === 'create' || value === 'join') &&
+      value === 'join' &&
       guestMultiplayerBlocked(
         player.accountType,
         auth.services.guestMultiplayerEnabled,
@@ -52,36 +48,43 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
     setMode(value)
     setError('')
   }
-  async function submit(event: React.FormEvent) {
-    event.preventDefault()
-    if (
-      guestMultiplayerBlocked(
-        player.accountType,
-        auth.services.guestMultiplayerEnabled,
-      )
-    ) {
+  async function hostGame() {
+    if (creating.current) return
+    if (guestMultiplayerBlocked(player.accountType, auth.services.guestMultiplayerEnabled)) {
       setGuestNotice(true)
       return
     }
-    setBusy(true)
-    setError('')
+    creating.current = true
+    setBusy(true); setError('')
     try {
-      const room =
-        mode === 'create'
-          ? await auth.services.api<{ code: string }>('/rooms', {
-              method: 'POST',
-              body: JSON.stringify(roomSettings(settings)),
-            })
-          : { code: roomCode(code) }
-      if (mode === 'join')
-        await auth.services.api(`/rooms/${room.code}/join`, { method: 'POST' })
-      await auth.refresh()
+      const room = await auth.services.api<{ code: string }>('/rooms', {
+        method: 'POST', body: JSON.stringify(DEFAULT_ROOM_SETTINGS),
+      })
       location.hash = `#/room/${room.code}`
+      // Membership refresh must not delay entering the newly created lobby.
+      void auth.refresh().catch(() => {})
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Please retry.')
+      setError(error instanceof Error ? error.message : 'Could not host a game. Please retry.')
     } finally {
+      creating.current = false
       setBusy(false)
     }
+  }
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    if (guestMultiplayerBlocked(player.accountType, auth.services.guestMultiplayerEnabled)) {
+      setGuestNotice(true)
+      return
+    }
+    setBusy(true); setError('')
+    try {
+      const codeToJoin = roomCode(code)
+      await auth.services.api(`/rooms/${codeToJoin}/join`, { method: 'POST' })
+      await auth.refresh()
+      location.hash = `#/room/${codeToJoin}`
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Please retry.')
+    } finally { setBusy(false) }
   }
   async function logout() {
     setBusy(true)
@@ -140,9 +143,9 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
               </div>
             </div>
             <div className="dashboard-actions" role="group" aria-label="Game options">
-              <button className="button button-primary lounge-nav-button lounge-action-featured" onClick={() => go('create')}>
+              <button className="button button-primary lounge-nav-button lounge-action-featured" disabled={busy} onClick={() => void hostGame()}>
                 <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3" /><path d="M12 8v8M8 12h8" /></svg>
-                Create Game Room
+                {busy ? 'Creating room…' : 'Host a Game'}
               </button>
               <button className="button button-primary lounge-nav-button" onClick={() => go('join')}>
                 <svg className="lounge-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5M3 12h12m-4-4 4 4-4 4" /></svg>
@@ -166,93 +169,15 @@ export function DashboardPage({ initialMode = 'home' }: { initialMode?: 'home' |
           <button className="text-button" onClick={() => go('home')}>
             ← Back to Lounge
           </button>
-          <h2>
-            {mode === 'create'
-              ? 'Your room, your card night.'
-              : 'Find your table.'}
-          </h2>
+          <h2>Find your table.</h2>
           <CompactForm onSubmit={submit}>
-            {mode === 'create' ? (
-              <>
-                <label>
-                  Number of players
-                  <select
-                    value={settings.maxPlayers}
-                    onChange={(e) =>
-                      setSettings((s) => ({
-                        ...s,
-                        maxPlayers: Number(e.target.value),
-                      }))
-                    }
-                  >
-                    {Array.from({ length: 7 }, (_, i) => i + 2).map((n) => (
-                      <option value={n} key={n}>
-                        {n} players
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <p className="field-hint">
-                  {settings.maxPlayers <= 4
-                    ? 'One deck + one Printed Joker'
-                    : 'Two decks + two Printed Jokers'}{' '}
-                  · Seven starting cards each
-                </p>
-                <label>
-                  Elimination cutoff
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    required
-                    value={settings.eliminationThreshold || ''}
-                    onChange={(e) =>
-                      setSettings((s) => ({
-                        ...s,
-                        eliminationThreshold: Number(e.target.value),
-                      }))
-                    }
-                  />
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={settings.timedGame}
-                    onChange={(e) =>
-                      setSettings((s) => ({
-                        ...s,
-                        timedGame: e.target.checked,
-                        turnDurationSeconds: e.target.checked ? 45 : null,
-                      }))
-                    }
-                  />
-                  Timed game · 45 seconds per turn
-                </label>
-                <p className="field-hint">
-                  {settings.timedGame
-                    ? 'The server enforces the deadline, including power-card decisions.'
-                    : 'No turn countdown or timeout forfeits. Reconnection grace applies only to waiting-lobby seats.'}
-                </p>
-              </>
-            ) : (
-              <label>
-                Room code
-                <input
-                  required
-                  autoComplete="off"
-                  maxLength={6}
-                  placeholder="ABC234"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                />
-              </label>
-            )}
+            <label>
+              Room code
+              <input required autoComplete="off" maxLength={6} placeholder="ABC234"
+                value={code} onChange={e => setCode(e.target.value.toUpperCase())} />
+            </label>
             <button className="button button-primary" disabled={busy}>
-              {busy
-                ? 'Please wait…'
-                : mode === 'create'
-                  ? 'Create Room'
-                  : 'Join Room'}
+              {busy ? 'Please wait…' : 'Join Room'}
             </button>
           </CompactForm>
         </div>

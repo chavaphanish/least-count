@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - Versions follow **Semantic Versioning (`MAJOR.MINOR.PATCH`)** under [AGENTS.md](AGENTS.md): PATCH for small fixes/UI adjustments, MINOR for features/medium functionality changes, and MAJOR for redesigns/architecture/breaking upgrades. Increment once per implementation task; documentation-only maintenance does not bump the application version. `package.json` carries the web version. The earlier `1.1.x` releases retain their recorded history.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.3.0 — 2026-11-21
+
+- **Multiplayer hosting:** Host a Game creates a default room directly. Hosts can adjust player count and elimination threshold in a compact synchronized lobby; reserved seats and server-validated full-lobby starts are preserved. Removed Copy Code and improved immediate native invitation sharing, clipboard/manual fallback and cancellation/error handling.
+
 ## 1.2.0 — 2026-11-21
 
 - **My Profile:** replaced redundant identity/XP panels and history/social sections with compact Overview and Stats tabs using existing career data. Edit Profile opens Settings directly on its Profile tab; header, public profiles, editing behavior and internal XP remain unchanged.

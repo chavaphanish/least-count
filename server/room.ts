@@ -14,6 +14,7 @@ import {
 import type { Action, GameState } from '../src/game/engine'
 import {
   HEARTBEAT_MS,
+  LOBBY_THRESHOLDS,
   HOST_TRANSFER_MS,
   LOBBY_GRACE_MS,
   roomSettings,
@@ -231,12 +232,37 @@ export function start(
   r.status = 'in-game'
   beginCareer(r, careerEnabled, now)
 }
+/** Waiting-room configuration shares the serialized/deduplicated socket action path. */
+export function updateLobbySettings(r: RoomRecord, id: string, raw: unknown, now: number) {
+  const actor = member(r, id)
+  if (r.hostId !== id) throw new ApiError(403, 'Only the host can change game settings.')
+  if (r.status !== 'waiting' || r.game) throw new ApiError(409, 'Game settings are locked after the game starts.')
+  if (!actor.connected || actor.left || actor.authExpiresAt <= now || now - actor.lastSeen >= HEARTBEAT_MS)
+    throw new ApiError(403, 'Reconnect before changing game settings.')
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new ApiError(400, 'Choose game settings.')
+  const patch = raw as Record<string, unknown>
+  const keys = Object.keys(patch)
+  if (!keys.length || keys.some(key => key !== 'maxPlayers' && key !== 'eliminationThreshold'))
+    throw new ApiError(400, 'Only player count and elimination threshold can be changed here.')
+  if ('eliminationThreshold' in patch && !LOBBY_THRESHOLDS.some(value => value === patch.eliminationThreshold))
+    throw new ApiError(400, 'Choose an elimination threshold of 50, 100, 150, 200 or 250.')
+  const settings = roomSettings({ ...r.settings, ...patch })
+  // Disconnected lobby reservations still belong to their players until normal expiry.
+  if (settings.maxPlayers < r.members.length)
+    throw new ApiError(409, 'Player count cannot be lower than the occupied or reserved seats.')
+  r.settings = settings
+}
+
 export function gameAction(
   r: RoomRecord,
   id: string,
   raw: unknown,
   now: number,
 ) {
+  if (raw && typeof raw === 'object' && (raw as ClientGameAction).type === 'update-settings') {
+    updateLobbySettings(r, id, (raw as ClientGameAction).settings, now)
+    return
+  }
   if (!r.game || r.status !== 'in-game')
     throw new ApiError(409, 'The game has not started.')
   const m = member(r, id)

@@ -32,8 +32,9 @@ for (const mobile of [false, true]) {
       await expect(page).toHaveTitle('YAYDU — Lounge')
       const before = (await (await page.request.get('/api/session')).json())
         .user.player.id
-      await page.getByRole('button', { name: 'Create Game Room' }).click()
-      await page.getByRole('button', { name: 'Back to Lounge' }).click()
+      await page.getByRole('button', { name: 'Host a Game' }).click()
+      await expect(page.getByRole('heading', { name: 'Waiting lobby' })).toBeVisible()
+      await page.getByRole('button', { name: 'Leave Room', exact: true }).click()
       await page.getByRole('link', { name: 'Rules', exact: true }).click()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await page.reload()
@@ -52,7 +53,7 @@ for (const mobile of [false, true]) {
       await mock(page)
       await page.goto('/#/profile')
       await expect(
-        page.getByRole('region', { name: 'Player career' }),
+        page.getByRole('region', { name: 'My Profile' }),
       ).toBeVisible()
       await page.getByRole('link', { name: 'Lounge', exact: true }).click()
       await expect(page).toHaveURL(/#\/$/)

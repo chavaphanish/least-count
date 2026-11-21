@@ -179,3 +179,18 @@ it('rejects both premature draws and retired opening actions without changing ca
     )
   expect((storage.get('room') as typeof r).game).toEqual(before)
 })
+
+it('persists and deduplicates waiting-room settings through the socket action gate', async () => {
+  const { room, ws, storage, messages, r } = await harness()
+  r.game = null; r.status = 'waiting'
+  const configure = (requestId: string, settings: unknown) => room.webSocketMessage(ws, JSON.stringify({ type: 'action', requestId, action: { type: 'update-settings', settings } }))
+  await Promise.all([configure('capacity', { maxPlayers: 3 }), configure('threshold', { eliminationThreshold: 150 })])
+  expect((storage.get('room') as typeof r).settings).toMatchObject({ maxPlayers: 3, eliminationThreshold: 150 })
+  await configure('new-capacity', { maxPlayers: 4 })
+  await configure('capacity', { maxPlayers: 3 })
+  const saved = storage.get('room') as typeof r
+  expect(saved.settings).toMatchObject({ maxPlayers: 4, eliminationThreshold: 150 })
+  expect(saved.members.map(m => m.id)).toEqual(['Alex', 'Ben'])
+  expect(messages.some(m => (m as { type: string }).type === 'state')).toBe(true)
+  expect((storage.get('seen') as string[])).toContain('Alex:capacity')
+})

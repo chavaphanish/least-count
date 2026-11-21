@@ -1,3 +1,5 @@
+import { RoomLobby } from '../components/RoomLobby'
+import { invitationMessage, shareRoomInvitation } from '../lib/roomInvitation'
 import { GameNotices } from '../components/GameNotices'
 import { HostTransferDialog } from '../components/HostTransferDialog'
 import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
@@ -15,12 +17,11 @@ import { PlayerHand } from '../components/PlayerHand'
 import { TurnAnimation } from '../components/TurnAnimation'
 import { useRoomCardMotion } from '../hooks/useRoomCardMotion'
 import { GameActivity } from '../components/GameActivity'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
 import { gameplayIdentity, playerFirstName } from '../shared/playerIdentity'
 import { PlayerIdentity } from '../components/PlayerIdentity'
-import { Avatar } from '../components/Avatar'
 import { PlayingCard } from '../components/PlayingCard'
 import { cardLabel, handTotal } from '../game/deck'
 export function RoomPage({
@@ -52,29 +53,17 @@ export function RoomPage({
     if (room) onJoined()
   }, [room?.id, onJoined])
   const invitation = `${location.origin}/join/${code}`
-  async function copy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text)
-      setNotice('Copied to clipboard.')
-    } catch {
-      setNotice(
-        'Copy is unavailable. Select the code or invitation URL and copy it manually.',
-      )
-    }
+  const invitationDialog = useRef<HTMLDialogElement>(null)
+  const invitationTitle = useId()
+  const [invitationFailed, setInvitationFailed] = useState(false)
+  const manualInvitation = (failed: boolean) => {
+    setInvitationFailed(failed)
+    invitationDialog.current?.showModal()
   }
-  async function share() {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'YAYDU',
-          text: `Join my YAYDU room: ${code}`,
-          url: invitation,
-        })
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError'))
-          await copy(invitation)
-      }
-    } else await copy(invitation)
+  const copiedInvitation = () => setNotice('Invitation copied. Paste it into your messaging app.')
+  const share = () => {
+    setNotice('')
+    shareRoomInvitation(code, invitation, copiedInvitation, manualInvitation)
   }
   if (!room)
     return (
@@ -116,10 +105,6 @@ export function RoomPage({
       </section>
     )
   const host = room.hostId === id && !room.hostTransfer
-  const connected = room.members.filter((m) => m.connected && !m.left).length
-  const full =
-    room.members.length === room.settings.maxPlayers &&
-    connected === room.settings.maxPlayers
   const g = room.game
   const own = g?.players.find((p) => p.id === id)
   const current = g?.players.find((p) => p.id === g.currentPlayerId)
@@ -158,7 +143,7 @@ export function RoomPage({
     <section
       data-room-state={g ? 'playing' : 'lobby'}
       data-hand-count={g?.hand.length}
-      className={`room-page ${g ? 'active-game' : ''} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
+      className={`room-page ${g ? 'active-game' : 'lobby-page'} ${animation ? 'turn-in-motion' : ''} ${animation?.outgoing.length ? 'turn-discard-in-motion' : ''}`}
     >
       {room.hostTransfer?.fromId === id && <HostTransferDialog key={room.hostTransfer.id} room={room} now={now} busy={busy} live={connection === 'live'} error={error} send={send} />}
       <GameNotices events={g?.events ?? []} now={now} hostName={room.hostChange && room.hostChange.playerId === room.hostId && now - room.hostChange.at < 8000 ? room.members.find(member => member.id === room.hostId) && playerFirstName(room.members.find(member => member.id === room.hostId)!) : undefined} />
@@ -203,9 +188,6 @@ export function RoomPage({
                 ? 'Connection needs attention'
                 : 'Reconnecting…'}
           </p>
-          <button className="text-button" onClick={() => copy(code)}>
-            Copy Code
-          </button>
           <button className="text-button" onClick={share}>
             Share Invitation
           </button>
@@ -233,17 +215,14 @@ export function RoomPage({
           </button>
         </p>
       )}
+      {!g ? <RoomLobby room={room} id={id} live={connection === 'live'} busy={busy}
+        send={send} start={() => void command('start')} share={share} /> : (
+        <>
       <div className="room-code-panel">
         <div>
           <span>ROOM CODE</span>
           <strong>{room.code}</strong>
         </div>
-        <button
-          className="button button-secondary compact-button"
-          onClick={() => copy(code)}
-        >
-          Copy Code
-        </button>
         <button
           className="button button-secondary compact-button"
           onClick={share}
@@ -271,89 +250,7 @@ export function RoomPage({
             : 'Untimed · no timeout forfeits'}
         </span>
       </div>
-      {!g ? (
-        <>
-          <div className="lobby-count">
-            <h2>
-              {connected} connected · {room.members.length} of{' '}
-              {room.settings.maxPlayers} seats reserved
-            </h2>
-            <p>
-              {room.settings.maxPlayers - room.members.length} available seats
-            </p>
-          </div>
-          <div className="lobby-grid">
-            {room.members.map((m) => (
-              <article
-                className={`lobby-player ${!m.connected ? 'disconnected-player' : ''}`}
-                key={m.id}
-                data-host={m.id === room.hostId}
-                data-connected={m.connected}
-              >
-                <Avatar player={m} />
-                <h3>
-                  <PlayerIdentity player={gameplayIdentity(m)} compact />
-                  {m.id === id ? ' (You)' : ''}
-                </h3>
-                <span className="account-badge">
-                  {m.accountType === 'guest' ? 'Guest' : 'Registered'}
-                  {m.id === room.hostId ? ' · Host' : ''}
-                </span>
-                <p>
-                  {m.connected ? 'Connected' : 'Reconnecting · seat reserved'}
-                </p>
-              </article>
-            ))}
-            {Array.from(
-              {
-                length: Math.max(
-                  0,
-                  room.settings.maxPlayers - room.members.length,
-                ),
-              },
-              (_, i) => (
-                <article className="lobby-player empty-seat" key={`seat-${i}`}>
-                  <span aria-hidden="true">♧</span>
-                  <h3>Waiting for player…</h3>
-                  <p>Share the code to fill this seat.</p>
-                </article>
-              ),
-            )}
-          </div>
-          <div className="lobby-start">
-            {host ? (
-              <>
-                <p role="status">
-                  {connection !== 'live'
-                    ? 'Reconnect to start the game.'
-                    : full
-                      ? 'All players have joined. Ready when you are.'
-                      : 'Waiting for every configured seat to be filled and connected.'}
-                </p>
-                <button
-                  className="button button-primary"
-                  disabled={!full || busy || connection !== 'live'}
-                  onClick={() => command('start')}
-                >
-                  Start Game
-                </button>
-              </>
-            ) : (
-              <p role="status">
-                {full
-                  ? 'Waiting for host to start'
-                  : `Waiting for ${room.settings.maxPlayers - connected} more connected players`}
-              </p>
-            )}
-          </div>
-          <p className="field-hint">
-            The host starts manually. Temporary disconnects reserve a lobby seat
-            for 90 seconds after detection; returning with the same identity
-            restores that seat. Only connected, valid seats can start.
-          </p>
-        </>
-      ) : (
-        <>
+
           <p className="field-hint">
             {g.career?.eligible
               ? 'Career game · verified players · server-confirmed XP'
@@ -590,6 +487,20 @@ export function RoomPage({
           {notice}
         </p>
       )}
+      <dialog ref={invitationDialog} className="table-overlay invitation-dialog" aria-labelledby={invitationTitle}>
+        <div className="table-overlay-shell">
+          <header><h2 id={invitationTitle}>Share Invitation</h2><button className="text-button" onClick={() => invitationDialog.current?.close()}>Close</button></header>
+          <div className="table-overlay-body">
+            <p>{invitationFailed ? 'Sharing could not open. Copy the invitation below.' : 'Select and copy the invitation below.'}</p>
+            <textarea aria-label="Invitation message" readOnly value={invitationMessage(code, invitation)} onFocus={event => event.target.select()} />
+            {navigator.clipboard?.writeText && <button className="button button-primary" onClick={() => {
+              void navigator.clipboard.writeText(invitationMessage(code, invitation)).then(() => {
+                copiedInvitation(); invitationDialog.current?.close()
+              }, () => setInvitationFailed(true))
+            }}>Copy invitation</button>}
+          </div>
+        </div>
+      </dialog>
       <div className="room-footer">
         <button
           className="text-button"

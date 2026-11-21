@@ -1,0 +1,68 @@
+/* Lobby only; the active table, shared header and viewport system stay unchanged. */
+.room-page.lobby-page { display: flex; flex-direction: column; height: calc(100svh - 196px); min-height: 0; gap: 12px; padding: 16px 0; }
+.room-page.lobby-page > .room-heading { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.room-page.lobby-page .room-heading .eyebrow { display: none; }
+.room-page.lobby-page .room-heading h1 { font-size: 28px; margin: 0; }
+.room-page.lobby-page .connection-pill { margin: 0; }
+.room-page.lobby-page .room-footer { margin: 0; padding-top: 8px; flex-shrink: 0; flex-wrap: nowrap; }
+.room-page.lobby-page > .game-alert, .room-page.lobby-page > .form-notice { flex-shrink: 0; margin: 0; padding: 4px 8px; font-size: 12px; }
+.room-lobby { display: flex; flex: 1; min-width: 0; min-height: 0; flex-direction: column; gap: 12px; }
+.room-page.lobby-page .room-code-panel { display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; padding: 8px 16px; margin: 0; flex-shrink: 0; }
+.room-page.lobby-page .room-code-panel > div:first-child { display: flex; align-items: center; gap: 12px; flex: initial; width: auto; }
+.room-page.lobby-page .room-code-panel strong { font-size: 30px; letter-spacing: 4px; }
+.room-page.lobby-page .room-code-panel span { margin: 0; }
+.lobby-layout { display: grid; grid-template-columns: minmax(160px, .8fr) minmax(0, 2.7fr); flex: 1; min-height: 0; gap: 16px; }
+.lobby-settings { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 16px; min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: #ffffff03; }
+.lobby-settings h2 { margin: 0; font-size: 18px; }
+.lobby-settings label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; min-width: 0; }
+.lobby-settings select { width: 100%; min-width: 0; min-height: 36px; margin: 0; font-size: 16px; }
+.lobby-settings dl { margin: 0; display: grid; gap: 14px; }
+.lobby-settings dt { color: var(--muted); font-size: 12px; }
+.lobby-settings dd { margin: 4px 0 0; color: var(--gold); font-size: 20px; }
+.lobby-players { display: flex; flex-direction: column; min-width: 0; min-height: 0; gap: 8px; }
+.room-page.lobby-page .lobby-count { margin: 0; flex-shrink: 0; }
+.room-page.lobby-page .lobby-count h2 { font-size: 15px; }
+.room-page.lobby-page .lobby-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--lobby-columns),minmax(0,1fr)); grid-template-rows: repeat(var(--lobby-rows),minmax(0,1fr)); margin: 0; gap: 10px; }
+.room-page.lobby-page .lobby-player { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 6px; gap: 6px; min-width: 0; min-height: 0; }
+.room-page.lobby-page .lobby-player h3 { margin: 0; min-width: 0; max-width: 100%; font-size: 12px; line-height: 1.2; }
+.room-page.lobby-page .lobby-start { flex-shrink: 0; flex-wrap: nowrap; margin: 0; padding: 8px 0 0; gap: 8px; }
+.room-page.lobby-page .lobby-start p { margin: 0; font-size: 12px; }
+.invitation-dialog .table-overlay-body { display: grid; gap: 8px; }
+.invitation-dialog textarea { width: 100%; height: min(140px,40dvh); min-width: 0; resize: none; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; }
+.invitation-dialog p { font-size: 12px; line-height: 1.3; }
+[data-mobile-device] .room-page.lobby-page[data-room-state=lobby] { display: flex; height: 100%; padding: 4px; gap: 5px; }
+[data-mobile-device] .lobby-page .room-lobby { gap: 6px; }
+[data-mobile-device] .lobby-page .room-heading h1 { font-size: 20px; }
+[data-mobile-device] .lobby-page .room-heading .connection-pill { padding: 4px 8px; }
+[data-mobile-device] .lobby-page .room-code-panel { padding: 4px 8px; }
+[data-mobile-device] .lobby-page .room-code-panel strong { font-size: 24px; }
+[data-mobile-device] .lobby-page .room-code-panel .button { min-height: 32px; padding: 4px 10px; }
+[data-mobile-device] .lobby-page .lobby-layout { grid-template-columns: minmax(134px,.8fr) minmax(0,2.7fr); gap: 8px; }
+[data-mobile-device] .lobby-page .lobby-settings { padding: 8px; gap: 8px; }
+[data-mobile-device] .lobby-page .lobby-settings h2 { font-size: 13px; }
+[data-mobile-device] .lobby-page .lobby-settings label, [data-mobile-device] .lobby-page .lobby-settings dt { font-size: 10px; }
+[data-mobile-device] .lobby-page .lobby-settings select { min-height: 32px; height: 32px; padding: 3px 6px; }
+[data-mobile-device] .lobby-page .lobby-settings dd { font-size: 16px; }
+[data-mobile-device] .lobby-page .lobby-grid { gap: 4px; }
+[data-mobile-device] .lobby-page .lobby-player { padding: 3px; gap: 2px; }
+[data-mobile-device] .lobby-page .lobby-player .profile-avatar, [data-mobile-device] .lobby-page .empty-seat > span { width: 24px; height: 24px; font-size: 16px; grid-row: auto; }
+[data-mobile-device] .lobby-page .lobby-player h3 { font-size: 10px; line-height: 1.1; white-space: normal; }
+[data-mobile-device] .lobby-page .lobby-player p, [data-mobile-device] .lobby-page .lobby-player .account-badge { font-size: 8px; line-height: 1.1; }
+[data-mobile-device] .lobby-page .lobby-count h2 { font-size: 12px; }
+[data-mobile-device] .lobby-page .lobby-start { padding-top: 4px; }
+[data-mobile-device] .lobby-page .lobby-start p { font-size: 10px; }
+[data-mobile-device] .lobby-page .lobby-start .button { min-height: 32px; padding: 4px 10px; }
+[data-mobile-device] .room-page.lobby-page .room-footer { padding-top: 3px; gap: 12px; }
+[data-mobile-device] .lobby-page .room-footer .text-button, [data-mobile-device] .lobby-page .room-footer .text-link { min-height: 24px; padding: 2px 4px; font-size: 10px; }
+[data-mobile-device] .lobby-page .lobby-player { display: grid; grid-template-columns: 24px minmax(0,1fr); align-content: center; text-align: left; gap: 1px 4px; }
+[data-mobile-device] .lobby-page .lobby-player .profile-avatar, [data-mobile-device] .lobby-page .empty-seat > span { grid-row: 1 / 4; }
+[data-mobile-device] .lobby-page .lobby-player h3, [data-mobile-device] .lobby-page .lobby-player .account-badge, [data-mobile-device] .lobby-page .lobby-player p { grid-column: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-mobile-device] .lobby-page .empty-seat h3 { white-space: normal; font-size: 9px; }
+@media (max-height: 360px) {
+  [data-mobile-device] .lobby-page .room-code-panel { padding: 2px 8px; }
+  [data-mobile-device] .lobby-page .room-code-panel strong { font-size: 22px; line-height: 1.1; }
+  [data-mobile-device] .lobby-page .lobby-settings { padding: 6px; gap: 4px; }
+  [data-mobile-device] .lobby-page .lobby-settings h2 { font-size: 12px; }
+  [data-mobile-device] .lobby-page .lobby-settings label { gap: 3px; line-height: 1.1; }
+  [data-mobile-device] .lobby-page .lobby-settings select { height: 30px; min-height: 30px; }
+}
