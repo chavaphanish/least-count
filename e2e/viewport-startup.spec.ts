@@ -73,3 +73,49 @@ test('visual keyboard resize and recovery keep the shared viewport current', asy
   await expect(shell).toHaveCSS('--app-height', '390px')
   await expect(page.getByLabel('Elimination cutoff')).toHaveValue('150')
 })
+
+
+test('first landscape rotation follows visual viewport origin through late scroll-only updates', async ({ page }) => {
+  await mock(page)
+  await page.addInitScript(() => {
+    const origin = { left: 0, top: 0, height: 844 }
+    Object.assign(window, { testVisualOrigin: origin })
+    Object.defineProperty(visualViewport!, 'offsetLeft', { get: () => origin.left })
+    Object.defineProperty(visualViewport!, 'offsetTop', { get: () => origin.top })
+    Object.defineProperty(visualViewport!, 'height', { get: () => origin.height })
+  })
+  await page.clock.install()
+  await page.goto('/')
+  await expect(page.getByRole('dialog', { name: 'Rotate Your Phone' })).toBeVisible()
+  const main = await page.locator('main').elementHandle()
+  await page.setViewportSize({ width: 844, height: 390 })
+  await page.evaluate(() => {
+    const origin = (window as unknown as { testVisualOrigin: { top: number; height: number } }).testVisualOrigin
+    origin.top = 24; origin.height = 366
+    visualViewport!.dispatchEvent(new Event('scroll'))
+  })
+  const shell = page.locator('.app-shell'), loading = page.locator('.startup-screen')
+  await expect.poll(() => shell.boundingBox()).toMatchObject({ x: 0, y: 24, width: 844, height: 366 })
+  await expect.poll(() => loading.boundingBox()).toMatchObject({ x: 0, y: 24, width: 844, height: 366 })
+  await page.clock.runFor(5500)
+  await expect(loading).toHaveCount(0)
+  // Offset-only changes must update even though viewport width and height are unchanged.
+  await page.evaluate(() => {
+    const origin = (window as unknown as { testVisualOrigin: { top: number } }).testVisualOrigin
+    origin.top = 12
+    visualViewport!.dispatchEvent(new Event('scroll'))
+    setTimeout(() => { origin.top = 0 }, 400)
+  })
+  await page.clock.runFor(1600)
+  await expect.poll(() => shell.boundingBox()).toMatchObject({ x: 0, y: 0, width: 844, height: 366 })
+  expect(await main!.evaluate(node => node === document.querySelector('main'))).toBe(true)
+  expect(await page.evaluate(() => [scrollX, scrollY])).toEqual([0, 0])
+  // The layout viewport can itself lag: do not clamp a valid visible height to it.
+  await page.evaluate(() => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 366 })
+    const origin = (window as unknown as { testVisualOrigin: { height: number } }).testVisualOrigin
+    origin.height = 390
+    visualViewport!.dispatchEvent(new Event('resize'))
+  })
+  await expect.poll(() => shell.boundingBox()).toMatchObject({ x: 0, y: 0, width: 844, height: 390 })
+})

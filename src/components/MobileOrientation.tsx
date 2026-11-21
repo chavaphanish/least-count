@@ -14,12 +14,16 @@ type Viewport = {
   mobile: boolean
   width: number
   height: number
+  left: number
+  top: number
   keyboard: boolean
 }
 const ViewportContext = createContext<Viewport>({
   mobile: false,
   width: 0,
   height: 0,
+  left: 0,
+  top: 0,
   keyboard: false,
 })
 export const useAppViewport = () => useContext(ViewportContext)
@@ -37,8 +41,10 @@ function dimensions() {
   const usable = visual && visual.width > 0 && visual.height > 0 &&
     (visual.scale !== 1 || Math.abs(visual.width - innerWidth) < 80)
   return {
-    width: Math.round(usable ? Math.min(visual.width, innerWidth) : innerWidth),
-    height: Math.round(usable ? Math.min(visual.height, innerHeight) : innerHeight),
+    width: Math.round(usable ? visual.width : innerWidth),
+    height: Math.round(usable ? visual.height : innerHeight),
+    left: usable ? Math.max(0, visual.offsetLeft) : 0,
+    top: usable ? Math.max(0, visual.offsetTop) : 0,
   }
 }
 export function MobileOrientation({ children }: { children: ReactNode }) {
@@ -65,7 +71,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
     ...dimensions(),
     keyboard: false,
   }))
-  const baseline = useRef(dimensions())
+  const baseline = useRef<{ width: number; height: number }>(dimensions())
   const requested = useRef(false)
   const keyboardVisible = useRef(false)
   useLayoutEffect(() => {
@@ -90,7 +96,8 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           keyboardVisible.current)
       keyboardVisible.current = keyboard
       setViewport(previous => previous.width === size.width &&
-        previous.height === size.height && previous.keyboard === keyboard
+        previous.height === size.height && previous.left === size.left &&
+        previous.top === size.top && previous.keyboard === keyboard
         ? previous : { mobile, ...size, keyboard })
       if (mobile && (window.scrollX || window.scrollY)) window.scrollTo(0, 0)
     }
@@ -109,7 +116,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
     }
     const resume = () => { if (document.visibilityState === 'visible') stabilize() }
     window.visualViewport?.addEventListener('resize', stabilize)
-    window.visualViewport?.addEventListener('scroll', update)
+    window.visualViewport?.addEventListener('scroll', stabilize)
     window.addEventListener('resize', stabilize)
     window.addEventListener('orientationchange', stabilize)
     screen.orientation?.addEventListener('change', stabilize)
@@ -121,7 +128,7 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
     return () => {
       cancelSettling()
       window.visualViewport?.removeEventListener('resize', stabilize)
-      window.visualViewport?.removeEventListener('scroll', update)
+      window.visualViewport?.removeEventListener('scroll', stabilize)
       window.removeEventListener('resize', stabilize)
       window.removeEventListener('orientationchange', stabilize)
       screen.orientation?.removeEventListener('change', stabilize)
@@ -160,6 +167,8 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           {
             '--app-width': `${viewport.width}px`,
             '--app-height': `${viewport.height}px`,
+            '--app-left': `${viewport.left}px`,
+            '--app-top': `${viewport.top}px`,
           } as CSSProperties
         }
       >
