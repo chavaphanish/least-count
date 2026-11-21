@@ -1,8 +1,8 @@
 import { useLayoutEffect } from 'react'
-import type { ReactNode } from 'react'
+import { QuitGame } from './QuitGame'
 import { useMobileLandscape } from './MobileOrientation'
 import { TableOverlay } from './TableOverlay'
-import { ScreenPages, PagedItems } from './ScreenPages'
+import { ResultScores } from './ResultScores'
 import { TurnTimer } from './TurnTimer'
 import type { GameCard } from '../game/deck'
 
@@ -13,7 +13,7 @@ export function MobileGameBar({
   joker,
   penalty,
   players,
-  children,
+  onQuit,
 }: {
   round: number
   activeName: string
@@ -21,13 +21,14 @@ export function MobileGameBar({
   joker: Pick<GameCard, 'rank' | 'suit'>
   penalty: number
   players: { id: string; name: string; score: number; eliminated: boolean; forfeited?: boolean }[]
-  children: ReactNode
+  onQuit: () => void
 }) {
   const mobile = useMobileLandscape()
   useLayoutEffect(() => {
     if (mobile) window.scrollTo(0, 0)
   }, [mobile])
-  if (!mobile) return null
+  const scorecard = <TableOverlay label="Scorecard" trigger="☰"><ResultScores players={players}/><QuitGame onQuit={onQuit}/></TableOverlay>
+  if (!mobile) return <div className="desktop-scorecard">{scorecard}</div>
   const suits: Record<string, string> = {
     hearts: '♥',
     diamonds: '♦',
@@ -54,34 +55,7 @@ export function MobileGameBar({
           7 · +{penalty}
         </strong>
       )}
-      <TableOverlay label="Table options" trigger="Table ☰">
-        <ScreenPages
-          label="Table sections"
-          pages={[
-            {
-              label: 'Room & help',
-              content: <div className="table-options">{children}</div>,
-            },
-            {
-              label: 'Match scores',
-              content: (
-                <section className="match-scores">
-                  <h2>Match scores</h2>
-                  <PagedItems as="ul" label="scores" size={4}>
-                    {players.map((p) => (
-                      <li key={p.id}>
-                        <span>{p.name}</span>
-                        <strong>{p.score}</strong>
-                        <small>{p.forfeited ? (p.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : p.eliminated ? 'Eliminated' : 'Active'}</small>
-                      </li>
-                    ))}
-                  </PagedItems>
-                </section>
-              ),
-            },
-          ]}
-        />
-      </TableOverlay>
+      {scorecard}
     </header>
   )
 }

@@ -26,7 +26,7 @@ const minimum = (s: Metrics, key: string, n: number) => {
 export function beginCareer(r: RoomRecord, enabled: boolean, now: number) {
   if (!r.game) return
   r.career = {
-    id: r.id,
+    id: r.matchId ?? r.id,
     startedAt: now,
     completedAt: null,
     status: 'active',

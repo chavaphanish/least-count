@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRoom, gameAction, join, leave, start, sweep, view, reconcileHost } from './room'
+import { createRoom, gameAction, join, leave, start, sweep, view, reconcileHost, quitGame, restoreLobby } from './room'
 import {
   DEFAULT_ROOM_SETTINGS,
   LOBBY_GRACE_MS,
@@ -324,7 +324,8 @@ describe('eliminated host handover', () => {
     expect(() => gameAction(r, old, { type: 'transfer-host', transferId, targetId: r.members[1].id }, 3)).toThrow(/host/)
     reconcileHost(r, 3); expect(r.hostChange).toEqual(once)
     expect(() => gameAction(r, old, { type: 'next-round' }, 3)).toThrow(/host/)
-    gameAction(r, target, { type: 'next-round' }, 3)
+    for (const player of r.game!.players.filter(p => !p.eliminated && p.id !== r.hostId)) gameAction(r, player.id, { type: 'ready', matchId: r.id, round: r.game!.round }, 3)
+    gameAction(r, target, { type: 'next-round', matchId: r.id, round: r.game!.round }, 3)
     expect(r.game!.round).toBe(2)
   })
   it('rejects other actors, forged transfer IDs and unsolicited transfers', () => {
@@ -400,4 +401,48 @@ describe('eliminated host handover', () => {
     reconcileHost(r, 4)
     expect(r.hostId).toBe(''); expect(r.hostTransfer).toBeUndefined(); expect(r.game).toEqual(game)
   })
+})
+
+it('locks advancement to the current round and updates readiness through disconnect and reconnect', () => {
+  const r = full(3, false)
+  start(r, r.hostId, 0)
+  r.game!.phase = 'round-over'
+  const [host, second, third] = r.members
+  const ready = {type: 'ready', matchId: r.id, round: 1}
+  const next = {...ready, type: 'next-round'}
+  gameAction(r, second.id, ready, 1)
+  gameAction(r, second.id, ready, 2)
+  expect(r.ready).toEqual([second.id])
+  expect(() => gameAction(r, host.id, next, 2)).toThrow(/ready/)
+  third.connected = false
+  expect(view(r, host.id, 3).requiredReady).toEqual([second.id])
+  third.connected = true
+  expect(() => gameAction(r, host.id, next, 3)).toThrow(/ready/)
+  gameAction(r, third.id, ready, 3)
+  gameAction(r, host.id, next, 4)
+  expect(r.game!.round).toBe(2)
+  expect(r.ready).toBeUndefined()
+  expect(() => gameAction(r, second.id, ready, 5)).toThrow()
+})
+
+it('preserves scores on quit, rejects rejoining that match and resets only after final acknowledgments', () => {
+  const r = full(3, false)
+  start(r, r.hostId, 0)
+  const [host, second, third] = r.members
+  r.game!.players[0].score = 12
+  quitGame(r, host.id, r.id, 1)
+  expect(r.game!.players[0]).toMatchObject({score: 12, eliminated: true})
+  expect(r.hostId).not.toBe(host.id)
+  expect(() => join(r, person('Host'), 2)).toThrow(/forfeited/)
+  r.game!.phase = 'game-over'
+  const back = {type: 'return-lobby', matchId: r.id}
+  gameAction(r, second.id, back, 3)
+  expect(restoreLobby(r, 3)).toBe(false)
+  expect(view(r, third.id, 3).game?.phase).toBe('game-over')
+  gameAction(r, third.id, back, 4)
+  expect(restoreLobby(r, 4)).toBe(true)
+  expect(r).toMatchObject({code: 'ABC234', status: 'waiting', game: null})
+  expect(r.matchId).not.toBe(r.id)
+  join(r, person('Host'), 5)
+  expect(r.members).toHaveLength(3)
 })

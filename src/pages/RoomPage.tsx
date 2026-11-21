@@ -5,10 +5,10 @@ import { HostTransferDialog } from '../components/HostTransferDialog'
 import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
-import { ResultScores } from '../components/ResultScores'
+import { ResultScores, resultTitle } from '../components/ResultScores'
 import { MobileGameBar } from '../components/MobileGameBar'
 import { OpponentSeat } from '../components/OpponentSeat'
-import { CareerRewards } from '../career/CareerRewards'
+import { QuitGame } from '../components/QuitGame'
 import { useActiveSeat } from '../hooks/useActiveSeat'
 import { TurnActions } from '../components/TurnActions'
 import { TurnTimer } from '../components/TurnTimer'
@@ -38,7 +38,7 @@ export function RoomPage({
   const { room, connection, error, busy, now, send, command, guestBlocked } =
     local
   useGameplayLoading(!!room?.game)
-  useGameFeedback(room?.game ? {scope:`room:${room.id}`,revision:room.revision,round:room.game.round,phase:room.game.phase,dropIds:room.game.latestDiscard.map(c=>c.id).join(','),localId:auth.user!.player.id,currentId:room.game.currentPlayerId,players:room.game.players,events:room.game.events,deadline:room.game.deadline,now,connected:connection==='live',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
+  useGameFeedback(room?.game ? {scope:`room:${room.matchId ?? room.id}`,revision:room.revision,round:room.game.round,phase:room.game.phase,dropIds:room.game.latestDiscard.map(c=>c.id).join(','),localId:auth.user!.player.id,currentId:room.game.currentPlayerId,players:room.game.players,events:room.game.events,deadline:room.game.deadline,now,connected:connection==='live',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
   useActiveSeat(room?.game?.currentPlayerId)
   const id = auth.user!.player.id
   const {
@@ -109,7 +109,11 @@ export function RoomPage({
   const own = g?.players.find((p) => p.id === id)
   const current = g?.players.find((p) => p.id === g.currentPlayerId)
   const activeName = current ? playerFirstName(current) : 'the active player'
-  const winner = g?.players.find((p) => !p.eliminated)
+  const players = g?.players.map(p => ({ ...p, name: playerFirstName(p) })) ?? []
+  const required = room.requiredReady ?? []
+  const readyPlayers = room.ready ?? []
+  const readyCount = required.filter(player => readyPlayers.includes(player)).length
+  const quit = () => { void command('quit') }
   const yours =
     !!g &&
     g.currentPlayerId === id &&
@@ -172,39 +176,9 @@ export function RoomPage({
           seconds={final ? null : seconds}
           joker={g.indicator}
           penalty={g.penalty}
-          players={g.players.map((p) => ({
-            id: p.id,
-            name: playerFirstName(p),
-            score: p.score,
-            eliminated: p.eliminated,
-            forfeited: p.forfeited,
-          }))}
-        >
-          <p>
-            Host: {room.members.find(member => member.id === room.hostId) ? playerFirstName(room.members.find(member => member.id === room.hostId)!) : 'Waiting for an active player'} · Room {code} · cutoff {room.settings.eliminationThreshold} ·{' '}
-            {connection === 'live'
-              ? 'Connected'
-              : connection === 'error'
-                ? 'Connection needs attention'
-                : 'Reconnecting…'}
-          </p>
-          <button className="text-button" onClick={share}>
-            Share Invitation
-          </button>
-          <button
-            className="text-button"
-            disabled={busy}
-            onClick={async () => {
-              onExit()
-              await command('leave')
-            }}
-          >
-            Leave Room
-          </button>
-          <a className="text-link" href="#/rules">
-            How to Play →
-          </a>
-        </MobileGameBar>
+          players={players}
+          onQuit={quit}
+        />
       )}
 
       {error && (
@@ -398,67 +372,19 @@ export function RoomPage({
           </div>
           {g.result && (
             <section className="round-summary">
-              <div className="result-intro">
-                {g.career?.eligible && (
-                  <CareerRewards
-                    key={g.round}
-                    game={g.career.gameId}
-                    round={g.round}
-                  />
-                )}
-                <h2>
-                  {g.phase === 'game-over'
-                    ? `${winner ? playerFirstName(winner) : 'The remaining player'} wins the match!`
-                    : g.result.reason === 'show'
-                      ? g.result.successful
-                        ? 'Least successful!'
-                        : 'Least failed!'
-                      : 'Round complete'}
-                </h2>
-                {g.result.reason === 'show' && (
-                  <p>
-                    {g.result.successful
-                      ? 'The lowest hand wins; zero-point ties share the win.'
-                      : 'A 40-point penalty was applied to the unsuccessful declaration.'}
-                  </p>
-                )}
-                <p>
-                  Only totals are shared. Opponents’ individual cards remain
-                  private.
-                </p>
-              </div>
-              {!!g.result.scores.length && (
-                <ResultScores
-                  scores={g.result.scores}
-                  round={g.round}
-                  winners={g.result.winners}
-                />
-              )}
+              <div className="result-intro"><h2>{resultTitle(players, g.result, g.phase === 'game-over')}</h2></div>
+              <ResultScores players={players} result={g.result} final={g.phase === 'game-over'} quitters={room.quitters}/>
               <div className="result-actions">
-                {g.phase === 'round-over' &&
-                  (host ? (
-                    <button
-                      className="button button-primary"
-                      disabled={busy || connection !== 'live'}
-                      onClick={() => send({ type: 'next-round' })}
-                    >
-                      Start round {g.round + 1}
-                    </button>
-                  ) : (
-                    <p>Waiting for the host to start the next round.</p>
-                  ))}
-                {final && (
-                  <button
-                    className="button button-secondary"
-                    disabled={busy}
-                    onClick={async () => {
-                      onExit()
-                      await command('leave')
-                    }}
-                  >
-                    Leave Room
-                  </button>
-                )}
+                {error && <p role="alert">{error}</p>}
+                {g.phase === 'game-over' ? <button className="button button-primary" disabled={busy || connection !== 'live' || room.returned?.includes(id)}
+                  onClick={() => send({ type: 'return-lobby', matchId: room.matchId })}>{room.returned?.includes(id) ? 'Waiting for other players' : 'Return to Lobby'}</button> : <>
+                  <p>{readyCount}/{required.length} Players Ready</p>
+                  {host ? <button className="button button-primary" disabled={busy || connection !== 'live' || readyCount !== required.length}
+                    onClick={() => send({ type: 'next-round', matchId: room.matchId, round: g.round })}>Start Round {g.round + 1}</button>
+                    : required.includes(id) && <button className="button button-primary" disabled={busy || connection !== 'live' || readyPlayers.includes(id)}
+                      onClick={() => send({ type: 'ready', matchId: room.matchId, round: g.round })}>{readyPlayers.includes(id) ? 'Ready ✓' : 'Next Round'}</button>}
+                  <QuitGame onQuit={quit}/>
+                </>}
               </div>
             </section>
           )}
@@ -501,7 +427,7 @@ export function RoomPage({
           </div>
         </div>
       </dialog>
-      <div className="room-footer">
+      {!g && <div className="room-footer">
         <button
           className="text-button"
           disabled={busy}
@@ -527,7 +453,7 @@ export function RoomPage({
         <a className="text-link" href="#/rules">
           How to Play →
         </a>
-      </div>
+      </div>}
       {g && !final && (
         <p className="field-hint">
           Leaving this screen does not pause an online turn. In untimed games,

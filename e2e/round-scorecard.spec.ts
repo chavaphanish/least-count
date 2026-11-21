@@ -1,0 +1,26 @@
+import { test, expect } from '@playwright/test'
+import { auditGame } from './ux-fixture'
+import { mock } from './career-fixture'
+import { SESSION_KEY } from '../src/lib/session'
+
+test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1' })
+test('all eight scores and both round actions fit iPhone landscape', async ({page}) => {
+  await mock(page)
+  const game = auditGame(8)
+  game.phase = 'round-over'
+  game.deadline = null
+  game.result = { reason: 'show', successful: true, caller: 'p0', winners: ['p0'],
+    scores: game.players.map(p => ({...p, total: 7, penalty: 0})) }
+  await page.addInitScript(({key, game}) => sessionStorage.setItem(key, JSON.stringify(game)), {key: SESSION_KEY, game})
+  await page.goto('/#/game')
+  const panel = page.locator('.round-summary')
+  await expect(panel.getByRole('heading')).toContainText('declared a least count of 7 and won the round!')
+  await expect(panel.locator('tbody tr:visible')).toHaveCount(8)
+  for (const control of await panel.locator('tbody tr,button:visible').all()) await expect(control).toBeInViewport({ratio: 1})
+  await panel.getByRole('button', {name:'Quit Game',exact:true}).click()
+  const confirm = page.getByRole('dialog',{name:'Quit Game?'})
+  await expect(confirm).toBeVisible()
+  await confirm.getByRole('button',{name:'Cancel'}).click()
+  await expect(panel).toBeVisible()
+})

@@ -4,6 +4,7 @@ import type { CareerState } from './career'
 import { gameEvents } from '../src/game/events'
 import {
   applyAction,
+  quitMatch,
   canShow,
   createGame,
   isPlaying,
@@ -31,6 +32,10 @@ import type {
 import type { Identity } from './types'
 import { ApiError } from './http'
 export type RoomRecord = {
+  matchId?: string
+  ready?: string[]
+  returned?: string[]
+  quitters?: string[]
   id: string
   code: string
   hostId: string
@@ -81,6 +86,7 @@ export function member(r: RoomRecord, id: string) {
 }
 export function join(r: RoomRecord, identity: Identity, now: number) {
   if (r.status === 'closed') throw new ApiError(410, 'This room is closed.')
+  if (r.game && r.quitters?.includes(identity.id)) throw new ApiError(403, 'You forfeited this game.')
   const existing = r.members.find((m) => m.id === identity.id)
   if (existing) {
     Object.assign(existing, publicPlayer(identity), {
@@ -127,6 +133,10 @@ export function reconcileHost(r: RoomRecord, now: number) {
   const active = r.game.players.filter(p => !p.eliminated && !p.forfeited)
   const host = r.game.players.find(p => p.id === r.hostId)
   const seat = r.members.find(m => m.id === r.hostId)
+  if (r.game.phase === 'round-over' && !seat?.connected) {
+    const replacement = r.members.find(m => m.connected && !m.left && m.authExpiresAt > now && r.game!.players.some(p => p.id === m.id && !p.eliminated))
+    if (replacement) { assignHost(r, replacement.id, now); return }
+  }
   if (host && !host.eliminated && seat && !seat.left) return
   const eligible = eligibleHosts(r, now)
   if (!active.length || !eligible.length) { assignHost(r, '', now); return }
@@ -161,6 +171,38 @@ export function leave(r: RoomRecord, id: string, now: number) {
   if (!r.members.length) r.status = 'closed'
   if (r.game) observeCareer(r, r.game, r.game, now, false)
 }
+export function quitGame(r: RoomRecord, id: string, matchId: unknown, now: number) {
+  if (!r.game || matchId !== (r.matchId ?? r.id) || r.game.phase === 'game-over')
+    throw new ApiError(409, 'This match is no longer active.')
+  const next = quitMatch(r.game, id, now, secureRandom)
+  leave(r, id, now)
+  r.quitters = [...new Set([...(r.quitters ?? []), id])]
+  replaceGame(r, next, now)
+}
+
+function requiredReady(r: RoomRecord) {
+  return r.game?.players.filter(p => !p.eliminated && p.id !== r.hostId &&
+    r.members.some(m => m.id === p.id && m.connected && !m.left)).map(p => p.id) ?? []
+}
+
+export function restoreLobby(r: RoomRecord, now: number) {
+  if (r.game?.phase !== 'game-over' || !r.returned?.length ||
+      r.members.some(m => m.connected && !m.left && !r.returned!.includes(m.id)) ||
+      (r.career?.eligible && r.career.revision !== r.career.syncedRevision)) return false
+  r.members = r.members.filter(m => !m.left)
+  for (const m of r.members) if (!m.connected) m.disconnectedAt = now
+  r.game = null
+  r.status = r.members.length ? 'waiting' : 'closed'
+  delete r.career
+  delete r.ready
+  delete r.returned
+  delete r.quitters
+  delete r.hostTransfer
+  r.matchId = crypto.randomUUID()
+  transferHost(r, now)
+  return true
+}
+
 export function sweep(r: RoomRecord, now: number) {
   if (r.game) replaceGame(r, resolveForcedDraw(r.game, now, secureRandom), now)
   for (const m of r.members)
@@ -281,10 +323,24 @@ export function gameAction(
     assignHost(r, a.targetId, now)
     return
   }
+  const matchId = r.matchId ?? r.id
+  if (a.type === 'return-lobby') {
+    if (a.matchId !== matchId || r.game.phase !== 'game-over') throw new ApiError(409, 'This match has not finished.')
+    r.returned = [...new Set([...(r.returned ?? []), id])]
+    return
+  }
+  if (a.type === 'ready') {
+    if (a.matchId !== matchId || a.round !== r.game.round || r.game.phase !== 'round-over' || !requiredReady(r).includes(id))
+      throw new ApiError(409, 'You cannot ready up for this round.')
+    r.ready = [...new Set([...(r.ready ?? []), id])]
+    return
+  }
   let action: Action
   if (a.type === 'next-round') {
     if (id !== r.hostId || r.hostTransfer)
       throw new ApiError(403, 'Only the host can advance a completed round.')
+    if (a.matchId !== matchId || a.round !== r.game.round || requiredReady(r).some(player => !r.ready?.includes(player)))
+      throw new ApiError(409, 'Wait for the other players to be ready.')
     action = { type: 'next-round' }
   } else if (a.type === 'show' || a.type === 'accept-penalty')
     action = { type: a.type, playerId: id }
@@ -314,6 +370,7 @@ export function gameAction(
   } else throw new ApiError(400, 'That action is not available to a player.')
   try {
     replaceGame(r, applyAction(r.game, action, now, secureRandom), now, true)
+    if (a.type === 'next-round') delete r.ready
   } catch (error) {
     throw new ApiError(
       400,
@@ -328,6 +385,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
   return {
     id: r.id,
     code: r.code,
+    ...(g ? { matchId: r.matchId ?? r.id, ready: r.ready ?? [], requiredReady: requiredReady(r), returned: r.returned ?? [], quitters: r.quitters ?? [] } : {}),
     hostId: r.hostId,
     ...(r.hostTransfer ? { hostTransfer: { id: r.hostTransfer.id, fromId: r.hostTransfer.fromId, deadline: r.hostTransfer.deadline, eligibleIds: eligibleHosts(r, now).map(p => p.id) } } : {}),
     ...(r.hostChange ? { hostChange: { id: r.hostChange.id, playerId: r.hostChange.playerId, at: r.hostChange.at } } : {}),
@@ -346,12 +404,13 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
     })),
     game: g
       ? {
-          career: r.career ? { gameId: r.id, eligible: r.career.eligible, synced: r.career.syncedRevision === r.career.revision } : undefined,
+          career: r.career ? { gameId: r.career.id, eligible: r.career.eligible, synced: r.career.syncedRevision === r.career.revision } : undefined,
           phase: g.phase,
           round: g.round,
           currentPlayerId: g.players[g.current].id,
           players: g.players.map((p) => ({
             ...publicPlayer(member(r, p.id)),
+            ...(g.phase === 'game-over' && r.career?.eligible ? { finalRank: r.career.players.find(player => player.id === p.id)?.rank ?? undefined } : {}),
             cardCount: p.hand.length,
             score: p.score,
             eliminated: p.eliminated,

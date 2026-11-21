@@ -151,7 +151,7 @@ export default {
         }
       }
       const match =
-        /^\/api\/rooms\/([A-Za-z0-9]{6})(?:\/(join|ticket|start|leave|close|ws))?$/.exec(
+        /^\/api\/rooms\/([A-Za-z0-9]{6})(?:\/(join|ticket|start|leave|quit|close|ws))?$/.exec(
           url.pathname,
         )
       if (!match) throw new ApiError(404, 'Endpoint not found.')
@@ -205,6 +205,7 @@ export default {
         body: JSON.stringify({
           identity: auth.identity,
           careerAllowed: careerOriginAllowed(url.origin, env),
+          ...(operation === 'quit' ? { matchId: (await body(request)).matchId } : {}),
         }),
       })
       if (operation === 'join' && !response.ok)

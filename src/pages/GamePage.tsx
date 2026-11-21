@@ -268,22 +268,8 @@ export function GamePage({
         joker={game.indicator}
         penalty={game.phase === 'penalty' ? (game.sevens?.amount ?? 0) : 0}
         players={displayGame.players}
-      >
-        <p>Local practice · cutoff 100</p>
-        <button
-          className="text-button"
-          onClick={newGame}
-          disabled={!!animation}
-        >
-          New game
-        </button>
-        <a className="text-link" href="#/">
-          Back to the Lounge
-        </a>
-        <a className="text-link" href="#/rules">
-          How to Play →
-        </a>
-      </MobileGameBar>
+        onQuit={reset}
+      />
       {!canSave && (
         <p className="game-alert" role="status">
           Browser storage is unavailable. Refreshing will lose this match.
@@ -480,6 +466,7 @@ export function GamePage({
             send({ type: 'next-round' })
           }}
           newGame={newGame}
+          quit={reset}
         />
       )}
       <div className="game-below-table">

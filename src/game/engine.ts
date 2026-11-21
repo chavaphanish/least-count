@@ -492,6 +492,38 @@ export function createGame(
   return s
 }
 
+/** Explicit match departure never charges another round penalty. */
+export function quitMatch(state: GameState, id: string, now: number, random = Math.random) {
+  const s = structuredClone(state)
+  const index = s.players.findIndex(player => player.id === id)
+  const player = s.players[index]
+  if (!player || s.phase === 'game-over') throw new RuleError('This match has ended.')
+  if (player.eliminated) return s
+  player.eliminated = true
+  if (s.sevens) {
+    s.sevens.participants = s.sevens.participants.filter(i => i !== index)
+    if (s.sevens.initiator === index && active(s).length) s.sevens.initiator = nextActive(s, index)
+  }
+  if (survivors(s).length === 1) {
+    s.phase = 'game-over'
+    s.deadline = null
+    s.sevens = null
+    s.result ??= { reason: 'last-player', winners: [], scores: [] }
+    emit(s, { type: 'GAME_COMPLETED', winner: publicPlayer(survivors(s)[0]) }, now)
+  } else if (isPlaying(s)) {
+    if (s.sevens && s.sevens.participants.length === active(s).length && active(s).length > 1) {
+      const starter = s.sevens.initiator
+      s.sevens = null
+      beginTurn(s, starter, now, random)
+    } else if (active(s).length <= 1) settle(s, 'last-player', undefined, now)
+    else if (index === s.current) {
+      s.eligible = []
+      beginTurn(s, nextActive(s, index), now, random)
+    }
+  }
+  return s
+}
+
 /** Immutable reducer: validation failures throw without changing the supplied state. */
 export function applyAction(
   state: GameState,
