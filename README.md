@@ -12,7 +12,7 @@ YAYDU is a responsive browser card game with a green felt table, local practice,
 
 ## Player careers and social features
 
-Registered profiles now include Overview, Statistics, Game History, and Buddies, with public profile discovery, XP/levels, frequent opponents, and Global/Buddies XP Rankings on the Lounge. Large avatar photos are previewed, center-cropped and compressed before upload (5 MB input limit).
+Registered My Profile now has compact Overview and Stats tabs without a repeated identity block or total XP display. Edit Profile opens Settings → Profile directly. Public player profiles, dedicated game-report routes, the header’s XP/level progress, Your Circle and Global/Buddies Rankings retain their existing behavior. Large avatar photos are previewed, center-cropped and compressed before upload (5 MB input limit).
 
 **Production setup required before enabling career tracking:** apply the two new Supabase migrations, configure the Worker-only `SUPABASE_CAREER_KEY` secret, and configure `CAREER_ORIGIN` plus `CAREER_ENABLED=true` as Worker secret bindings for production. See [player careers: setup, definitions, privacy, and testing](docs/player-careers.md). Keep tracking disabled in previews/tests connected to production data. Existing guest play and local practice remain casual and do not earn permanent XP.
 

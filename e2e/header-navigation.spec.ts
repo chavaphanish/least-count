@@ -70,7 +70,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       for (const target of ['.profile-avatar', '.header-profile-lines strong', '.header-profile-lines small']) {
         await identity.locator(target).click()
         await expect(page).toHaveURL(/#\/profile$/)
-        await expect(page.getByRole('region', { name: 'Player career' })).toBeVisible()
+        await expect(page.getByRole('region', { name: 'My Profile' })).toBeVisible()
         await nav.getByRole('link', { name: 'Lounge', exact: true }).click()
       }
       await nav.getByRole('link', { name: 'Settings', exact: true }).click()
