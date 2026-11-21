@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - From 12 November 2026 onward, versions follow **`1.1.x`**. Each change set that ships to `main` increments the patch number (`1.1.1`, `1.1.2`, …). `package.json` carries the current version.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.1.37 — 2026-11-21
+
+- **Mobile viewport:** remeasure the shared visible viewport during startup, orientation changes and foreground restoration, including delayed iOS PWA stabilization. Reject stale orientation dimensions and skip unchanged updates while preserving keyboard handling, safe-area styling and mounted gameplay.
+
 ## 1.1.36 — 2026-11-20
 
 - **Lounge Tutorial:** completed the authenticated Lounge’s existing 2×2 action grid with a matching Tutorial button and an “Under construction” popup dismissed with OK. Existing actions, header and landscape layout are unchanged.
