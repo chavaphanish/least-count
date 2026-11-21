@@ -2,6 +2,14 @@
 .form-contents, .desktop-contents { display: contents; }
 [data-mobile-device] [hidden] { display: none !important; }
 html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; height: 100%; overflow: clip; overscroll-behavior: none; }
+/* Fixed descendants share the visual viewport's origin as well as its dimensions.
+   Layout containment anchors loading screens, the header and gameplay together. */
+[data-mobile-device] > .orientation-content {
+  position: fixed; left: var(--app-left,0px); top: var(--app-top,0px);
+  width: var(--app-width,100dvw); height: var(--app-height,100dvh);
+  contain: layout;
+}
+[data-mobile-device] .startup-screen.studio-loading { width: 100%; height: 100%; }
 [data-mobile-device] .app-shell {
   position: fixed; inset: 0; width: var(--app-width,100dvw); height: var(--app-height,100dvh); max-width: none; margin: 0;
   padding: max(4px,var(--mobile-safe-top)) max(8px,var(--mobile-safe-right)) max(4px,var(--mobile-safe-bottom)) max(8px,var(--mobile-safe-left));
