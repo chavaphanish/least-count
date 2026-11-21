@@ -1,67 +1,28 @@
-import { useState } from 'react'
-import type { RoundScore } from '../game/engine'
-import { useMobileLandscape } from './MobileOrientation'
-/** Pagination changes presentation only; totals and elimination status are untouched. */
-export function ResultScores({
-  scores,
-  round,
-  winners = [],
-}: {
-  scores: readonly RoundScore[]
-  round: number
-  winners?: readonly string[]
+import type { RoundResult } from '../game/engine'
+
+export type ScorePlayer = { id: string; name: string; finalRank?: number; score: number; eliminated: boolean; forfeited?: boolean }
+
+export function resultTitle(players: ScorePlayer[], result: RoundResult, final: boolean) {
+  if (final) {
+    const winner = players.find(p => !p.eliminated)
+    return winner ? `${winner.name} wins the game!` : 'Final standings'
+  }
+  const caller = result.scores.find(p => p.id === result.caller)
+  if (caller) return `${players.find(p => p.id === caller.id)?.name ?? caller.name} declared a least count of ${caller.total} and ${result.successful ? 'won the round!' : 'failed!'}`
+  return result.reason === 'exhaustion' ? 'Draw pile exhausted' : 'One player remains this round'
+}
+
+export function ResultScores({ players, result, final, quitters = [] }: {
+  players: ScorePlayer[]; result?: RoundResult; final?: boolean; quitters?: string[]
 }) {
-  const mobile = useMobileLandscape(),
-    [page, setPage] = useState(0)
-  const pages = Math.ceil(scores.length / 4),
-    current = Math.min(page, Math.max(0, pages - 1))
-  return (
-    <div className="result-scores">
-      <table className="score-table">
-        <caption>Round {round} scoring</caption>
-        <thead>
-          <tr>
-            <th scope="col">Player</th>
-            <th scope="col">Hand</th>
-            <th scope="col">Penalty</th>
-            <th scope="col">Cumulative</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {scores.map((score, index) => (
-            <tr
-              key={score.id}
-              hidden={mobile && Math.floor(index / 4) !== current}
-            >
-              <th scope="row">
-                {score.name}
-                {winners.includes(score.id) ? ' ★' : ''}
-              </th>
-              <td>{score.total}</td>
-              <td>+{score.penalty}</td>
-              <td>{score.score}</td>
-              <td>{score.forfeited ? (score.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : score.eliminated ? 'Eliminated' : 'Active'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {mobile && pages > 1 && (
-        <nav className="item-pages" aria-label="Score pages">
-          <button disabled={!current} onClick={() => setPage(current - 1)}>
-            Previous scores
-          </button>
-          <span>
-            {current + 1} / {pages}
-          </span>
-          <button
-            disabled={current === pages - 1}
-            onClick={() => setPage(current + 1)}
-          >
-            Next scores
-          </button>
-        </nav>
-      )}
-    </div>
-  )
+  const ordered = final ? [...players].sort((a,b) => (a.finalRank ?? 0) - (b.finalRank ?? 0) || Number(a.eliminated) - Number(b.eliminated) || a.score - b.score) : players
+  return <div className="result-scores"><table className="score-table compact-scorecard">
+    <thead><tr>{final && <th>Rank</th>}<th>Player</th>{result && <th>Penalty</th>}<th>Score</th><th>Status</th></tr></thead>
+    <tbody>{ordered.map((p,index) => {
+      const row = result?.scores.find(s => s.id === p.id)
+      const winner = final ? !p.eliminated : result?.winners.includes(p.id)
+      return <tr key={p.id} data-winner={!!winner}>{final && <td>{index+1}</td>}<th scope="row">{p.name}{result?.caller === p.id && <small> · Least</small>}</th>
+        {result && <td>{row ? `+${row.penalty}` : '—'}</td>}<td>{p.score}</td>
+        <td>{quitters.includes(p.id) ? 'Quit' : p.eliminated ? 'Eliminated' : winner ? 'Winner' : p.forfeited ? 'Forfeited' : 'Active'}</td></tr>
+    })}</tbody></table></div>
 }

@@ -104,6 +104,7 @@ export type Member = PublicPlayer & {
   left: boolean
 }
 export type PublicGamePlayer = PublicPlayer & {
+  finalRank?: number
   cardCount: number
   score: number
   eliminated: boolean
@@ -133,6 +134,11 @@ export const HOST_TRANSFER_MS = 30_000
 export type HostTransfer = { id: string; fromId: string; deadline: number }
 export type HostChange = { id: string; playerId: string; at: number }
 export type RoomView = {
+  matchId?: string
+  ready?: string[]
+  requiredReady?: string[]
+  returned?: string[]
+  quitters?: string[]
   id: string
   code: string
   hostId: string
@@ -147,7 +153,9 @@ export type RoomView = {
 }
 export type ClientGameAction = {
   type:
-    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round' | 'transfer-host' | 'update-settings'
+    'discard' | 'play-turn' | 'draw' | 'show' | 'accept-penalty' | 'next-round' | 'transfer-host' | 'update-settings' | 'ready' | 'return-lobby'
+  matchId?: string
+  round?: number
   settings?: LobbySettingsUpdate
   targetId?: string
   transferId?: string

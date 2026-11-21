@@ -56,3 +56,30 @@ test('real rooms synchronize lobby settings, invitation joins, disconnects, host
     await expect(friend.locator('.lobby-settings')).toHaveCount(0)
   } finally { await a.close(); await b.close() }
 })
+
+test('a confirmed quit blocks rejoining until the winner returns the same room to its lobby', async ({ browser, baseURL }) => {
+  test.setTimeout(60000)
+  const a = await browser.newContext(), b = await browser.newContext()
+  try {
+    const host = await a.newPage(), friend = await b.newPage()
+    await guest(host, 'First Host')
+    await guest(friend, 'Next Host')
+    await host.getByRole('button', {name:'Host a Game'}).click()
+    const code = await host.locator('.room-code-panel strong').innerText()
+    await host.getByLabel('Number of players').selectOption('2')
+    await friend.goto(`/join/${code}`)
+    await host.getByRole('button', {name:'Start Game', exact:true}).click()
+    await host.getByRole('button', {name:'Scorecard', exact:true}).click()
+    await host.getByRole('dialog', {name:'Scorecard', exact:true}).getByRole('button',{name:'Quit Game', exact:true}).click()
+    await host.getByRole('dialog', {name:'Quit Game?', exact:true}).getByRole('button',{name:'Quit Game', exact:true}).click()
+    await expect(host.getByRole('button', {name:'Host a Game'})).toBeVisible()
+    await expect(friend.getByRole('heading', {name:'Next Host wins the game!'})).toBeVisible()
+    expect((await host.request.post(`/api/rooms/${code}/join`, {headers:{Origin:baseURL!}})).status()).toBe(403)
+    await friend.getByRole('button',{name:'Return to Lobby'}).click()
+    await expect(friend.getByRole('heading',{name:'Waiting lobby'})).toBeVisible()
+    await expect(friend.getByLabel('Number of players')).toHaveValue('2')
+    await host.goto(`/join/${code}`)
+    await friend.getByRole('button',{name:'Start Game',exact:true}).click()
+    await expect(host.getByRole('button',{name:'Scorecard',exact:true})).toBeVisible()
+  } finally { await a.close(); await b.close() }
+})

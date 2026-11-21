@@ -211,11 +211,11 @@ export function useRoom(code: string) {
     }, 10_000)
     return true
   }, [])
-  async function command(action: 'start' | 'leave' | 'close') {
+  async function command(action: 'start' | 'leave' | 'close' | 'quit') {
     setError('')
     setBusy(true)
     try {
-      await auth.services.api(`/rooms/${code}/${action}`, { method: 'POST' })
+      await auth.services.api(`/rooms/${code}/${action}`, { method: 'POST', ...(action === 'quit' ? { body: JSON.stringify({ matchId: room?.matchId }) } : {}) })
       if (action !== 'start') {
         await auth.refresh()
         location.hash = '#/'

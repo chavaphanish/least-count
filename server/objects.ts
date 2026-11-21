@@ -9,6 +9,8 @@ import { ApiError, body, failure, hash, json, randomToken } from './http'
 import {
   createRoom,
   gameAction,
+  quitGame,
+  restoreLobby,
   join,
   leave,
   member,
@@ -289,6 +291,7 @@ export class GameRoom {
   }
   private async persist(broadcast = true) {
     const r = this.record!
+    if (restoreLobby(r, Date.now())) broadcast = true
     const hostBefore = JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id])
     reconcileHost(r, Date.now())
     if (hostBefore !== JSON.stringify([r.hostId, r.hostTransfer?.id, r.hostChange?.id])) broadcast = true
@@ -437,6 +440,7 @@ export class GameRoom {
         }
         if (url.pathname === '/join') join(r, identity, Date.now())
         else {
+          if (r.game && r.quitters?.includes(identity.id) && url.pathname !== '/quit') throw new ApiError(403, 'You forfeited this game.')
           const currentMember = member(r, identity.id)
           // Refresh public identity on authenticated view/ticket requests after profile edits.
           currentMember.displayName = identity.displayName
@@ -482,8 +486,9 @@ export class GameRoom {
                 m.disconnectedAt = Date.now()
               }
             start(r, identity.id, Date.now(), undefined, data.careerAllowed === true && this.env.CAREER_ENABLED === 'true' && !!this.env.SUPABASE_CAREER_KEY)
-          } else if (url.pathname === '/leave') {
-            leave(r, identity.id, Date.now())
+          } else if (url.pathname === '/leave' || url.pathname === '/quit') {
+            if (url.pathname === '/quit') quitGame(r, identity.id, data.matchId, Date.now())
+            else leave(r, identity.id, Date.now())
             for (const ws of this.ctx.getWebSockets(identity.id))
               ws.close(4001, 'You left the room')
             const tickets = await this.ctx.storage.list<Ticket>({
@@ -507,7 +512,7 @@ export class GameRoom {
         }
         await this.persist()
         return json(
-          url.pathname === '/leave' || url.pathname === '/close'
+          url.pathname === '/leave' || url.pathname === '/quit' || url.pathname === '/close'
             ? { ok: true }
             : view(r, identity.id, Date.now()),
         )
