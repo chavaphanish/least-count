@@ -6,7 +6,7 @@ The player-facing brand is **YAYDU**; the `least-count` repository, Worker, API 
 
 YAYDU is a responsive browser card game with a green felt table, local practice, and server-authoritative online rooms for 2–8 players.
 
-**Accounts and multiplayer:** Guest rooms work without external authentication configuration. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Gameplay changes are reviewed in pull requests before deployment.
+**Accounts and multiplayer:** Guest sessions and local practice work without external authentication configuration; online guest rooms are disabled by default and require the existing Worker override. Verified email/password accounts, password recovery, and profile pictures require a Supabase project: follow [the step-by-step setup guide](docs/supabase-setup.md). These provider-dependent flows are tested with mocks here, not a live Supabase project. Version classification and the current-branch/PR workflow follow [AGENTS.md](AGENTS.md).
 
 **Three-step registration:** First/last names (English letters only), then username (8–20 letters/numbers) and email with server-side availability checks, then the existing password/confirmation step. Names and @usernames are public; email remains private. Invalid steps show one themed popup and clear only that step after dismissal. Existing accounts and legacy 8–24-character usernames remain compatible. Sign in by email or username using the same Supabase account/session system. Apply [the access-validation migration and rollout checks](docs/access-validation.md) before deploying this update; the [earlier identity rollout](docs/signup-identity.md) remains a prerequisite.
 
@@ -26,14 +26,14 @@ Vibration is disabled with an explanation when unsupported (including most iPhon
 
 ## Playing
 
-- Continue as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh.
+- Use Login as Guest with a display name, or sign in after Supabase is configured. Sessions restore on refresh; a guest or registered session is required before gameplay.
 - From the Lounge, create a room or join using a six-character code or invitation link.
 - Room defaults are four players, a 100-point cumulative elimination cutoff, and 45-second turns. The host can choose 2–8 players, any positive safe-integer cutoff, or untimed play.
 - Share the invitation link. It uses the current site's origin and preserves the room through sign-in.
 - The waiting lobby updates live. **Only the host can start**, manually, when every reserved seat is connected and the room is exactly full. Starting is atomic and deals seven cards per player.
 - Each round opens with a visible card. For a non-7, the starter drops first, then picks up the eligible opening card or draws one closed replacement when required. Match and Drop and playing 7s skip that replacement. An opening 7 immediately activates a two-card penalty; an opener without a 7 draws automatically and skips.
 - The online table uses the existing engine. Select cards, choose a legal draw source, declare Least, handle 7 penalties, and play subsequent rounds. The server validates actions and sends each player only their own hand.
-- **Play Game** remains available for offline local practice against 1–7 simulated opponents, including the sequential drop-then-pickup animation, reduced-motion support, saved progress, and rule downloads.
+- **Local Practice** is available to a valid guest or registered session for browser-local games against 1–7 simulated opponents, including the sequential drop-then-pickup animation, reduced-motion support, saved progress, and rule downloads. This is not a guarantee of offline PWA startup.
 
 ### Guided gameplay controls
 
@@ -45,7 +45,7 @@ The countdown sits beside the active player's profile, warns at 15 seconds, and 
 
 ### Player hand presentation
 
-Mobile local and online hands use one adaptive overlapping row at every count, with raised selected cards and keyboard focus outlines. Desktop retains its existing rows. The hand summary shows the total points and cumulative score; individual card point labels are omitted. Your profile image or initials appear beside your hand, with initials used if an image fails to load. “Round Joker” is the display name for the existing per-round zero-value rank; its rules have not changed.
+Local and online hands use the shared adaptive overlapping row at every count, with raised selected cards and keyboard focus outlines on mobile and desktop. The hand summary shows the total points and cumulative score; individual card point labels are omitted. Your profile image or initials appear beside your hand, with initials used if an image fails to load. “Round Joker” is the display name for the existing per-round zero-value rank; its rules have not changed.
 
 ### Drop-first opening and pickup eligibility
 
@@ -106,6 +106,8 @@ For example, if the final two players each have 99 cumulative points and tie on 
 The linked documents contain the detailed scoring, hand-privacy, penalty, and draw-pile exhaustion rules. Online rooms enforce hand privacy and deadlines on the server. Room hosts may choose a positive custom elimination cutoff or disable turn deadlines; other rules are unchanged.
 
 ## Development
+
+Permanent development instructions are in [AGENTS.md](AGENTS.md), with on-demand repository skills under [.agents/skills](.agents/skills/). Use [ARCHITECTURE.md](ARCHITECTURE.md), [GAME_RULES.md](GAME_RULES.md), and [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for implementation references. These distinguish verified behavior from historical documentation and pending work. The physical iPhone first-rotation Lounge layout issue remains [open (#63)](https://github.com/chavaphanish/least-count/issues/63).
 
 Use Node.js 24 (see `.nvmrc`) and npm. Node.js 22.12+ within 22.x is also supported.
 
@@ -257,7 +259,7 @@ wrangler.jsonc            Worker/assets, SQLite Durable Object bindings and migr
 .dev.vars.example         Public provider configuration placeholders
 ```
 
-Registered access uses verified email/password only. Email confirmation and password recovery retain Supabase PKCE, persisted SDK sessions and automatic token refresh. The Worker verifies every bearer token using Supabase `getUser`, requires a verified email, and accesses profiles/Storage with the caller's JWT and public publishable key. No service-role key is used. Profile UUIDs come from verified identity. Emails and account timestamps are returned only by the private self-session endpoint; room projections contain only public names/avatars, presence, scores, and visible cards.
+Registered access uses verified email/password only. Email confirmation and password recovery retain Supabase PKCE, persisted SDK sessions and automatic token refresh. The Worker verifies every bearer token using Supabase `getUser`, requires a verified email, and accesses profiles/Storage with the caller's JWT and public publishable key. These caller-authorized profile operations do not use a service-role key; privileged career ingestion, access validation and account deletion use server-only credentials as described in [ARCHITECTURE.md](ARCHITECTURE.md). Profile UUIDs come from verified identity. Room responses use an explicit per-player allowlist, including membership timing fields, without email addresses, bearer credentials, hidden opponent hands or closed Draw Pile order. See [ARCHITECTURE.md](ARCHITECTURE.md) for the public/private boundaries.
 
 A single directory object reserves collision-checked six-character codes and tracks identity membership. Each room has its own Durable Object, serializing join/start/action operations and persisting state. Short-lived, single-use connection tickets keep long-lived credentials out of WebSocket URLs. Socket authorization expires with the originating session; reconnect obtains a fresh verified ticket. Requests enforce same-origin mutation checks and bounded payloads. The server supplies actor IDs and securely randomized dealing; clients cannot start for another host or submit another player's turn. Request IDs prevent replaying accepted socket actions. Alarms enforce timed turns independently of browser clocks.
 
@@ -295,7 +297,7 @@ Set runtime variables using Cloudflare configuration for both deployment and pre
 2. Deploy a reviewed build and test verified email access and profile storage against the real project.
 3. Playtest registered/guest mixed rooms and reconnection on real mobile networks. Record new rule decisions before changing gameplay.
 
-Substantial changes use pull requests; this feature must not merge automatically. Small trivial updates may go directly to `main` when authorized.
+Follow [AGENTS.md](AGENTS.md) for task classification and Git workflow: PATCH uses the current branch without a PR; MINOR/MAJOR use dedicated branches and PRs. Respect repository protections and required checks, and merge/deploy only within the user’s authorization.
 
 Registered player identities display first and last name together with @username; legacy accounts without names use their username until completed in My Profile. Email and authentication data remain private. Apply the additive [public identity migration](supabase/migrations/202611100002_public_player_names.sql) after the signup migration; it changes no stored accounts or career records.
 
