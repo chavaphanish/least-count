@@ -32,9 +32,13 @@ function mobileDevice() {
   )
 }
 function dimensions() {
+  const visual = window.visualViewport
+  // iOS can briefly report the previous orientation's visual viewport at launch.
+  const usable = visual && visual.width > 0 && visual.height > 0 &&
+    (visual.scale !== 1 || Math.abs(visual.width - innerWidth) < 80)
   return {
-    width: Math.round(window.visualViewport?.width ?? innerWidth),
-    height: Math.round(window.visualViewport?.height ?? innerHeight),
+    width: Math.round(usable ? Math.min(visual.width, innerWidth) : innerWidth),
+    height: Math.round(usable ? Math.min(visual.height, innerHeight) : innerHeight),
   }
 }
 export function MobileOrientation({ children }: { children: ReactNode }) {
@@ -64,7 +68,9 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
   const baseline = useRef(dimensions())
   const requested = useRef(false)
   const keyboardVisible = useRef(false)
-  useEffect(() => {
+  useLayoutEffect(() => {
+    let frame = 0
+    let settling: ReturnType<typeof setTimeout>[] = []
     const update = () => {
       const size = dimensions()
       const input =
@@ -83,19 +89,44 @@ export function MobileOrientation({ children }: { children: ReactNode }) {
           !!document.querySelector('form:focus-within') ||
           keyboardVisible.current)
       keyboardVisible.current = keyboard
-      setViewport({ mobile, ...size, keyboard })
-      if (mobile) window.scrollTo(0, 0)
+      setViewport(previous => previous.width === size.width &&
+        previous.height === size.height && previous.keyboard === keyboard
+        ? previous : { mobile, ...size, keyboard })
+      if (mobile && (window.scrollX || window.scrollY)) window.scrollTo(0, 0)
     }
-    window.visualViewport?.addEventListener('resize', update)
+    const cancelSettling = () => {
+      cancelAnimationFrame(frame)
+      settling.forEach(clearTimeout)
+      settling = []
+    }
+    const stabilize = () => {
+      cancelSettling()
+      update()
+      if (!mobile) return
+      // Safari's standalone launch/rotation measurements may settle without another event.
+      frame = requestAnimationFrame(update)
+      settling = [100, 250, 500, 1000, 1500].map(delay => setTimeout(update, delay))
+    }
+    const resume = () => { if (document.visibilityState === 'visible') stabilize() }
+    window.visualViewport?.addEventListener('resize', stabilize)
     window.visualViewport?.addEventListener('scroll', update)
-    window.addEventListener('resize', update)
+    window.addEventListener('resize', stabilize)
+    window.addEventListener('orientationchange', stabilize)
+    screen.orientation?.addEventListener('change', stabilize)
+    window.addEventListener('pageshow', stabilize)
+    document.addEventListener('visibilitychange', resume)
     document.addEventListener('focusin', update)
     document.addEventListener('focusout', update)
-    update()
+    stabilize()
     return () => {
-      window.visualViewport?.removeEventListener('resize', update)
+      cancelSettling()
+      window.visualViewport?.removeEventListener('resize', stabilize)
       window.visualViewport?.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
+      window.removeEventListener('resize', stabilize)
+      window.removeEventListener('orientationchange', stabilize)
+      screen.orientation?.removeEventListener('change', stabilize)
+      window.removeEventListener('pageshow', stabilize)
+      document.removeEventListener('visibilitychange', resume)
       document.removeEventListener('focusin', update)
       document.removeEventListener('focusout', update)
     }

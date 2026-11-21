@@ -106,6 +106,7 @@ test('portrait guard covers initial loading and unauthenticated entry', async ({
 test('portrait hides an already-open modal and preserves selection, state and deadline', async ({
   page,
 }) => {
+  await mock(page)
   const game = auditGame()
   await page.clock.install({ time: game.deadline! - 90_000 })
   await page.clock.pauseAt(game.deadline! - 59_999)
