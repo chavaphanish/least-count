@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - Versions follow **Semantic Versioning (`MAJOR.MINOR.PATCH`)** under [AGENTS.md](AGENTS.md): PATCH for small fixes/UI adjustments, MINOR for features/medium functionality changes, and MAJOR for redesigns/architecture/breaking upgrades. Increment once per implementation task; documentation-only maintenance does not bump the application version. `package.json` carries the web version. The earlier `1.1.x` releases retain their recorded history.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.5.0 — 2026-11-22
+
+- Added an interactive three-player Lounge tutorial with deterministic card play, replayable lessons, both Least outcomes and simulated next-round readiness.
+
 ## 1.4.0 — 2026-11-21
 
 - Compact round results, final standings and scorecards show every player. Multiplayer adds synchronized readiness, confirmed match forfeits and a shared return to the same waiting lobby for rematches.
