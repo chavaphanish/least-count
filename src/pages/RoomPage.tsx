@@ -373,7 +373,7 @@ export function RoomPage({
           {g.result && (
             <section className="round-summary">
               <div className="result-intro"><h2>{resultTitle(players, g.result, g.phase === 'game-over')}</h2></div>
-              <ResultScores players={players} result={g.result} final={g.phase === 'game-over'} quitters={room.quitters}/>
+              <ResultScores players={players} hands={g.completedHands} result={g.result} final={g.phase === 'game-over'} quitters={room.quitters}/>
               <div className="result-actions">
                 {error && <p role="alert">{error}</p>}
                 {g.phase === 'game-over' ? <button className="button button-primary" disabled={busy || connection !== 'live' || room.returned?.includes(id)}

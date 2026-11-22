@@ -112,6 +112,7 @@ export type PublicGamePlayer = PublicPlayer & {
   eliminationReason?: 'score' | 'timeout'
 }
 export type GameView = {
+  completedHands?: Record<string, GameCard[]>
   career?: { gameId: string; eligible: boolean; synced: boolean }
   phase: Phase
   round: number

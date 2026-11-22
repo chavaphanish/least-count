@@ -56,6 +56,7 @@ export function isSavedGame(value: unknown): value is GameState {
           typeof p.eliminated === 'boolean' &&
           (p.forfeited === undefined || typeof p.forfeited === 'boolean') &&
           (!p.forfeited || (p.hand.length === 0 && typeof p.forfeitTotal === 'number' && Number.isFinite(p.forfeitTotal) && p.forfeitTotal >= 0)) &&
+          (p.terminalHand === undefined || (Array.isArray(p.terminalHand) && p.terminalHand.every(validCard))) &&
           Array.isArray(p.hand) &&
           p.hand.every(validCard) &&
           (!p.eliminated || p.hand.length === 0),

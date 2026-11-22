@@ -446,3 +446,21 @@ it('preserves scores on quit, rejects rejoining that match and resets only after
   join(r, person('Host'), 5)
   expect(r.members).toHaveLength(3)
 })
+
+it('reveals ordered hands only between rounds, including the hand cleared on timeout', () => {
+  const r = full(3)
+  start(r,r.hostId,0,()=>.5)
+  const g = r.game!
+  const player = g.players[g.current]
+  const original = structuredClone(player.hand)
+  expect(view(r,r.hostId,1).game).not.toHaveProperty('completedHands')
+  sweep(r,g.deadline!)
+  expect(view(r,r.hostId,45000).game).not.toHaveProperty('completedHands')
+  expect(r.game!.players.find(p=>p.id===player.id)!.hand).toEqual([])
+  const next = r.game!.players[r.game!.current]
+  r.game!.phase = 'turn'
+  next.hand = [createCard('clubs','A')]
+  r.members.forEach(m=>{m.connected=true;m.lastSeen=45001})
+  gameAction(r,next.id,{type:'show'},45001)
+  for (const seat of r.members) expect(view(r,seat.id,45001).game!.completedHands?.[player.id]).toEqual(original)
+})

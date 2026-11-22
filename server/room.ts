@@ -4,6 +4,7 @@ import type { CareerState } from './career'
 import { gameEvents } from '../src/game/events'
 import {
   applyAction,
+  completedHands,
   quitMatch,
   canShow,
   createGame,
@@ -426,6 +427,7 @@ export function view(r: RoomRecord, id: string, now: number): RoomView {
           penalty: g.sevens?.amount ?? 0,
           openingPenalty: g.sevens?.opening === true,
           canShow: canShow(g, id),
+          ...(g.phase === 'round-over' || g.phase === 'game-over' ? { completedHands: completedHands(g) } : {}),
           result: withPlayerNames(g.result, r.members),
           log: g.log,
           events: withPlayerNames(gameEvents(g), r.members),

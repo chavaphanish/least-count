@@ -24,3 +24,29 @@ test('all eight scores and both round actions fit iPhone landscape', async ({pag
   await confirm.getByRole('button',{name:'Cancel'}).click()
   await expect(panel).toBeVisible()
 })
+
+for (const count of [2,8]) for (const final of [false,true]) {
+  test(`ordered hands fit for ${count} players at ${final ? 'game' : 'round'} completion`,async({page})=>{
+    await mock(page)
+    const game=auditGame(count,15)
+    const expected=game.players.map(p=>p.hand.map(card=>card.rank==='PJ'?'Printed Joker':`${card.rank} of ${card.suit}`))
+    game.phase=final?'game-over':'round-over'
+    game.deadline=null
+    game.result={reason:'last-player',winners:['p0'],scores:[]}
+    if(final) for (const player of game.players.slice(1)) {
+      player.eliminated=true
+      player.terminalHand=player.hand
+      player.hand=[]
+    }
+    await page.addInitScript(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game})
+    await page.goto('/#/game')
+    const panel=page.locator('.round-summary')
+    await expect(panel.getByRole('columnheader',{name:'Hand',exact:true})).toBeVisible()
+    for(let i=0;i<count;i++){
+      const cards=panel.locator('tbody tr').nth(i).locator('.score-hand .playing-card')
+      expect(await cards.evaluateAll(els=>els.map(el=>el.getAttribute('aria-label')))).toEqual(expected[i])
+      await expect(cards.last()).toBeInViewport({ratio:1})
+    }
+    expect(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1 && el.scrollHeight<=el.clientHeight+1)).toBe(true)
+  })
+}

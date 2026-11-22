@@ -497,3 +497,12 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 .compact-scorecard tr[data-winner=true] { color: var(--gold); }
 [data-mobile-device] .round-summary .result-scores { align-self: center; }
 .active-game:has(> .round-summary) > :is(.gameplay-stage,.desktop-scorecard,.mobile-game-bar,.game-below-table,.match-toolbar,.room-settings-summary,.room-code-panel,.field-hint) { display: none; }
+
+.compact-scorecard[data-hands] { table-layout:fixed; --result-card-width:clamp(14px,calc(39dvh / var(--score-rows)),42px); }
+.compact-scorecard[data-hands] .hand-column { width:34%; }
+.compact-scorecard[data-hands] :is(td,th) { white-space:normal; overflow-wrap:anywhere; }
+.score-hand { display:grid; grid-template-columns:repeat(calc(var(--hand-count) - 1),minmax(0,1fr)) var(--result-card-width); width:min(100%,calc(var(--result-card-width) * (1 + (var(--hand-count) - 1) * .55))); box-sizing:border-box; }
+.score-hand .playing-card { --card-width:var(--result-card-width);border-radius:3px; }
+.score-hand .card-corner,.score-hand .joker-corner { left:1px;top:1px;font-size:clamp(7px,calc(var(--card-width)*.25),11px); }
+.score-hand .card-corner small { margin:0; }
+.score-hand .card-corner-bottom { inset:auto 1px 1px auto; }

@@ -19,6 +19,7 @@ export type Player = {
   eliminated: boolean
   forfeited?: boolean
   forfeitTotal?: number
+  terminalHand?: GameCard[]
   eliminationReason?: 'score' | 'timeout'
 }
 export type RoundScore = {
@@ -92,6 +93,17 @@ export const pickupCards = (s: GameState): GameCard[] =>
   s.discards.flat().filter((c) => c.rank !== '7' && s.eligible.includes(c.id))
 export const isPlaying = (s: GameState) =>
   ['turn', 'draw', 'penalty'].includes(s.phase)
+/** Only publish cards once the authoritative round has settled. */
+export function completedHands(game: GameState): Record<string, GameCard[]> | undefined {
+  if (game.phase !== 'round-over' && game.phase !== 'game-over') return undefined
+  const hands: Record<string, GameCard[]> = {}
+  for (const p of game.players) {
+    // Older saves may have already discarded an eliminated or forfeited hand.
+    if (p.terminalHand || p.hand.length || (!p.eliminated && !p.forfeited))
+      hands[p.id] = p.terminalHand ?? p.hand
+  }
+  return hands
+}
 export const canShow = (s: GameState, playerId: string) =>
   s.phase === 'turn' &&
   !s.legacyOpeningDrawn &&
@@ -238,6 +250,7 @@ function settle(
     if (player.score >= gameSettings(s).eliminationThreshold) {
       player.eliminated = true
       player.eliminationReason = 'score'
+      player.terminalHand ??= player.hand
       player.hand = []
     }
     return {
@@ -399,6 +412,7 @@ function startRound(s: GameState, now: number, random: () => number) {
   s.indicator = indicator
   s.drawPile = cards
   for (const player of s.players) {
+    if (!player.eliminated) delete player.terminalHand
     player.hand = player.eliminated ? [] : s.drawPile.splice(-7)
   }
   s.discards = [[s.drawPile.pop()!]]
@@ -499,6 +513,7 @@ export function quitMatch(state: GameState, id: string, now: number, random = Ma
   const player = s.players[index]
   if (!player || s.phase === 'game-over') throw new RuleError('This match has ended.')
   if (player.eliminated) return s
+  player.terminalHand ??= player.hand
   player.eliminated = true
   if (s.sevens) {
     s.sevens.participants = s.sevens.participants.filter(i => i !== index)
@@ -546,6 +561,7 @@ export function applyAction(
   if (s.deadline !== null && now >= s.deadline) {
     const player = s.players[s.current]
     if (player.forfeited) throw new RuleError('This player already forfeited the round.')
+    player.terminalHand = player.hand
     player.forfeitTotal = handTotal(player.hand, s.indicator.rank)
     player.forfeited = true
     player.score += 40
