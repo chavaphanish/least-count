@@ -1,3 +1,4 @@
+import { guestOperation, sweepGuestVisits } from './guest-visits'
 import { presenceOperation, sweepPresence } from './presence'
 import { stepErasure } from './account-deletion'
 import type { ErasureJob, ErasureResult } from './account-deletion'
@@ -23,11 +24,8 @@ import type { RoomRecord } from './room'
 import {
   HEARTBEAT_MS,
   LOBBY_GRACE_MS,
-  displayName,
 } from '../src/shared/multiplayer'
-import type { SessionUser } from '../src/shared/multiplayer'
 
-type Guest = { user: SessionUser; expiresAt: number }
 type Reservation = { id: string; code: string }
 export class Directory {
   constructor(
@@ -68,43 +66,12 @@ export class Directory {
           if(bucket.count>limit)throw new ApiError(429,'Too many attempts.')
           return json({ok:true})
         }
-        if (path === '/guest') {
-          const name = displayName(data.displayName)
-          const token = randomToken()
-          const id = `guest:${crypto.randomUUID()}`
-          const now = new Date().toISOString()
-          const guest: Guest = {
-            user: {
-              player: {
-                id,
-                displayName: name,
-                avatarUrl: null,
-                accountType: 'guest',
-              },
-              email: null,
-              createdAt: now,
-              lastActiveAt: now,
-            },
-            expiresAt: Date.now() + 604800000,
+        if (['/guest', '/logout', '/session', '/guest-stats'].includes(path)) {
+          try {
+            return await guestOperation(this.ctx.storage, this.env, path, data)
+          } catch (error) {
+            return failure(error)
           }
-          await this.ctx.storage.put(`session:${await hash(token)}`, guest)
-          return json({ ...guest, token })
-        }
-        if (path === '/session' || path === '/logout') {
-          const token = typeof data.token === 'string' ? data.token : ''
-          if (!/^[a-f0-9]{64}$/.test(token)) return json(null)
-          const key = `session:${await hash(token)}`
-          const guest = await this.ctx.storage.get<Guest>(key)
-          if (!guest || guest.expiresAt <= Date.now()) {
-            await this.ctx.storage.delete(key)
-            return json(null)
-          }
-          if (path === '/logout') await this.ctx.storage.delete(key)
-          else {
-            guest.user.lastActiveAt = new Date().toISOString()
-            await this.ctx.storage.put(key, guest)
-          }
-          return json(guest)
         }
         if (path === '/lookup')
           return json(
@@ -243,6 +210,7 @@ export class Directory {
       }
       await this.ctx.blockConcurrencyWhile(async()=>{
         next=await sweepPresence(this.ctx.storage,now)
+        if (await this.ctx.storage.get('guest-schema')) next=Math.min(next,sweepGuestVisits(this.ctx.storage,now,this.env))
         const latest=await this.ctx.storage.list<ErasureResult>({prefix:'erasure-job:'})
         for(const value of latest.values())next=Math.min(next,'nextAt' in value?value.nextAt:value.expires)
         const bucket=await this.ctx.storage.get<{expires:number}>('access-rate')
@@ -443,6 +411,7 @@ export class GameRoom {
           if (r.game && r.quitters?.includes(identity.id) && url.pathname !== '/quit') throw new ApiError(403, 'You forfeited this game.')
           const currentMember = member(r, identity.id)
           // Refresh public identity on authenticated view/ticket requests after profile edits.
+          if (identity.accountType === 'guest' && identity.username) currentMember.username = identity.username
           currentMember.displayName = identity.displayName
           currentMember.avatarUrl = identity.avatarUrl
           if (url.pathname === '/ticket') {

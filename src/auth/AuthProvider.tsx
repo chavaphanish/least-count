@@ -33,9 +33,9 @@ function useAuthentication() {
   const sessionRevision = useRef(0)
   const activeBoot = useRef<AbortController | null>(null)
   const [configured, setConfigured] = useState(false)
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (observe = false) => {
     const revision = ++sessionRevision.current
-    const session = await services.session()
+    const session = await services.session(undefined, observe)
     if (revision !== sessionRevision.current) return session
     setState((s) => ({ ...s, ...session, status: 'ready', error: '' }))
     return session
@@ -143,12 +143,33 @@ function useAuthentication() {
     })
     return () => data.subscription.unsubscribe()
   }, [configured, services, refresh])
-  const guest = async (name: string) => {
+  const guestId = state.user?.player.accountType === 'guest' ? state.user.player.id : null
+  useEffect(() => {
+    if (!guestId) return
+    let interacted = false
+    const activity = () => { interacted = true }
+    const check = () => {
+      if (document.hidden) return
+      void refresh(!interacted).catch(() => {})
+      interacted = false
+    }
+    window.addEventListener('pointerdown', activity)
+    window.addEventListener('keydown', activity)
+    document.addEventListener('visibilitychange', check)
+    const timer = window.setInterval(check, 60_000)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('pointerdown', activity)
+      window.removeEventListener('keydown', activity)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [guestId, refresh])
+  const guest = async (name: string, analyticsConsent: boolean) => {
     if (services.provider)
       await services.provider.auth.signOut({ scope: 'local' })
     await services.api('/guest', {
       method: 'POST',
-      body: JSON.stringify({ displayName: name }),
+      body: JSON.stringify({ displayName: name, analyticsConsent }),
     })
     await refresh()
   }

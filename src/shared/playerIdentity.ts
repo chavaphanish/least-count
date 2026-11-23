@@ -11,6 +11,8 @@ export type PlayerIdentityData = {
 export function playerIdentity(player: PlayerIdentityData) {
   const name = [player.firstName, player.lastName].filter(Boolean).join(' ').trim()
   const handle = player.username ? `@${player.username.replace(/^@/, '')}` : ''
+  if (player.accountType === 'guest' && handle && player.displayName !== player.username)
+    return { primary: player.displayName, secondary: handle, label: player.displayName + ' (' + handle + ')' }
   const primary = name || handle || player.displayName
   return { primary, secondary: name ? handle : '', label: name && handle ? `${name} (${handle})` : primary }
 }

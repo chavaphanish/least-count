@@ -42,6 +42,8 @@ test('restores a server guest across refresh and clears it on sign out', async (
   const response = await page.request.get('/api/session')
   const before = await response.json()
   expect(before.user.player.id).toMatch(/^guest:/)
+  expect(before.user.player.username).toMatch(/^guest[1-9]\d{4}$/)
+  await expect(page.locator('.header-profile-lines small')).toHaveText('@' + before.user.player.username)
   const cookies = await context.cookies()
   expect(cookies.find((cookie) => cookie.name === 'lc_guest')?.httpOnly).toBe(
     true,

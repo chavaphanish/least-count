@@ -11,6 +11,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
   const [mode, setMode] = useState<'signin' | 'signup' | 'guest' | 'reset'>(
     'signin',
   )
+  const [analyticsConsent, setAnalyticsConsent] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +24,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
     setNotice('')
     setBusy(true)
     try {
-      if (mode === 'guest') await auth.guest(displayName(name))
+      if (mode === 'guest') await auth.guest(name.trim() ? displayName(name) : '', analyticsConsent)
       else {
         const provider = auth.services.provider
         if (!provider)
@@ -119,7 +120,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
               <label>
                 <span className="visually-hidden">Display name</span>
                 <input
-                  required
                   minLength={2}
                   maxLength={24}
                   autoComplete="nickname"
@@ -184,8 +184,8 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
         )}
         {mode === 'guest' && (
           <p className="account-fineprint">
-            No email required. Your server-verified guest session lasts up to
-            seven days. Keep this browser’s cookies to recover your seat.
+            Guest visits and session times are recorded. Guests expire after 30 minutes of inactivity.
+            <label><input type="checkbox" checked={analyticsConsent} onChange={e => setAnalyticsConsent(e.target.checked)} /> Allow IP and device details for visitor statistics (optional).</label>
           </p>
         )}
       </div>

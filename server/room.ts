@@ -55,7 +55,7 @@ export const secureRandom = () =>
 export const publicPlayer = (p: PublicPlayer): PublicPlayer => ({
   id: p.id,
   displayName: p.displayName,
-  ...(p.accountType === 'registered' ? { username: p.username, firstName: p.firstName, lastName: p.lastName } : {}),
+  ...(p.accountType === 'registered' ? { username: p.username, firstName: p.firstName, lastName: p.lastName } : p.username ? { username: p.username } : {}),
   avatarUrl: p.avatarUrl,
   accountType: p.accountType,
 })

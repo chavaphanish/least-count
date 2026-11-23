@@ -1,3 +1,4 @@
+import { visitorMetadata } from './guest-visits'
 import { presenceApi, clearPresence } from './presence'
 import { startDeletion, deletionStatus } from './account-deletion'
 import { accessLimit, availability, login, register } from './access'
@@ -57,9 +58,18 @@ export default {
           : null
         return json({ user: auth?.user ?? null, room: membership })
       }
+      if (url.pathname === '/api/admin/guest-stats' && request.method === 'GET') {
+        const digest = (value: string) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+        if (!env.GUEST_STATS_TOKEN || !crypto.subtle.timingSafeEqual(await digest(request.headers.get('Authorization') ?? ''), await digest('Bearer ' + env.GUEST_STATS_TOKEN)))
+          throw new ApiError(403, 'Administrator authorization required.')
+        return await directory(env, '/guest-stats', {})
+      }
       if (url.pathname === '/api/guest' && request.method === 'POST') {
         const input = await body(request)
+        await accessLimit(request, env, 'guest')
         const response = await directory(env, '/guest', {
+          token: cookie(request),
+          ...visitorMetadata(request, input.analyticsConsent === true),
           displayName: input.displayName,
         })
         if (!response.ok) return response
@@ -72,7 +82,7 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store',
-            'Set-Cookie': guestCookie(request, guest.token),
+            ...(guest.token ? { 'Set-Cookie': guestCookie(request, guest.token) } : {}),
           },
         })
       }
@@ -94,7 +104,8 @@ export default {
             )
         }
         if(auth?.uid)await clearPresence(request,env,auth.uid)
-        await directory(env, '/logout', { token: cookie(request) })
+        const revoked = await directory(env, '/logout', { token: cookie(request) })
+        if (!revoked.ok) return revoked
         return new Response(JSON.stringify({ ok: true }), {
           headers: {
             'Content-Type': 'application/json',
