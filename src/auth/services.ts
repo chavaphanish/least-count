@@ -102,11 +102,11 @@ export class Services {
     }
     return result as T
   }
-  session(signal?: AbortSignal) {
+  session(signal?: AbortSignal, observe = false) {
     return this.api<{
       user: SessionUser | null
       room: { id: string; code: string } | null
-    }>('/session', {}, signal)
+    }>('/session' + (observe ? '?observe=1' : ''), {}, signal)
   }
 }
 export type StartupAdapter = {

@@ -170,7 +170,8 @@ export async function authenticate(
       uid: auth.id,
     }
   }
-  const response = await directory(env, '/session', { token: cookie(request) })
+  const response = await directory(env, '/session', { token: cookie(request), observe: new URL(request.url).searchParams.get('observe') === '1' })
+  if (!response.ok) throw new ApiError(503, 'Guest session verification unavailable.')
   const guest = (await response.json()) as {
     user: SessionUser
     expiresAt: number
