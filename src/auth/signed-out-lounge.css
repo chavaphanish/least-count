@@ -23,7 +23,7 @@
 .signed-out-lounge .access-story h1.access-promise {
   display: grid;
   margin: 0;
-  font: 500 clamp(16px, 10.5cqi, 64px)/1.04 'DM Sans', sans-serif;
+  font: 700 clamp(16px, 10cqi, 64px)/1.04 'DM Sans', sans-serif;
   color: var(--gold);
   white-space: nowrap;
 }
@@ -31,13 +31,15 @@
   max-width: 40ch;
   margin: 0;
   font-size: clamp(12px, 1.25vw, 17px);
+  font-weight: 700;
   line-height: 1.45;
   text-wrap: pretty;
 }
 .signed-out-lounge .access-card {
   justify-self: center;
-  display: grid;
-  align-content: center;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 460px;
   min-width: 0;
@@ -45,6 +47,17 @@
   gap: clamp(6px, 1.4vh, 14px);
   border-radius: var(--ui-radius);
   background: var(--ui-panel);
+}
+.signed-out-lounge .signup-wizard {
+  display: flex;
+  flex-direction: column;
+}
+.signed-out-lounge .access-card :is(form, .signup-wizard) {
+  flex: 1 0 auto;
+}
+.signed-out-lounge .access-card form:not([data-form-steps]) {
+  align-content: space-evenly;
+  align-items: center;
 }
 .signed-out-lounge .access-tabs {
   display: grid;
@@ -91,7 +104,7 @@
 }
 [data-keyboard] .app-shell[data-access] { grid-template-rows: 28px minmax(0, 1fr); }
 [data-keyboard] .access-page.signed-out-lounge { grid-template-columns: minmax(0, 1fr); padding: 2px 6px; gap: 2px; }
-[data-keyboard] .signed-out-lounge .access-card { max-width: none; padding: 2px 8px; }
+[data-keyboard] .signed-out-lounge .access-card { display: grid; align-content: center; max-width: none; padding: 2px 8px; }
 [data-keyboard] .signed-out-lounge :is(.access-story, .access-options) { display: none; }
 
 /* Signed-out header height stays independent of the authenticated controls row. */

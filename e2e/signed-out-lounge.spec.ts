@@ -15,10 +15,13 @@ async function fits(page: Page) {
       const r = el.getBoundingClientRect()
       return r.left < 0 || r.right > innerWidth + 1 || r.top < 0 || r.bottom > innerHeight + 1 ? [{ tag: el.tagName, text: el.textContent, bottom: r.bottom }] : []
     })
-    return { columns: welcome.right <= card.left && Math.max(welcome.bottom, card.bottom) <= footer.top && welcome.top >= document.querySelector('.site-header')!.getBoundingClientRect().bottom,
+    const styles = getComputedStyle(root)
+    const panelTop = root.getBoundingClientRect().top + parseFloat(styles.borderTopWidth) + parseFloat(styles.paddingTop)
+    const fillsColumn = Math.abs(card.top - panelTop) <= 1 && Math.abs(card.bottom + parseFloat(styles.rowGap) - footer.top) <= 1
+    return { fillsColumn, columns: welcome.right <= card.left && Math.max(welcome.bottom, card.bottom) <= footer.top && welcome.top >= document.querySelector('.site-header')!.getBoundingClientRect().bottom,
       noPageScroll: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight, overflow }
   })
-  expect(geometry).toEqual({ columns: true, noPageScroll: true, overflow: [] })
+  expect(geometry).toEqual({ fillsColumn: true, columns: true, noPageScroll: true, overflow: [] })
 }
 for (const [width, height] of [[1280, 800], [1024, 768], [844, 390], [667, 375], [568, 320], [480, 320]]) test(`signed-out Lounge fits two columns in all form modes without scrolling at ${width}x${height}`, async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width, height }, ...(width <= 1024 ? { isMobile: true, hasTouch: true, userAgent: width === 1024 ? iphone.replaceAll('iPhone','iPad') : iphone } : {}) })
@@ -26,6 +29,8 @@ for (const [width, height] of [[1280, 800], [1024, 768], [844, 390], [667, 375],
     const page = await context.newPage(); await signedOut(page); await page.goto('/')
     await expect(page.getByRole('heading', { name: /Seven Cards/ })).toBeVisible()
     await expect(page.locator('.signed-out-lounge .brand-wordmark, .signed-out-lounge .brand-subtitle')).toHaveCount(0)
+    await expect(page.locator('.access-promise')).toHaveCSS('font-weight', '700')
+    await expect(page.locator('.access-invitation')).toHaveCSS('font-weight', '700')
     await expect(page.locator('.access-promise span')).toHaveText(['Seven Cards.', 'One Goal.', 'Lowest Score Wins!'])
     await expect(page.getByText(/Challenge your friends, outsmart your opponents/)).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Play Game', exact: true })).toHaveCount(0)
