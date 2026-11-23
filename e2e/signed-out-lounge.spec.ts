@@ -15,13 +15,13 @@ async function fits(page: Page) {
       const r = el.getBoundingClientRect()
       return r.left < 0 || r.right > innerWidth + 1 || r.top < 0 || r.bottom > innerHeight + 1 ? [{ tag: el.tagName, text: el.textContent, bottom: r.bottom }] : []
     })
-    return { stacked: welcome.bottom <= card.top && card.bottom <= footer.top && welcome.top >= document.querySelector('.site-header')!.getBoundingClientRect().bottom, width: welcome.width === card.width,
+    return { columns: welcome.right <= card.left && Math.max(welcome.bottom, card.bottom) <= footer.top && welcome.top >= document.querySelector('.site-header')!.getBoundingClientRect().bottom,
       noPageScroll: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight, overflow }
   })
-  expect(geometry).toEqual({ stacked: true, width: true, noPageScroll: true, overflow: [] })
+  expect(geometry).toEqual({ columns: true, noPageScroll: true, overflow: [] })
 }
-for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], [480, 320]]) test(`signed-out Lounge stacks all form modes without scrolling at ${width}x${height}`, async ({ browser }) => {
-  const context = await browser.newContext({ viewport: { width, height }, ...(width < 1000 ? { isMobile: true, hasTouch: true, userAgent: iphone } : {}) })
+for (const [width, height] of [[1280, 800], [1024, 768], [844, 390], [667, 375], [568, 320], [480, 320]]) test(`signed-out Lounge fits two columns in all form modes without scrolling at ${width}x${height}`, async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width, height }, ...(width <= 1024 ? { isMobile: true, hasTouch: true, userAgent: width === 1024 ? iphone.replaceAll('iPhone','iPad') : iphone } : {}) })
   try {
     const page = await context.newPage(); await signedOut(page); await page.goto('/')
     await expect(page.getByRole('heading', { name: /Seven Cards/ })).toBeVisible()
@@ -45,6 +45,13 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
     expect(brand.ratio).toBeCloseTo(.9, 1)
     expect(brand.alignment).toBeLessThan(1)
     expect(brand.gap).toBeLessThan(4)
+    if (width === 844) {
+      await page.addStyleTag({content: '.app-shell[data-access] { --mobile-safe-left: 47px; --mobile-safe-right: 47px; --mobile-safe-bottom: 21px; }'})
+      const box = await page.locator('.signed-out-lounge').boundingBox()
+      expect(box!.x).toBeGreaterThanOrEqual(47)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width - 47)
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height - 21)
+    }
     await fits(page)
     await page.evaluate(() => document.fonts.ready)
     const proportions = await page.locator('.signed-out-lounge').evaluate(root => {
@@ -53,14 +60,14 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
       const text = root.querySelector('.access-invitation')!.getBoundingClientRect(), form = root.querySelector('.access-card')!.getBoundingClientRect()
       return { left: Math.abs(tagline.left - root.querySelector('.access-story')!.getBoundingClientRect().left) < 1,
         fontSize: parseFloat(getComputedStyle(root.querySelector('.access-promise')!).fontSize),
-        invitationCenter: Math.abs((text.y + text.height / 2) - (tagline.bottom + form.top) / 2),
+        introBelowTagline: text.top >= tagline.bottom && text.right <= form.left,
         logoGap: header.bottom - logo.bottom, corners: getComputedStyle(root).borderRadius,
-        box: box.bottom <= innerHeight, footer: footer.bottom <= box.bottom, nestedBorder: getComputedStyle(root.querySelector('.access-card')!).borderTopWidth }
+        box: box.bottom <= innerHeight, footer: footer.bottom <= box.bottom }
     })
-    expect(proportions).toMatchObject({ left: true, corners: width < 1000 ? '18px' : '24px', box: true, footer: true, nestedBorder: '0px' })
+    expect(proportions).toMatchObject({ left: true, corners: width <= 1024 ? '18px' : '24px', box: true, footer: true })
     expect(proportions.logoGap).toBeGreaterThan(4)
-    expect(proportions.fontSize).toBeGreaterThan(width < 1000 ? 20 : 45)
-    expect(proportions.invitationCenter).toBeLessThan(1)
+    expect(proportions.fontSize).toBeGreaterThanOrEqual(16)
+    expect(proportions.introBelowTagline).toBe(true)
     await page.getByRole('button', { name: 'Login as Guest', exact: true }).click(); await fits(page)
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
     await page.getByRole('button', { name: 'Forgot password?', exact: true }).click(); await fits(page)

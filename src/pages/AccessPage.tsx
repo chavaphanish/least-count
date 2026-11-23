@@ -67,6 +67,7 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
         <div className="access-welcome-row">
           <h1 className="access-promise"><span>Seven Cards.</span><span>One Goal.</span><span>Lowest Score Wins!</span></h1>
         </div>
+        <p className="access-invitation">Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
         {invitation && (
           <p className="invitation-banner">
             Your invitation to room <strong>{invitation}</strong> will be kept
@@ -74,7 +75,6 @@ export function AccessPage({ invitation }: { invitation: string | null }) {
           </p>
         )}
       </div>
-      <p className="access-invitation">Sign up to join the fun, sign in to continue your journey, or play as a guest to jump straight into the action!</p>
       <div className="access-card">
         <div className="access-tabs" role="group" aria-label="Account access">
           {(['signin', 'signup', 'guest'] as const).map((value) => (
