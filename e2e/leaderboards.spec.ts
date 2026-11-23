@@ -45,7 +45,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
         const bottom = (await page.locator('.ranking-list').boundingBox())!
         expect(bottom.y + bottom.height).toBeLessThanOrEqual(height)
       }
-      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await page.getByRole('link', { name: 'Home', exact: true }).click()
       await expect(page.locator('.dashboard-page[data-mode=home]')).toBeVisible()
       await expect(page.locator('.leaderboard')).toHaveCount(0)
       await page.goBack()
@@ -146,7 +146,7 @@ test('guest ranking access preserves the verified-account prompt', async ({ page
   await expect(page.locator('.ranking-list')).toContainText('@lc_other')
   await page.getByRole('button', { name: 'Buddies Ranking', exact: true }).click()
   await expect(page.getByText('Create a verified account to compare with buddies.')).toBeVisible()
-  await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+  await page.getByRole('link', { name: 'Home', exact: true }).click()
   await expect(page.locator('.dashboard-page[data-mode=home]')).toBeVisible()
 })
 

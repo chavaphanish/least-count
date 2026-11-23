@@ -220,14 +220,14 @@ test('profile draft survives section changes and declined navigation', async ({
     expect(dialog.message()).toContain('Discard unsaved')
     await dialog.dismiss()
   })
-  await page.getByRole('link', { name: 'Rules', exact: true }).click()
+  await page.getByRole('link', { name: 'Home', exact: true }).click()
   await expect(page.getByLabel('Display name', { exact: true })).toHaveValue(
     'Unsent draft',
   )
   await expect(page).toHaveURL(/#\/profile$/)
   page.once('dialog', (dialog) => dialog.accept())
-  await page.getByRole('link', { name: 'Rules', exact: true }).click()
-  await expect(page).toHaveURL(/#\/rules$/)
+  await page.getByRole('link', { name: 'Home', exact: true }).click()
+  await expect(page).toHaveURL(/#\/$/)
 })
 
 test('complete guest room journey reaches results, then existing career screens', async ({
@@ -370,7 +370,7 @@ test('complete guest room journey reaches results, then existing career screens'
     await page
       .getByRole('button', { name: 'Buddies Ranking', exact: true })
       .click()
-    await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+    await page.getByRole('link', { name: 'Home', exact: true }).click()
     await expect(
       page.getByRole('heading', { name: 'Welcome back, Career Tester!' }),
     ).toBeVisible()

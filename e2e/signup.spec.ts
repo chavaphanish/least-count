@@ -163,7 +163,7 @@ test('legacy profile completion is optional for login and public names save thro
   await bounds(page)
   await keyboard(page, false)
   await bounds(page)
-  await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+  await page.getByRole('link', { name: 'Home', exact: true }).click()
   await expect(
     page.getByRole('link', { name: 'Update profile →' }),
   ).toHaveCount(0)

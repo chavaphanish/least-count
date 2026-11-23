@@ -110,7 +110,7 @@ for (const size of sizes)
         await page.getByRole('button', { name: 'Buddies Ranking' }).click()
       }
       await fits(page)
-      if (mode === 'Leaderboards' || mode === 'Settings') await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      if (mode === 'Leaderboards' || mode === 'Settings') await page.getByRole('link', { name: 'Home', exact: true }).click()
       else await page.getByRole('button', { name: 'Back to Lounge' }).click()
     }
     await page.goto('/#/profile')

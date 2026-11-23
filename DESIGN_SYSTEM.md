@@ -36,7 +36,7 @@ Root tokens in `src/styles.css`:
 - [pages/lounge.css](src/pages/lounge.css): authenticated Lounge only; do not alter the shared header through Lounge selectors.
 - [career/leaderboard.css](src/career/leaderboard.css), [career/circle.css](src/career/circle.css), [settings-panel.css](src/components/settings-panel.css): compact list/tabbed panels.
 
-Authenticated header: profile/avatar/identity and XP progress at left; Rules, Lounge, trophy, Buddies, Mailbox, Settings navigation at right. Signed-out header has branded text/tagline and Rules only. [Layout](src/components/Layout.tsx) owns it; do not recreate a header per page. The Lounge has a welcome area and 2×2 actions; Tutorial is a placeholder. **Host a Game** creates a room directly; host-only settings live in the waiting lobby.
+Authenticated header: profile/avatar/identity and XP progress at left; Home, trophy, Buddies, Mailbox, Settings navigation at right. Signed-out header has branded text/tagline and Home only. [Layout](src/components/Layout.tsx) owns it; do not recreate a header per page. The Lounge has a welcome area and 2×2 actions; Tutorial opens the guided practice round. **Host a Game** creates a room directly; host-only settings live in the waiting lobby.
 
 ## Reusable UI components
 

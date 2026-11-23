@@ -23,7 +23,7 @@ for(const [width,height]of [[1280,800],[667,375]])test(`shared online avatars ac
   await page.getByRole('link',{name:'Buddies',exact:true}).click()
   await expect(page.locator('.circle-list .presence-dot').first()).toBeVisible()
   await page.getByRole('link',{name:'Your profile',exact:true}).click();await expect(page.locator('.career-profile-header .presence-dot')).toBeVisible()
-  await page.getByRole('link',{name:'Lounge',exact:true}).click();await page.getByRole('link',{name:'Leaderboards',exact:true}).click()
+  await page.getByRole('link',{name:'Home',exact:true}).click();await page.getByRole('link',{name:'Leaderboards',exact:true}).click()
   await expect(page.locator('.leaderboard .presence-dot').first()).toBeVisible()
   expect(p.calls.filter(c=>c.heartbeat).length).toBe(1)
   expect(p.calls.every(c=>new Set(c.ids).size===c.ids.length&&c.ids.length<=100)).toBe(true)

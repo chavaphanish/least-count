@@ -96,14 +96,14 @@ for (const viewport of [
       await expect(
         page.getByRole('region', { name: 'My Profile' }),
       ).toBeVisible()
-      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await page.getByRole('link', { name: 'Home', exact: true }).click()
       for (const [name, target] of [
         ['Leaderboards', '.leaderboard'],
         ['Buddies', '.circle-panel'],
       ]) {
         await page.getByRole('link', { name, exact: true }).click()
         await expect(page.locator(target)).toBeVisible()
-        await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+        await page.getByRole('link', { name: 'Home', exact: true }).click()
       }
       expect(
         await page.locator('.dashboard-action.lounge-nav-button').count(),

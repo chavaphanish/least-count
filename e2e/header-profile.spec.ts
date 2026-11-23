@@ -28,7 +28,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320]])
       expect(barBox!.y + barBox!.height).toBeLessThanOrEqual(headerBox!.y + headerBox!.height)
       await profile.click()
       await expect(page).toHaveURL(/#\/profile$/)
-      await header.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await header.getByRole('link', { name: 'Home', exact: true }).click()
       await expect(page).toHaveURL(/#\/$/)
     } finally { await context.close() }
   })

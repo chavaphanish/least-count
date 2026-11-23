@@ -87,7 +87,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       if (width === 568) await page.screenshot({ path:'/tmp/settings-sounds-568.png' })
       await page.reload()
       await expect(page.getByRole('tab', { name: 'Account', exact: true })).toHaveAttribute('aria-selected','true')
-      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await page.getByRole('link', { name: 'Home', exact: true }).click()
       await expect(page.locator('.lounge-home')).toBeVisible()
     } finally { await context.close() }
   })

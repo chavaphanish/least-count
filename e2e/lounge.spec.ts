@@ -35,8 +35,8 @@ for (const mobile of [false, true]) {
       await page.getByRole('button', { name: 'Host a Game' }).click()
       await expect(page.getByRole('heading', { name: 'Waiting lobby' })).toBeVisible()
       await page.getByRole('button', { name: 'Leave Room', exact: true }).click()
-      await page.getByRole('link', { name: 'Rules', exact: true }).click()
-      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await page.goto('/#/rules')
+      await page.getByRole('link', { name: 'Home', exact: true }).click()
       await page.reload()
       await expect(
         page.getByRole('heading', { name: 'Welcome, Lounge Guest!' }),
@@ -55,7 +55,7 @@ for (const mobile of [false, true]) {
       await expect(
         page.getByRole('region', { name: 'My Profile' }),
       ).toBeVisible()
-      await page.getByRole('link', { name: 'Lounge', exact: true }).click()
+      await page.getByRole('link', { name: 'Home', exact: true }).click()
       await expect(page).toHaveURL(/#\/$/)
       await expect(page).toHaveTitle('YAYDU — Lounge')
       await expect(
