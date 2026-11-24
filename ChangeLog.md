@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - Versions follow **Semantic Versioning (`MAJOR.MINOR.PATCH`)** under [AGENTS.md](AGENTS.md): PATCH for small fixes/UI adjustments, MINOR for features/medium functionality changes, and MAJOR for redesigns/architecture/breaking upgrades. Increment once per implementation task; documentation-only maintenance does not bump the application version. `package.json` carries the web version. The earlier `1.1.x` releases retain their recorded history.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.7.5 — 24 November 2026
+
+- Round Results now names the winning player when a forfeit leaves one player in the round.
+
 ## 1.7.4 — 24 November 2026
 
 - Scaled the Printed Joker illustration and label to match the visual size of regular suit symbols in results hands.

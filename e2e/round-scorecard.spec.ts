@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { applyAction } from '../src/game/engine'
 import { auditGame } from './ux-fixture'
 import { mock } from './career-fixture'
 import { SESSION_KEY } from '../src/lib/session'
@@ -109,3 +110,12 @@ for (const count of [2,8]) for (const final of [false,true]) {
     expect(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1 && el.scrollHeight<=el.clientHeight+1)).toBe(true)
   })
 }
+
+test('names the winning bot when the human forfeits a two-player round', async ({page}) => {
+  await mock(page)
+  const playing = auditGame(2)
+  const game = applyAction(playing, {type: 'timeout'}, playing.deadline!)
+  await page.addInitScript(({key, game}) => sessionStorage.setItem(key, JSON.stringify(game)), {key: SESSION_KEY, game})
+  await page.goto('/#/game')
+  await expect(page.locator('.round-summary').getByRole('heading')).toHaveText('Alex wins this round')
+})

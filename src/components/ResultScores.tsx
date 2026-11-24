@@ -10,6 +10,10 @@ export function resultTitle(players: ScorePlayer[], result: RoundResult, final: 
     const winner = players.find(p => !p.eliminated)
     return winner ? `${winner.name} wins the game!` : 'Final standings'
   }
+  if (result.reason === 'last-player') {
+    const winner = players.find(p => p.id === result.winners[0])
+    if (winner) return `${winner.name} wins this round`
+  }
   const caller = result.scores.find(p => p.id === result.caller)
   if (caller) return `${players.find(p => p.id === caller.id)?.name ?? caller.name} declared a least count of ${caller.total} and ${result.successful ? 'won the round!' : 'failed!'}`
   return result.reason === 'exhaustion' ? 'Draw pile exhausted' : 'One player remains this round'
