@@ -510,21 +510,27 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 .active-game > .round-summary[data-round-results] {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto auto;
-  align-content: center;
+  grid-template-rows: auto 1fr auto;
+  font-weight: 700;
   gap: clamp(4px, 1.4dvh, 12px);
   padding: clamp(8px, 2dvh, 20px);
 }
 .round-summary[data-round-results] > * { grid-area: auto; min-width: 0; }
 .round-summary[data-round-results] .result-intro h2 {
   margin: 0;
-  font-size: clamp(18px, 5dvh, 30px);
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--gold);
+  font-size: clamp(24px, 7dvh, 38px);
   line-height: 1.1;
 }
+.round-summary[data-round-results] .result-scores { align-self: stretch; }
 .round-summary[data-round-results] .compact-scorecard {
+  height: 100%;
   --result-card-width: clamp(12px, calc(32dvh / var(--score-rows)), 32px);
   font-size: clamp(11px, 2.8dvh, 14px);
 }
+.round-summary[data-round-results] thead { height: 1px; }
 .round-summary[data-round-results] .hand-column { width: 45%; }
 .round-summary[data-round-results] .compact-scorecard :is(th, td) {
   padding: clamp(1px, .4dvh, 4px) clamp(4px, 1vw, 12px);
@@ -539,3 +545,11 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 .round-summary[data-round-results] .result-actions > p,
 .round-summary[data-round-results] .result-actions > button:only-of-type { grid-column: 1 / -1; }
 .round-summary[data-round-results] .result-actions > p { margin: 0; }
+.round-summary[data-round-results] :is(th, td, small, .button, .card-corner, .joker-corner, .joker-center) { font-weight: 700; }
+.round-summary[data-round-results] .result-actions .button { justify-content: center; text-align: center; }
+
+@media (orientation: landscape) and (max-height: 350px) {
+  .active-game > .round-summary[data-round-results] { gap: 3px; padding-block: 4px; }
+  .round-summary[data-round-results] .compact-scorecard :is(th, td) { padding-block: 0; }
+  .round-summary[data-round-results] .result-actions > .button { min-height: 36px; padding-block: 6px; }
+}
