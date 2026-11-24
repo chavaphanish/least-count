@@ -3,7 +3,6 @@ import type { Phase } from '../game/engine'
 import { cardLabel } from '../game/deck'
 import { dropLabel } from '../lib/handSelection'
 import { PlayingCard } from './PlayingCard'
-import { useMobileLandscape } from './MobileOrientation'
 
 const suits = { clubs: '♣', diamonds: '♦', hearts: '♥', spades: '♠' }
 
@@ -11,7 +10,6 @@ const suits = { clubs: '♣', diamonds: '♦', hearts: '♥', spades: '♠' }
 export function TurnActions({
   phase,
   yours,
-  activeName,
   busy = false,
   moving = false,
   hand,
@@ -19,8 +17,6 @@ export function TurnActions({
   pickups,
   canDeclare,
   penalty,
-  error,
-  feedback,
   onDrop,
   onDraw,
   onPickup,
@@ -31,7 +27,6 @@ export function TurnActions({
 }: {
   phase: Phase
   yours: boolean
-  activeName: string
   busy?: boolean
   moving?: boolean
   hand: readonly GameCard[]
@@ -39,8 +34,6 @@ export function TurnActions({
   pickups: readonly GameCard[]
   canDeclare: boolean
   penalty: number
-  error?: string
-  feedback?: string
   onDrop: () => void
   onDraw: () => void
   onPickup: (id: string) => void
@@ -50,7 +43,6 @@ export function TurnActions({
   onClear: () => void
 }) {
   const playing = ['turn', 'draw', 'penalty'].includes(phase)
-  const mobile = useMobileLandscape()
   const actionable = yours && playing && !moving
   const replacing = phase === 'draw'
   const responding = phase === 'penalty'
@@ -60,31 +52,6 @@ export function TurnActions({
     hand.some(own => own.id === card.id) && card.rank === selected[0].rank && (!responding || card.rank === '7'),
   )
   const label = dropLabel(selected)
-  let title: string
-  let instruction: string
-  if (moving) {
-    title = 'TURN IN PROGRESS'
-    instruction = 'Moving your cards…'
-  } else if (!playing) {
-    title = 'ROUND COMPLETE'
-    instruction = 'Review the results below.'
-  } else if (!yours) {
-    title = 'WAITING'
-    instruction = `Waiting for ${activeName} to play…`
-  } else if (responding) {
-    title = 'POWER CARD 7'
-    instruction = hasSeven
-      ? `Play a 7 or draw ${penalty} penalty cards`
-      : 'Drawing your penalty cards…'
-  } else if (replacing) {
-    title = 'CHOOSE YOUR REPLACEMENT CARD'
-    instruction = 'Draw a new card or pick up the available card'
-  } else {
-    title = 'YOUR TURN'
-    instruction = !hand.length
-      ? 'Your hand is empty. Declare Least.'
-      : legal ? label : 'Select cards to drop'
-  }
   return (
     <section className="turn-panel" aria-label="Turn actions" aria-busy={busy}>
       <div className="game-action-rail" role="group" aria-label="Available turn actions">
@@ -117,12 +84,6 @@ export function TurnActions({
             )}
           </>
         )}
-      </div>
-      <div className="turn-status" role="group" aria-label="Turn instructions">
-        <p className="action-stage">{title}</p>
-        <p className={`turn-message${error ? ' game-alert' : ''}`} role={error ? 'alert' : 'status'}>{error || instruction}</p>
-        {feedback && !mobile && <p className="action-hint" role="status">{feedback}</p>}
-        {!mobile && !replacing && !responding && canDeclare && !!hand.length && <p className="action-hint">You can Declare Least, or continue with a Drop.</p>}
       </div>
     </section>
   )

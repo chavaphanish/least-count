@@ -6,13 +6,11 @@ import { GuestNoticeDialog } from '../components/GuestNoticeDialog'
 import { useGameFeedback } from '../feedback/FeedbackProvider'
 import { useGameplayLoading } from '../components/NavigationLoading'
 import { ResultScores, resultTitle } from '../components/ResultScores'
-import { MobileGameBar } from '../components/MobileGameBar'
-import { OpponentSeat } from '../components/OpponentSeat'
+import { MobileGameBar, turnInstruction } from '../components/MobileGameBar'
+import { PlayerRoster } from '../components/PlayerRoster'
 import { QuitGame } from '../components/QuitGame'
-import { useActiveSeat } from '../hooks/useActiveSeat'
 import { TurnActions } from '../components/TurnActions'
-import { TurnTimer } from '../components/TurnTimer'
-import { latestActionHint, toggleHandCard } from '../lib/handSelection'
+import { toggleHandCard } from '../lib/handSelection'
 import { PlayerHand } from '../components/PlayerHand'
 import { TurnAnimation } from '../components/TurnAnimation'
 import { useRoomCardMotion } from '../hooks/useRoomCardMotion'
@@ -20,8 +18,7 @@ import { GameActivity } from '../components/GameActivity'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useRoom } from '../hooks/useRoom'
-import { gameplayIdentity, playerFirstName } from '../shared/playerIdentity'
-import { PlayerIdentity } from '../components/PlayerIdentity'
+import { playerFirstName } from '../shared/playerIdentity'
 import { PlayingCard } from '../components/PlayingCard'
 import { cardLabel, handTotal } from '../game/deck'
 export function RoomPage({
@@ -39,7 +36,6 @@ export function RoomPage({
     local
   useGameplayLoading(!!room?.game)
   useGameFeedback(room?.game ? {scope:`room:${room.matchId ?? room.id}`,revision:room.revision,round:room.game.round,phase:room.game.phase,dropIds:room.game.latestDiscard.map(c=>c.id).join(','),localId:auth.user!.player.id,currentId:room.game.currentPlayerId,players:room.game.players,events:room.game.events,deadline:room.game.deadline,now,connected:connection==='live',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
-  useActiveSeat(room?.game?.currentPlayerId)
   const id = auth.user!.player.id
   const {
     motion: animation,
@@ -172,13 +168,53 @@ export function RoomPage({
       {g && (
         <MobileGameBar
           round={g.round}
+          instruction={selectionError || turnInstruction(g.phase, yours, activeName, !!animation, g.hand, g.penalty)}
           activeName={activeName}
           seconds={final ? null : seconds}
           joker={g.indicator}
           penalty={g.penalty}
           players={players}
           onQuit={quit}
-        />
+        >
+        <div className="room-code-panel">
+          <div>
+            <span>ROOM CODE</span>
+            <strong>{room.code}</strong>
+          </div>
+          <button
+            className="button button-secondary compact-button"
+            onClick={share}
+          >
+            Share Invitation
+          </button>
+          <label className="invitation-url">
+            Invitation URL
+            <input
+              readOnly
+              value={invitation}
+              onFocus={(e) => e.target.select()}
+            />
+          </label>
+        </div>
+        <div className="room-settings-summary">
+          <span>
+            {room.settings.maxPlayers} players ·{' '}
+            {room.settings.maxPlayers <= 4 ? '1 deck' : '2 decks'}
+          </span>
+          <span>Elimination cutoff: {room.settings.eliminationThreshold}</span>
+          <span>
+            {room.settings.timedGame
+              ? 'Timed · 45 seconds'
+              : 'Untimed · no timeout forfeits'}
+          </span>
+        </div>
+
+            <p className="field-hint">
+              {g.career?.eligible
+                ? 'Career game · verified players · server-confirmed XP'
+                : 'Casual game · no permanent XP or career statistics'}
+            </p>
+        </MobileGameBar>
       )}
 
       {error && (
@@ -192,79 +228,11 @@ export function RoomPage({
       {!g ? <RoomLobby room={room} id={id} live={connection === 'live'} busy={busy}
         send={send} start={() => void command('start')} share={share} /> : (
         <>
-      <div className="room-code-panel">
-        <div>
-          <span>ROOM CODE</span>
-          <strong>{room.code}</strong>
-        </div>
-        <button
-          className="button button-secondary compact-button"
-          onClick={share}
-        >
-          Share Invitation
-        </button>
-        <label className="invitation-url">
-          Invitation URL
-          <input
-            readOnly
-            value={invitation}
-            onFocus={(e) => e.target.select()}
-          />
-        </label>
-      </div>
-      <div className="room-settings-summary">
-        <span>
-          {room.settings.maxPlayers} players ·{' '}
-          {room.settings.maxPlayers <= 4 ? '1 deck' : '2 decks'}
-        </span>
-        <span>Elimination cutoff: {room.settings.eliminationThreshold}</span>
-        <span>
-          {room.settings.timedGame
-            ? 'Timed · 45 seconds'
-            : 'Untimed · no timeout forfeits'}
-        </span>
-      </div>
-
-          <p className="field-hint">
-            {g.career?.eligible
-              ? 'Career game · verified players · server-confirmed XP'
-              : 'Casual game · no permanent XP or career statistics'}
-          </p>
-          <div className="match-toolbar">
-            <strong>
-              {activeName}’s
-              turn
-            </strong>
-          </div>
           <div className="gameplay-stage">
           <div className="game-table live-table">
-            <div
-              className="opponent-row"
-              role="group"
-              aria-label="Other players"
-              tabIndex={0}
-            >
-              {g.players
-                .filter((p) => p.id !== id)
-                .map((p) => (
-                  <OpponentSeat
-                    key={p.id}
-                    player={p}
-                    count={p.cardCount}
-                    score={p.score}
-                    active={p.id === g.currentPlayerId && !final}
-                    eliminated={p.eliminated}
-                    forfeited={p.forfeited}
-                    status={p.id === room.hostId ? 'Host' : p.accountType === 'guest' ? 'Guest' : 'Registered'}
-                    timer={
-                      !final && p.id === g.currentPlayerId ? (
-                        <TurnTimer seconds={seconds} name={playerFirstName(p)} />
-                      ) : null
-                    }
-                  />
-                ))}
-            </div>
-            <div className="live-piles">
+        <PlayerRoster viewer={id} active={final ? undefined : g.currentPlayerId}
+              players={g.players.map(p => ({ ...p, status: p.id === room.hostId ? 'Host' : p.accountType === 'guest' ? 'Guest' : 'Registered' }))}/>
+        <div className="live-piles">
               <div className="sample-pile">
                 <button
                   className="pile-button"
@@ -275,35 +243,22 @@ export function RoomPage({
                 >
                   <PlayingCard faceDown />
                 </button>
-                <span>Draw pile · {g.drawCount}</span>
               </div>
               <div className="sample-pile">
                 <div
                   className={`discard-stack ${g.phase === 'penalty' ? 'power-card-active' : ''}`}
-                  data-discard-target
+                  role="group" aria-label="Drop Pile"
+                data-discard-target
                 >
                   <PlayingCard card={g.latestDiscard.at(-1)} />
                 </div>
-                <span>Drop Pile</span>
               </div>
               <div className="sample-pile joker-indicator">
                 <PlayingCard card={g.indicator} />
                 <span>Round Joker · {g.indicator.rank}</span>
               </div>
             </div>
-            <PlayerHand
-              player={auth.user!.player}
-              total={handTotal(g.hand, g.indicator.rank)}
-              score={own?.score ?? 0}
-              active={!final && g.currentPlayerId === id}
-              timer={
-                !final && g.currentPlayerId === id ? (
-                  <TurnTimer
-                    seconds={seconds}
-                    name={own ? playerFirstName(own) : 'You'}
-                  />
-                ) : null
-              }
+            <PlayerHand total={handTotal(g.hand, g.indicator.rank)} active={!final && g.currentPlayerId === id}
               empty={
                 own?.forfeited && !own.eliminated
                   ? 'You forfeited this round. You can play again next round.'
@@ -339,7 +294,6 @@ export function RoomPage({
           <TurnActions
             phase={g.phase}
             yours={yours}
-            activeName={activeName}
             busy={busy}
             moving={!!animation}
             hand={g.hand}
@@ -347,8 +301,6 @@ export function RoomPage({
             pickups={g.pickup}
             canDeclare={g.canShow}
             penalty={g.penalty}
-            feedback={latestActionHint(g.events)}
-            error={selectionError}
             onDrop={discard}
             onDraw={() => draw('pile')}
             onPickup={(id) => draw('discard', id)}
@@ -388,21 +340,7 @@ export function RoomPage({
               </div>
             </section>
           )}
-          <div className="game-below-table">
-            <section className="match-scores">
-              <h2>Match scores</h2>
-              <ul>
-                {g.players.map((p) => (
-                  <li key={p.id}>
-                    <PlayerIdentity player={gameplayIdentity(p)} compact />
-                    <strong>{p.score}</strong>
-                    <small>{p.forfeited ? (p.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : p.eliminated ? 'Eliminated' : 'Active'}</small>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <GameActivity events={g.events} />
-          </div>
+          <GameActivity events={g.events} />
         </>
       )}
       {animation && (
