@@ -1,13 +1,10 @@
 import { GameNotices } from '../components/GameNotices'
 import { useFeedback, useGameFeedback } from '../feedback/FeedbackProvider'
-import { gameplayIdentity, playerFirstName, withPlayerNames } from '../shared/playerIdentity'
-import { PlayerIdentity } from '../components/PlayerIdentity'
-import { MobileGameBar } from '../components/MobileGameBar'
-import { OpponentSeat } from '../components/OpponentSeat'
-import { useActiveSeat } from '../hooks/useActiveSeat'
+import { withPlayerNames } from '../shared/playerIdentity'
+import { MobileGameBar, turnInstruction } from '../components/MobileGameBar'
+import { PlayerRoster } from '../components/PlayerRoster'
 import { TurnActions } from '../components/TurnActions'
-import { TurnTimer } from '../components/TurnTimer'
-import { latestActionHint, toggleHandCard } from '../lib/handSelection'
+import { toggleHandCard } from '../lib/handSelection'
 import { useAuth } from '../auth/AuthProvider'
 import { PlayerHand } from '../components/PlayerHand'
 import { gameEvents } from '../game/events'
@@ -41,7 +38,6 @@ export function GamePage({
   const feedback=useFeedback()
   const auth = useAuth()
   const { game, now, error, canSave, send, start, reset } = local
-  useActiveSeat(game?.current)
   useGameFeedback(game ? {scope:'local',round:game.round,phase:game.phase,dropIds:game.discards.at(-1)?.map(c=>c.id).join(','),localId:game.players[0].id,currentId:game.players[game.current].id,players:game.players,events:gameEvents(game),deadline:game.deadline,now,connected:true,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches} : null)
   const [botCount, setBotCount] = useState(3)
   const [selected, setSelected] = useState<string[]>([])
@@ -263,70 +259,53 @@ export function GamePage({
       <GameNotices events={displayGame.events ?? []} now={now} />
       <MobileGameBar
         round={game.round}
+        instruction={visibleError || turnInstruction(game.phase, yours, current.name, !!animation, human.hand, game.sevens?.amount ?? 0)}
         activeName={current.name}
         seconds={playing && game.deadline !== null ? seconds : null}
         joker={game.indicator}
         penalty={game.phase === 'penalty' ? (game.sevens?.amount ?? 0) : 0}
         players={displayGame.players}
         onQuit={reset}
-      />
+      >
+        <div className="match-toolbar">
+          <div>
+            <strong>Round {game.round}</strong>
+            <span>
+              {game.players.filter((p) => !p.eliminated && !p.forfeited).length} active · cutoff
+              100
+            </span>
+          </div>
+          <button
+            className="button button-secondary compact-button"
+            onClick={newGame}
+            disabled={!!animation}
+          >
+            New game
+          </button>
+        </div>
+        <div className="table-footnote">
+          <span>
+            Saved in this tab. The turn clock continues through navigation and
+            refreshes.
+          </span>
+          <a className="text-link" href="#/rules">
+            Read the rules →
+          </a>
+        </div>
+      </MobileGameBar>
       {!canSave && (
         <p className="game-alert" role="status">
           Browser storage is unavailable. Refreshing will lose this match.
         </p>
       )}
-      <div className="match-toolbar">
-        <div>
-          <strong>Round {game.round}</strong>
-          <span>
-            {game.players.filter((p) => !p.eliminated && !p.forfeited).length} active · cutoff
-            100
-          </span>
-        </div>
-        <button
-          className="button button-secondary compact-button"
-          onClick={newGame}
-          disabled={!!animation}
-        >
-          New game
-        </button>
-      </div>
       <div className="gameplay-stage">
       <div className="game-table live-table" aria-label="Local card table">
-        <p className="seat-scroll-hint">
-          Simulated opponents · scroll to see all seats
-        </p>
-        <div
-          className="opponent-row"
-          tabIndex={0}
-          role="group"
-          aria-label="Simulated opponents; scroll horizontally to see all seats"
-        >
-          {game.players.slice(1).map((player, index) => (
-            <OpponentSeat
-              key={player.id}
-              player={{ displayName: player.name, avatarUrl: null }}
-              count={player.hand.length}
-              score={player.score}
-              active={game.current === index + 1 && playing}
-              eliminated={player.eliminated}
-              forfeited={player.forfeited}
-              status={
-                player.eliminated
-                  ? `Out · ${player.eliminationReason}`
-                  : 'Simulated opponent'
-              }
-              timer={
-                game.current === index + 1 && playing ? (
-                  <TurnTimer
-                    seconds={game.deadline === null ? null : seconds}
-                    name={player.name}
-                  />
-                ) : null
-              }
-            />
-          ))}
-        </div>
+        <PlayerRoster viewer={human.id} active={playing ? current.id : undefined} players={game.players.map(player => ({
+          ...(player.id === human.id ? auth.user?.player : {}), id: player.id,
+          displayName: player.id === human.id ? auth.user?.player.displayName ?? human.name : player.name,
+          cardCount: player.hand.length, score: player.score, eliminated: player.eliminated,
+          forfeited: player.forfeited, status: player.id === human.id ? 'You' : 'Simulated opponent',
+        }))}/>
         <div className="live-piles">
           <div className="sample-pile">
             <button
@@ -338,12 +317,12 @@ export function GamePage({
             >
               <PlayingCard faceDown />
             </button>
-            <span>Draw pile · {game.drawPile.length}</span>
           </div>
           <div className="sample-pile">
             <div className="discard-presentation">
               <div
                 className={`discard-stack ${game.phase === 'penalty' ? 'power-card-active' : ''}`}
+                role="group" aria-label="Drop Pile"
                 data-discard-target
               >
                 {group.slice(-3).map((card, index) => (
@@ -369,9 +348,6 @@ export function GamePage({
                 </div>
               ) : null}
             </div>
-            <span>
-              {'Drop Pile'} · {group.length}
-            </span>
           </div>
           <div className="sample-pile joker-indicator">
             <PlayingCard card={game.indicator} />
@@ -379,21 +355,7 @@ export function GamePage({
             <small>This rank is worth 0</small>
           </div>
         </div>
-        <PlayerHand
-          player={
-            auth.user?.player ?? { displayName: human.name, avatarUrl: null }
-          }
-          total={handTotal(human.hand, game.indicator.rank)}
-          score={human.score}
-          active={playing && game.current === 0}
-          timer={
-            playing && game.current === 0 ? (
-              <TurnTimer
-                seconds={game.deadline === null ? null : seconds}
-                name={auth.user ? playerFirstName(auth.user.player) : human.name}
-              />
-            ) : null
-          }
+        <PlayerHand total={handTotal(human.hand, game.indicator.rank)} active={playing && game.current === 0}
           empty={
             human.forfeited && !human.eliminated
               ? 'You forfeited this round. You can play again next round.'
@@ -425,15 +387,12 @@ export function GamePage({
       <TurnActions
         phase={game.phase}
         yours={yours}
-        activeName={current.name}
         moving={!!animation}
         hand={human.hand}
         selected={selectedCards}
         pickups={pickups}
         canDeclare={canShow(game, human.id)}
         penalty={game.sevens?.amount ?? 0}
-        feedback={latestActionHint(gameEvents(game))}
-        error={visibleError}
         onDrop={discardSelected}
         onDraw={() => chooseDraw('pile')}
         onPickup={(id) => chooseDraw('discard', id)}
@@ -469,34 +428,8 @@ export function GamePage({
           quit={reset}
         />
       )}
-      <div className="game-below-table">
-        <section className="match-scores" aria-labelledby="match-scores-title">
-          <h2 id="match-scores-title">Match scores</h2>
-          <ul>
-            {displayGame.players.map((player) => (
-              <li key={player.id}>
-                <span>{auth.user && player.id === human.id ? <PlayerIdentity player={gameplayIdentity(auth.user.player)} compact /> : player.name}</span>
-                <strong>{player.score}</strong>
-                <small>
-                  {player.forfeited ? (player.eliminated ? 'Forfeited · Eliminated' : 'Forfeited') : player.eliminated
-                    ? `Out · ${player.eliminationReason}`
-                    : 'Active'}
-                </small>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <GameActivity events={gameEvents(displayGame)} />
-      </div>
-      <div className="table-footnote">
-        <span>
-          Saved in this tab. The turn clock continues through navigation and
-          refreshes.
-        </span>
-        <a className="text-link" href="#/rules">
-          Read the rules →
-        </a>
-      </div>
+      <GameActivity events={gameEvents(displayGame)} />
+
     </section>
   )
 }

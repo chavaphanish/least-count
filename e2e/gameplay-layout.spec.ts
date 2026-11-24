@@ -10,7 +10,7 @@ for (const viewport of [{width:667,height:320},{width:844,height:390},{width:144
     const game=auditGame(8,count)
     game.settings={timedGame:false,eliminationThreshold:100};game.deadline=null
     await page.route('**/api/config',r=>r.fulfill({json:{service:'least-count',supabase:null}}))
-    await page.route('**/api/session',r=>r.fulfill({json:{user:null,room:null}}))
+    await page.route('**/api/session',r=>r.fulfill({json:{user:{player:{id:'guest:test',accountType:'guest',displayName:'Tester',avatarUrl:null}},room:null}}))
     await page.goto('/#/game')
     await page.evaluate(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game})
     await page.reload()
@@ -21,11 +21,13 @@ for (const viewport of [{width:667,height:320},{width:844,height:390},{width:144
     const boxes=await cards.evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}}))
     expect(new Set(boxes.map(b=>Math.round(b.y))).size).toBe(1)
     const table=(await page.locator('.live-table').boundingBox())!, handBox=(await hand.boundingBox())!, railBox=(await page.locator('.game-action-rail').boundingBox())!
-    const status=(await page.locator('.turn-status').boundingBox())!
-    expect(status.y).toBeGreaterThanOrEqual(table.y+table.height)
-    expect(Math.abs(status.x+status.width/2-table.x-table.width/2)).toBeLessThan(1)
-    await expect(page.locator('.turn-status')).toContainText('YOUR TURN')
-    await expect(page.locator('.turn-status button')).toHaveCount(0)
+    const status=(await page.locator('.table-latest-action').boundingBox())!
+    expect(status.y).toBeGreaterThanOrEqual(table.y+table.height-1)
+    await expect(page.locator('.round-instruction')).toContainText('Select cards to drop')
+    await expect(page.getByRole('button',{name:'Activity',exact:true})).toHaveCount(0)
+    await expect(page.locator('.roster-seat')).toHaveCount(8)
+    await expect(page.locator('.roster-seat').first()).toHaveClass(/active-seat/)
+    expect(Math.abs((boxes[0].x+boxes.at(-1)!.x+boxes.at(-1)!.width)/2 - (handBox.x+handBox.width/2))).toBeLessThan(2)
     expect(railBox.x).toBeGreaterThanOrEqual(handBox.x+handBox.width)
     for(const box of boxes){
       expect(box.width).toBeGreaterThan(0)
@@ -41,7 +43,13 @@ for (const viewport of [{width:667,height:320},{width:844,height:390},{width:144
     expect(status.y+status.height).toBeLessThanOrEqual(viewport.height)
     const cardImages=await cards.locator(':scope > .playing-card').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {right:r.right,bottom:r.bottom}}))
     expect(Math.max(...cardImages.map(b=>b.right))).toBeLessThanOrEqual(railBox.x)
-    const seats=await page.locator('.live-opponent').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}))
+    const seats=await page.locator('.roster-seat').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}))
+    for(const [index,seat] of seats.entries()) {
+      expect(seat.right).toBeLessThanOrEqual(handBox.x)
+      expect(seat.y).toBeGreaterThanOrEqual(index ? seats[index-1].bottom-1 : table.y)
+      expect(seat.bottom).toBeLessThanOrEqual(table.y+table.height)
+    }
+    expect(await page.locator('.roster-seat > span:last-child').evaluateAll(els => els.every(el => el.scrollWidth <= el.clientWidth + 1))).toBe(true)
     const piles=await page.locator('.live-piles .playing-card:visible').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom}}))
     for(const pile of piles) {
       expect(pile.right).toBeLessThanOrEqual(railBox.x)

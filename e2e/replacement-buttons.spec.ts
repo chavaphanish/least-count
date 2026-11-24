@@ -34,7 +34,7 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
       await page.routeWebSocket('**/api/rooms/ABC234/ws**',socket=>{socket.onMessage(data=>{const message=JSON.parse(String(data));actions.push(message);socket.send(JSON.stringify({type:'ack',requestId:message.requestId}))})})
       await page.goto('/#/room/ABC234')
     } else {
-      await page.route('**/api/session',r=>r.fulfill({json:{user:null,room:null}}))
+      await page.route('**/api/session',r=>r.fulfill({json:{user:{player:{id:'guest:test',accountType:'guest',displayName:'Tester',avatarUrl:null}},room:null}}))
       await page.goto('/#/game')
       await page.evaluate(({key,game})=>sessionStorage.setItem(key,JSON.stringify(game)),{key:SESSION_KEY,game})
       await page.reload()
@@ -50,13 +50,13 @@ for (const mobile of [false,true]) for (const online of [false,true]) test.descr
     await expect(page.getByRole('dialog',{name:'Choose an open card'})).toHaveCount(0)
     await expect(panel).toHaveCSS('border-top-width','0px')
     await expect(panel).toHaveCSS('background-color','rgba(0, 0, 0, 0)')
-    const table=(await page.locator('.live-table').boundingBox())!, rail=(await panel.locator('.game-action-rail').boundingBox())!, status=(await panel.locator('.turn-status').boundingBox())!
+    const table=(await page.locator('.live-table').boundingBox())!, rail=(await panel.locator('.game-action-rail').boundingBox())!, status=(await page.locator('.round-instruction').boundingBox())!
     expect(rail.x).toBeGreaterThan(table.x+table.width/2)
     expect(rail.x+rail.width).toBeLessThanOrEqual(table.x+table.width)
     expect(rail.y).toBeGreaterThanOrEqual(table.y)
     expect(rail.y+rail.height).toBeLessThanOrEqual(table.y+table.height)
-    expect(status.y).toBeGreaterThanOrEqual(table.y+table.height)
-    expect(Math.abs(status.x+status.width/2-table.x-table.width/2)).toBeLessThan(1)
+    expect(status.y+status.height).toBeLessThanOrEqual(table.y)
+    await expect(page.locator('.round-instruction')).toContainText('Draw a new card')
     await expect(panel.locator('.turn-status').getByRole('button')).toHaveCount(0)
     const drawBox=(await draw.boundingBox())!, pickupBox=(await pickup.boundingBox())!
     expect(Math.abs(drawBox.x-pickupBox.x)).toBeLessThan(1)

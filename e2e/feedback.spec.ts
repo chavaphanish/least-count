@@ -1,26 +1,29 @@
+import { statSync } from 'node:fs'
 import { expect,test } from '@playwright/test'
 import type { Page,WebSocketRoute } from '@playwright/test'
 import { auditGame } from './ux-fixture'
 import { SESSION_KEY } from '../src/lib/session'
 const android='Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36'
 async function harness(page:Page,vibration=true){
- await page.addInitScript(({vibration})=>{
+ const clips = Object.fromEntries(['turn_bell','round_applause','game_applause'].map(name=>[statSync(`public/audio/${name}.mp3`).size,name]))
+ await page.addInitScript(({vibration,clips})=>{
+  const names = new WeakMap<AudioBuffer,string>()
   const trace:Record<string,unknown>[]=[];(window as unknown as {feedbackTrace:typeof trace}).feedbackTrace=trace
   if(vibration)Object.defineProperty(navigator,'vibrate',{configurable:true,value:(pattern:number|number[])=>{trace.push({kind:'vibrate',pattern});return true}})
   else Object.defineProperty(navigator,'vibrate',{configurable:true,value:undefined})
   const Native=window.AudioContext
   class ObservedContext extends Native {
    constructor(){super();trace.push({kind:'context'})}
-   async decodeAudioData(buffer:ArrayBuffer){const decoded=await super.decodeAudioData(buffer);trace.push({kind:'decode',duration:decoded.duration});return decoded}
+   async decodeAudioData(buffer:ArrayBuffer){const name=clips[buffer.byteLength];const decoded=await super.decodeAudioData(buffer);if(name)names.set(decoded,name);trace.push({kind:'decode',duration:decoded.duration});return decoded}
    createBufferSource(){
     const source=super.createBufferSource(),start=source.start.bind(source),stop=source.stop.bind(source)
-    source.start=(...args:Parameters<typeof source.start>)=>{trace.push({kind:'start',duration:source.buffer?.duration,loop:source.loop});start(...args)}
+    source.start=(...args:Parameters<typeof source.start>)=>{trace.push({kind:'start',clip:source.buffer && names.get(source.buffer),duration:source.buffer?.duration,loop:source.loop});start(...args)}
     source.stop=(...args:Parameters<typeof source.stop>)=>{trace.push({kind:'stop',duration:source.buffer?.duration,loop:source.loop});stop(...args)}
     return source
    }
   }
   window.AudioContext=ObservedContext
- },{vibration})
+ },{vibration,clips})
 }
 const traces=(page:Page)=>page.evaluate(()=>(window as unknown as {feedbackTrace:Record<string,unknown>[]}).feedbackTrace)
 async function clock(page:Page){const now=new Date('2026-11-11T16:00:00Z');await page.clock.install({time:now});await page.clock.pauseAt(new Date(now.getTime()+60000))}
@@ -57,28 +60,35 @@ for(const mobile of [false,true])test.describe(mobile?'Android feedback':'deskto
  for(const final of [false,true])test(`real decoded audio and mobile-only turn haptics follow confirmed turns, warnings and ${final?'game':'round'} results once`,async({page})=>{
   await harness(page,true);await clock(page);const {room,view,sockets,now}=await backend(page)
   await page.goto('/#/room/ABC234');await expect(page.locator('.connection-live')).toHaveCount(1)
+  await expect(page.locator('.round-instruction')).toContainText('Waiting for')
+  await expect(page.locator('.adaptive-hand')).toHaveCSS('filter','brightness(0.66)')
+  await expect(page.locator('.roster-seat').nth(1)).toHaveClass(/active-seat/)
   expect((await traces(page)).filter(t=>t.kind==='start')).toHaveLength(0)
   // A trusted interaction unlocks audio; all ten assets decode once and are cached.
   await page.mouse.click(2,180)
   await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='decode').length).toBe(10)
   const turn={...view,currentPlayerId:'p0',deadline:now+20000,events:[...view.events,{id:'event-2',sequenceNumber:2,roundNumber:1,timestamp:now,type:'POWER_SEVEN_CYCLE_COMPLETED',next:{id:'p0',name:'You'}}]}
   sockets.at(-1)!.send(JSON.stringify({type:'state',room:{...room,revision:2,game:turn}}))
-  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&Math.abs(Number(t.duration)-.8)<.05).length).toBe(1)
+  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&t.clip==='turn_bell').length).toBe(1)
+  await expect(page.locator('.round-instruction')).toContainText('Select cards to drop')
+  await expect(page.locator('.adaptive-hand')).toHaveCSS('filter','none')
+  await expect(page.locator('.roster-seat').first()).toHaveClass(/active-seat/)
   sockets.at(-1)!.send(JSON.stringify({type:'state',room:{...room,revision:3,game:turn}}));await page.clock.runFor(500)
   expect((await traces(page)).filter(t=>t.kind==='vibrate'&&t.pattern===150)).toHaveLength(mobile?1:0)
   // Native Web Audio uses real time, independently of Playwright's virtual JS clock.
-  await page.waitForTimeout(900)
+  const bell=(await traces(page)).find(t=>t.kind==='start'&&t.clip==='turn_bell')!
+  await page.waitForTimeout(Number(bell.duration)*1000+200)
   await page.clock.runFor(5000)
   await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&t.loop===true).length).toBe(1)
   await page.clock.runFor(1000)
   expect((await traces(page)).filter(t=>t.kind==='start'&&t.loop===true)).toHaveLength(1)
   const done={...turn,phase:final?'game-over':'round-over',deadline:null,result:{reason:'exhaustion',winners:[],scores:[]},events:[...turn.events,{id:'event-3',sequenceNumber:3,roundNumber:1,timestamp:now+6500,type:'ROUND_COMPLETED',reason:'exhaustion',scores:[]},...(final?[{id:'event-4',sequenceNumber:4,roundNumber:1,timestamp:now+6500,type:'GAME_COMPLETED',winner:{id:'p0',name:'You'}}]:[])]}
   sockets.at(-1)!.send(JSON.stringify({type:'state',room:{...room,revision:4,serverNow:now+6500,game:done}}))
-  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&Math.abs(Number(t.duration)-(final?5:3))<.05).length).toBe(1)
+  await expect.poll(async()=>(await traces(page)).filter(t=>t.kind==='start'&&t.clip===(final?'game_applause':'round_applause')).length).toBe(1)
   sockets.at(-1)!.send(JSON.stringify({type:'state',room:{...room,revision:5,serverNow:now+6500,game:done}}))
   await page.clock.runFor(300)
   const after=await traces(page)
-  expect(after.filter(t=>t.kind==='start'&&Math.abs(Number(t.duration)-(final?3:5))<.05)).toHaveLength(0)
+  expect(after.filter(t=>t.kind==='start'&&t.clip===(final?'round_applause':'game_applause'))).toHaveLength(0)
   expect(after.filter(t=>t.kind==='stop'&&t.loop===true)).toHaveLength(1)
   expect(after.filter(t=>t.kind==='vibrate'&&JSON.stringify(t.pattern)===(final?'[150,120,150,120,150]':'[150,120,150]'))).toHaveLength(mobile?1:0)
   const count=after.filter(t=>t.kind==='start').length

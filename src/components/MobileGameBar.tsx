@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import type { Phase } from '../game/engine'
 import { useLayoutEffect } from 'react'
 import { QuitGame } from './QuitGame'
 import { useMobileLandscape } from './MobileOrientation'
@@ -8,7 +10,7 @@ import type { GameCard } from '../game/deck'
 
 export function MobileGameBar({
   round,
-  activeName,
+  activeName, instruction, children,
   seconds,
   joker,
   penalty,
@@ -16,6 +18,8 @@ export function MobileGameBar({
   onQuit,
 }: {
   round: number
+  instruction: string
+  children?: ReactNode
   activeName: string
   seconds: number | null
   joker: Pick<GameCard, 'rank' | 'suit'>
@@ -27,8 +31,7 @@ export function MobileGameBar({
   useLayoutEffect(() => {
     if (mobile) window.scrollTo(0, 0)
   }, [mobile])
-  const scorecard = <TableOverlay label="Scorecard" trigger="☰"><ResultScores players={players}/><QuitGame onQuit={onQuit}/></TableOverlay>
-  if (!mobile) return <div className="desktop-scorecard">{scorecard}</div>
+  const scorecard = <TableOverlay label="Scorecard" trigger="☰"><ResultScores players={players}/>{!mobile && children}<QuitGame onQuit={onQuit}/></TableOverlay>
   const suits: Record<string, string> = {
     hearts: '♥',
     diamonds: '♦',
@@ -38,10 +41,7 @@ export function MobileGameBar({
   return (
     <header className="mobile-game-bar" aria-label="Game information">
       <strong className="mobile-round">Round {round}</strong>
-      <span className="mobile-active-player" title={`${activeName}'s turn`}>
-        <i aria-hidden="true" />
-        {activeName}
-      </span>
+      <span className="round-instruction" role="status">· {instruction}</span>
       <TurnTimer seconds={seconds} name={activeName} />
       <span className="mobile-joker" aria-label={`Round Joker: ${joker.rank}`}>
         <small>Round Joker</small>
@@ -58,4 +58,14 @@ export function MobileGameBar({
       {scorecard}
     </header>
   )
+}
+
+export function turnInstruction(phase: Phase, yours: boolean, name: string, moving: boolean, hand: readonly Pick<GameCard, 'rank'>[], penalty: number) {
+  if (moving) return 'Moving cards…'
+  if (phase === 'round-over' || phase === 'game-over') return 'Review the results.'
+  if (!yours) return `Waiting for ${name} to play…`
+  if (phase === 'penalty') return hand.some(card => card.rank === '7')
+    ? `Play a 7 or draw ${penalty} penalty cards.` : 'Drawing penalty cards…'
+  if (phase === 'draw') return 'Draw a new card or pick up the available card.'
+  return hand.length ? 'Select cards to drop.' : 'Your hand is empty. Declare Least.'
 }
