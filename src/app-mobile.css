@@ -504,6 +504,9 @@ html:has([data-mobile-device]), body:has([data-mobile-device]) { width: 100%; he
 .score-hand { display:grid; grid-template-columns:repeat(calc(var(--hand-count) - 1),minmax(0,1fr)) var(--result-card-width); width:min(100%,calc(var(--result-card-width) * (1 + (var(--hand-count) - 1) * .55))); box-sizing:border-box; }
 .score-hand .playing-card { --card-width:var(--result-card-width);border-radius:3px; }
 .score-hand .card-corner,.score-hand .joker-corner { left:1px;top:1px;font-size:clamp(7px,calc(var(--card-width)*.25),11px); }
+.score-hand .joker-center { position: absolute; inset: 0; height: auto; }
+.score-hand .joker-center .jester-art { width: .8em; }
+.score-hand .joker-center small { letter-spacing: .05em; line-height: 1; }
 .score-hand .card-corner small { margin:0; }
 .score-hand .card-corner-bottom { inset:auto 1px 1px auto; }
 

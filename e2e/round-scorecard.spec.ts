@@ -72,6 +72,11 @@ for (const count of [2,8]) for (const final of [false,true]) {
   test(`ordered hands fit for ${count} players at ${final ? 'game' : 'round'} completion`,async({page})=>{
     await mock(page)
     const game=auditGame(count,15)
+    const firstHand = game.players[0].hand
+    const source = [game.drawPile, ...game.players.map(p => p.hand)].find(cards => cards.some(card => card.rank === 'PJ'))!
+    const jokerIndex = source.findIndex(card => card.rank === 'PJ')
+    const last = firstHand.length - 1
+    ;[source[jokerIndex], firstHand[last]] = [firstHand[last], source[jokerIndex]]
     const expected=game.players.map(p=>p.hand.map(card=>card.rank==='PJ'?'Printed Joker':`${card.rank} of ${card.suit}`))
     game.phase=final?'game-over':'round-over'
     game.deadline=null
@@ -85,6 +90,17 @@ for (const count of [2,8]) for (const final of [false,true]) {
     await page.goto('/#/game')
     const panel=page.locator('.round-summary')
     await expect(panel.getByRole('columnheader',{name:'Hand',exact:true})).toBeVisible()
+    const hand = panel.locator('.score-hand').first()
+    const joker = hand.locator('.printed-joker').last()
+    const regular = hand.locator('.playing-card:not(.printed-joker)').first()
+    const jokerBox = (await joker.boundingBox())!
+    const regularBox = (await regular.boundingBox())!
+    expect(jokerBox.width).toBeCloseTo(regularBox.width, 1)
+    expect(jokerBox.height).toBeCloseTo(regularBox.height, 1)
+    const art = (await joker.locator('.jester-art').boundingBox())!
+    const pipSize = await regular.locator('.card-pip').evaluate(el => parseFloat(getComputedStyle(el).fontSize))
+    expect(art.height).toBeGreaterThan(0)
+    expect(art.height).toBeLessThanOrEqual(pipSize)
     for(let i=0;i<count;i++){
       const cards=panel.locator('tbody tr').nth(i).locator('.score-hand .playing-card')
       expect(await cards.evaluateAll(els=>els.map(el=>el.getAttribute('aria-label')))).toEqual(expected[i])
