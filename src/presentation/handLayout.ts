@@ -35,13 +35,15 @@ export function layoutHand(
       items: [],
     }
   const desired = Math.max(52, 80 - Math.max(0, count - 7) * 1.2)
+  const fittedWidth = (reservedHeight: number) =>
+    0.85 * Math.min(desired, w, (h - reservedHeight) / 1.4)
   let reserve = Math.min(8, h * 0.1)
-  let cw = Math.min(desired, w, (h - reserve) / 1.4)
+  let cw = fittedWidth(reserve)
   let step = count === 1 ? 0 : Math.min(cw * 0.72, (w - cw) / (count - 1))
   const compact = count > 1 && step < 18
   if (compact) {
     reserve = Math.min(34, h * 0.3)
-    cw = Math.min(desired, w, (h - reserve) / 1.4)
+    cw = fittedWidth(reserve)
     step = Math.min(cw * 0.72, (w - cw) / (count - 1))
   }
   const ch = cw * 1.4,
