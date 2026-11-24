@@ -323,7 +323,7 @@ export function RoomPage({
           />
           </div>
           {g.result && (
-            <section className="round-summary">
+            <section className="round-summary" data-round-results={g.phase === 'round-over' || undefined}>
               <div className="result-intro"><h2>{resultTitle(players, g.result, g.phase === 'game-over')}</h2></div>
               <ResultScores players={players} hands={g.completedHands} result={g.result} final={g.phase === 'game-over'} quitters={room.quitters}/>
               <div className="result-actions">

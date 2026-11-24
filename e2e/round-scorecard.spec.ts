@@ -25,6 +25,49 @@ test('all eight scores and both round actions fit iPhone landscape', async ({pag
   await expect(panel).toBeVisible()
 })
 
+for (const viewport of [{width:844,height:390}, {width:667,height:320}, {width:1024,height:768}, {width:1440,height:900}]) {
+  test.describe(`round results at ${viewport.width}×${viewport.height}`, () => {
+    test.use({viewport, ...(viewport.width === 1440 ? {isMobile:false,hasTouch:false,userAgent:'Mozilla/5.0 (X11; Linux x86_64) Chrome/146.0.0.0 Safari/537.36'} : {})})
+    for (const count of viewport.width === 844 ? [2, 4, 6, 8] : [8]) for (const successful of [true, false]) {
+      test(`${count} players fit after a ${successful ? 'successful' : 'failed'} Least declaration`, async ({page}) => {
+        await mock(page)
+        const game = auditGame(count, 15)
+        game.phase = 'round-over'
+        game.deadline = null
+        game.result = {reason: 'show', caller: 'p0', successful, winners: [successful ? 'p0' : 'p1'],
+          scores: game.players.map(p => ({...p, total: 7, penalty: 0}))}
+        await page.addInitScript(({key, game}) => sessionStorage.setItem(key, JSON.stringify(game)), {key: SESSION_KEY, game})
+        await page.goto('/#/game')
+        const panel = page.locator('[data-round-results]')
+        await expect(panel.getByRole('heading')).toContainText(successful ? 'won the round!' : 'failed!')
+        const rows = panel.locator('tbody tr')
+        await expect(rows).toHaveCount(count)
+        for (const [index, player] of game.players.entries()) {
+          const cards = rows.nth(index).locator('.score-hand .playing-card')
+          await expect(cards).toHaveCount(player.hand.length)
+          await expect(cards.last()).toBeInViewport({ratio: 1})
+        }
+        const header = (await panel.locator('.result-intro').boundingBox())!
+        const table = (await panel.locator('table').boundingBox())!
+        const start = panel.getByRole('button', {name: 'Start Round 2'})
+        const startBox = (await start.boundingBox())!
+        const quitBox = (await panel.getByRole('button', {name: 'Quit Game', exact:true}).boundingBox())!
+        expect(header.y + header.height).toBeLessThanOrEqual(table.y + 1)
+        expect(table.y + table.height).toBeLessThanOrEqual(startBox.y + 1)
+        expect(startBox.width).toBeCloseTo(quitBox.width, 0)
+        expect(startBox.y).toBe(quitBox.y)
+        expect(startBox.x).toBeCloseTo(table.x, 0)
+        expect(quitBox.x + quitBox.width).toBeCloseTo(table.x + table.width, 0)
+        expect(await panel.evaluate(el => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true)
+        await expect(start).toBeInViewport({ratio: 1})
+        await start.click()
+        await expect(page.locator('.mobile-game-bar')).toContainText('Round 2')
+      })
+    }
+
+  })
+}
+
 for (const count of [2,8]) for (const final of [false,true]) {
   test(`ordered hands fit for ${count} players at ${final ? 'game' : 'round'} completion`,async({page})=>{
     await mock(page)
