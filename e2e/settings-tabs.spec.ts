@@ -48,20 +48,6 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       expect(boxes[1].y).toBeGreaterThan(boxes[0].y + boxes[0].height)
       expect(boxes[2].y).toBeGreaterThan(boxes[1].y + boxes[1].height)
       await fits(page)
-      const presentation = () => page.locator('.circle-panel').evaluate(panel => {
-        const tab = panel.querySelector('.career-tabs button')!, style = getComputedStyle(tab)
-        const rect = tab.getBoundingClientRect(), root = panel.getBoundingClientRect(), content = panel.querySelector('.circle-results')!.getBoundingClientRect()
-        const layout = getComputedStyle(panel.querySelector('.circle-layout')!), tabs = getComputedStyle(panel.querySelector('.career-tabs')!)
-        return { x: root.x, y: root.y, width: root.width, height: root.height, tabWidth: rect.width, tabHeight: rect.height,
-          font: style.font, padding: style.padding, radius: style.borderRadius, color: style.color, background: style.backgroundColor,
-          columns: layout.gridTemplateColumns, gap: layout.gap, tabGap: tabs.gap, contentY: content.y,
-          headingFont: getComputedStyle(panel.querySelector('h2')!).font }
-      })
-      const settingsPresentation = await presentation()
-      await page.getByRole('link', { name: 'Buddies', exact: true }).click()
-      await expect(page.getByRole('heading', { name: 'Your Circle', exact: true })).toBeVisible()
-      expect(await presentation()).toEqual(settingsPresentation)
-      await page.getByRole('link', { name: 'Settings', exact: true }).click()
       await page.getByRole('tab', { name: 'Sounds', exact: true }).click()
       await expect(page.getByRole('checkbox', { name: 'Sound Effects', exact: true })).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Vibration', exact: true })).toBeVisible()

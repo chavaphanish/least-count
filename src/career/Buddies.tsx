@@ -4,6 +4,7 @@ import { playerIdentity } from '../shared/playerIdentity'
 import { useFriendsPresence } from '../presence/PresenceProvider'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
+import { RankingList } from './RankingList'
 import { BuddyAction } from './BuddyAction'
 import { xpProgress } from './model'
 import type { CareerPlayer, Relationship } from './model'
@@ -35,8 +36,8 @@ export function Buddies() {
   const incoming = list.data?.players.filter(p => p.relationship === 'incoming') ?? []
 
   function rows(items: SocialPlayer[], label: string, actions = false) {
-    return <ul className="ranking-list circle-list" aria-label={label} tabIndex={0}>
-      {items.map(p => <li key={p.id}>
+    if (!items.length) return null
+    const entries = items.map(p => <li key={p.id}>
         <a className="circle-player" href={`#/player/${p.username}`} aria-label={`View ${playerIdentity(p).label}'s profile`}>
           <span className="circle-identity">
             <PlayerIdentity player={p} avatar />
@@ -48,12 +49,13 @@ export function Buddies() {
           </span>
         </a>
         {actions && <BuddyAction id={p.id} relationship={p.relationship} circle onChange={refresh} onSuccess={setMessage} />}
-      </li>)}
-    </ul>
+      </li>)
+    return actions
+      ? <ul className="ranking-list circle-list" aria-label={label} tabIndex={0}>{entries}</ul>
+      : <RankingList key={label} count={items.length} label={label} className="circle-list">{entries}</RankingList>
   }
 
   return <section className="career-section leaderboard circle-panel" aria-label="Buddies">
-    <h2>Your Circle</h2>
     <div className="leaderboard-layout circle-layout">
       <div className="career-tabs" role="group" aria-label="Your Circle tabs">
         {tabs.map(value => <button key={value} aria-pressed={tab === value} onClick={() => { setTab(value); setMessage('') }}>{value}</button>)}

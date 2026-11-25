@@ -46,12 +46,18 @@ for (const [width, height] of [[1280, 800], [844, 390], [667, 375], [568, 320], 
       const panel = page.getByRole('region', { name: 'Buddies', exact: true })
       await expect(panel.getByRole('button', { name: 'All Friends', exact: true })).toHaveAttribute('aria-pressed', 'true')
       await expect(panel.getByRole('button', { name: /Back to Lounge/ })).toHaveCount(0)
+      await expect(panel.getByRole('heading', { name: 'Your Circle' })).toHaveCount(0)
       const list = panel.getByRole('list', { name: 'All Friends', exact: true })
       await expect(list.locator('li')).toHaveCount(14)
       await expect(list.locator('li').first()).toContainText('@friend13')
       await expect(list.locator('li').first().locator('.presence-dot')).toBeVisible()
       await expect(list.locator('li').first()).toContainText(/Level \d/)
       expect(await list.evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true)
+      const frame = (await list.boundingBox())!
+      const firstRow = (await list.locator('li').first().boundingBox())!
+      const lastTab = (await panel.getByRole('button', {name:'Friend Requests'}).boundingBox())!
+      expect(Math.abs(firstRow.height * 5 - frame.height)).toBeLessThan(1)
+      expect(Math.abs(lastTab.y + lastTab.height - frame.y - frame.height)).toBeLessThan(1)
       for (const tab of ['Favourites', 'Currently Online', 'Friend Requests', 'All Friends']) {
         await panel.getByRole('button', { name: tab, exact: true }).click()
         if (tab === 'Favourites') {

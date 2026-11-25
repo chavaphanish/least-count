@@ -1,6 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
+import { RankingList } from './RankingList'
 import { PlayerIdentity } from './PlayerIdentity'
 import type { Ranking } from './model'
 type Scope = 'Global' | 'Buddies' | 'Achievements'
@@ -83,42 +84,30 @@ export function Leaderboard() {
                   {!players.length && !loading && (
                     <p>No registered players in this ranking yet.</p>
                   )}
-                  <div key={scope} className="ranking-frame" data-scrollable={players.length > 5}
-                    style={{ '--ranking-count': Math.max(5, players.length), '--visible-rows': Math.max(1, Math.min(5, players.length)) } as CSSProperties}>
-                    <ol
-                      className="ranking-list"
-                      aria-label="Player rankings"
-                      tabIndex={0}
-                      onScroll={({ currentTarget }) => {
-                        const range = currentTarget.scrollHeight - currentTarget.clientHeight
-                        currentTarget.parentElement?.style.setProperty('--rows-scrolled', String(5 * currentTarget.scrollTop / currentTarget.clientHeight))
-                        if (range > 0 && range - currentTarget.scrollTop < 2) loadMore()
-                      }}
-                    >
-                      {players.map((p) => (
-                        <li
-                          key={p.id}
-                          className={
-                            [p.rank !== null && p.rank <= 3 ? 'top-player' : '', p.id === me?.id ? 'current-player' : ''].filter(Boolean).join(' ')
-                          }
-                          aria-current={p.id === me?.id ? 'true' : undefined}
-                        >
-                          <strong className="rank-number">#{p.rank}</strong>
-                          <PlayerIdentity player={p} />
-                          <div className="ranking-score">
-                            <strong>{p.xp.toLocaleString()} XP</strong>
-                            <small>
-                              {p.gamesWon} wins ·{' '}
-                              {p.gamesPlayed
-                                ? Math.round((p.gamesWon / p.gamesPlayed) * 100)
-                                : 0}
-                              % win rate
-                            </small>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                  <RankingList key={scope} ordered label="Player rankings" count={players.length} onEnd={loadMore}>
+                    {players.map((p) => (
+                      <li
+                        key={p.id}
+                        className={
+                          [p.rank !== null && p.rank <= 3 ? 'top-player' : '', p.id === me?.id ? 'current-player' : ''].filter(Boolean).join(' ')
+                        }
+                        aria-current={p.id === me?.id ? 'true' : undefined}
+                      >
+                        <strong className="rank-number">#{p.rank}</strong>
+                        <PlayerIdentity player={p} />
+                        <div className="ranking-score">
+                          <strong>{p.xp.toLocaleString()} XP</strong>
+                          <small>
+                            {p.gamesWon} wins ·{' '}
+                            {p.gamesPlayed
+                              ? Math.round((p.gamesWon / p.gamesPlayed) * 100)
+                              : 0}
+                            % win rate
+                          </small>
+                        </div>
+                      </li>
+                    ))}
+                  </RankingList>
                 </>
               )}
             </>
