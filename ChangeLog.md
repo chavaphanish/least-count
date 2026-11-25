@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - Versions follow **Semantic Versioning (`MAJOR.MINOR.PATCH`)** under [AGENTS.md](AGENTS.md): PATCH for small fixes/UI adjustments, MINOR for features/medium functionality changes, and MAJOR for redesigns/architecture/breaking upgrades. Increment once per implementation task; documentation-only maintenance does not bump the application version. `package.json` carries the web version. The earlier `1.1.x` releases retain their recorded history.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.7.9 — 25 November 2026
+
+- Matched Settings to the full-height Leaderboards and Your Circle layout, removed its visible heading, and balanced Account and Sounds controls in the content column.
+
 ## 1.7.8 — 25 November 2026
 
 - Matched Your Circle to Leaderboards with full-height navigation and adaptive friend rows, and removed the visible panel heading.

@@ -59,7 +59,7 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 600], [844, 390]
       await expect(page.getByLabel('Room code')).toBeVisible()
       await page.getByRole('button', { name: 'Back to Lounge' }).click()
       await page.getByRole('link', { name: 'Settings', exact: true }).click()
-      await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+      await expect(page.getByRole('region', { name: 'Settings' })).toBeVisible()
       await page.getByRole('link', { name: 'Home', exact: true }).click()
       await page.getByRole('link', { name: 'Buddies', exact: true }).click()
       await expect(page.getByRole('region', { name: 'Buddies', exact: true })).toBeVisible()

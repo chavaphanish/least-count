@@ -44,7 +44,11 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       expect(actionStyles[0]).toEqual(actionStyles[1])
       await expect(page.getByRole('button', { name: 'Back to Lounge' })).toHaveCount(0)
       const boxes = await tabs.getByRole('tab').evaluateAll(els => els.map(el => { const r = el.getBoundingClientRect(); return { x:r.x,y:r.y,width:r.width,height:r.height } }))
-      expect(new Set(boxes.map(r => r.width)).size).toBe(1); expect(new Set(boxes.map(r => r.height)).size).toBe(1)
+      expect(new Set(boxes.map(r => r.width)).size).toBe(1); expect(Math.max(...boxes.map(r => r.height)) - Math.min(...boxes.map(r => r.height))).toBeLessThan(1)
+      await expect(page.getByRole('heading', {name:'Settings', exact:true})).toHaveCount(0)
+      const content = (await page.locator('.settings-content').boundingBox())!
+      expect(Math.abs(boxes[0].y - content.y)).toBeLessThan(1)
+      expect(Math.abs(boxes[2].y + boxes[2].height - content.y - content.height)).toBeLessThan(1)
       expect(boxes[1].y).toBeGreaterThan(boxes[0].y + boxes[0].height)
       expect(boxes[2].y).toBeGreaterThan(boxes[1].y + boxes[1].height)
       await fits(page)

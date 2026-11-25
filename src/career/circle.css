@@ -2,10 +2,6 @@
 .dashboard-page:is([data-mode=buddies], [data-mode=settings]) { display: flex; flex-direction: column; height: calc(100svh - 196px); min-height: 0; padding: 20px 0; }
 .dashboard-page:is([data-mode=buddies], [data-mode=settings]) .dashboard-focused { display: flex; flex: 1; min-height: 0; }
 .circle-panel.career-section { flex: 1; min-height: 0; margin: 0; }
-.circle-panel > h2 { margin: 0; font-family: 'Libre Caslon Display', Georgia, serif; font-size: clamp(24px, 3vw, 34px); font-weight: 400; }
-.settings-panel .circle-layout { flex: 1; grid-template-columns: minmax(130px, 1fr) minmax(0, 3fr); }
-.settings-panel .career-tabs { flex-direction: column; }
-.settings-panel .career-tabs button { flex: none; }
 .circle-panel .circle-results { overflow: hidden; }
 .circle-panel .circle-list { max-height: none; min-height: 0; flex: 1; }
 .circle-panel .circle-list > li { grid-template-columns: minmax(0, 1fr) auto; height: auto; min-height: 0; gap: 8px; }
@@ -30,10 +26,6 @@
 .circle-panel .buddy-actions .button, .circle-panel .buddy-actions .text-button { white-space: nowrap; min-height: 32px; padding: 5px 8px; font-size: 11px; }
 [data-mobile-device] .dashboard-page:is([data-mode=buddies], [data-mode=settings]) { height: 100%; padding: 4px; }
 [data-mobile-device] .circle-panel.career-section { gap: 8px; }
-[data-mobile-device] .circle-panel > h2 { font-size: 16px; }
-[data-mobile-device] .settings-panel .circle-layout { grid-template-columns: minmax(110px, 1fr) minmax(0, 3fr); gap: 10px; }
-[data-mobile-device] .settings-panel .career-tabs { flex-direction: column; gap: 6px; }
-[data-mobile-device] .settings-panel .career-tabs button { flex: none; font-size: 11px; min-height: 32px; padding: 5px 8px; }
 [data-mobile-device] .circle-panel .circle-list { flex: 1; }
 [data-mobile-device] .circle-player { gap: 6px; }
 [data-mobile-device] .circle-identity { column-gap: 6px; }
@@ -54,8 +46,8 @@
 [data-keyboard] .circle-panel .career-tabs { gap: 2px; }
 [data-keyboard] .circle-panel .career-tabs button { min-height: 23px; padding: 1px 5px; }
 
-/* The Buddies route uses the same available panel area as Leaderboards. */
-.dashboard-page[data-mode=buddies]:has(.circle-panel) { height: auto; padding: 8px 0; }
-[data-mobile-device] .dashboard-page[data-mode=buddies]:has(.circle-panel) { height: 100%; padding: 0; }
+/* The Buddies and Settings routes use the same available panel area as Leaderboards. */
+.dashboard-page:is([data-mode=buddies], [data-mode=settings]):has(.circle-panel) { height: auto; padding: 8px 0; }
+[data-mobile-device] .dashboard-page:is([data-mode=buddies], [data-mode=settings]):has(.circle-panel) { height: 100%; padding: 0; }
 .circle-request-group .circle-list { display: block; height: auto; overflow-y: auto; scrollbar-color: var(--gold) var(--border); }
 .circle-request-group .circle-list > li { min-height: calc(var(--ranking-avatar) + 4px); }

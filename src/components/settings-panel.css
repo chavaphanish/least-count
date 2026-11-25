@@ -2,8 +2,8 @@
 .settings-panel { width: 100%; }
 .settings-content, .settings-content > [role=tabpanel] { min-width: 0; min-height: 0; }
 .settings-content > [role=tabpanel] { height: 100%; }
-.settings-panel .sound-haptics { margin: 0; }
-.settings-panel .feedback-options { flex-direction: column; gap: 4px; }
+.settings-panel .sound-haptics { height: 100%; margin: 0; display: flex; flex-direction: column; }
+.settings-panel .feedback-options { flex: 1; flex-direction: column; flex-wrap: nowrap; justify-content: space-around; gap: 4px; }
 .settings-profile-editor { width: 100%; height: 100%; min-height: 0; }
 .settings-panel .compact-profile-editor { display: grid; grid-template-columns: 88px minmax(0,1fr); align-items: center; gap: 16px; height: 100%; margin: 0; padding: 0; border: 0; background: transparent; }
 .settings-panel .compact-profile-editor > h2 { display: none; }
@@ -27,7 +27,7 @@
 [data-mobile-device] .settings-panel .compact-profile-editor form input { min-height: 36px; padding: 6px 8px; }
 [data-mobile-device] .settings-panel .compact-profile-editor form > .button { padding: 6px; font-size: 12px; }
 [data-keyboard] .settings-panel.career-section { padding: 4px; }
-[data-keyboard] .settings-panel > h2, [data-keyboard] .profile-photo-control small { display: none; }
+[data-keyboard] .profile-photo-control small { display: none; }
 [data-keyboard] .settings-panel .compact-profile-editor { grid-template-columns: 48px minmax(0,1fr); gap: 6px; padding: 0; }
 [data-keyboard] .profile-photo-trigger .profile-avatar { width: 44px; height: 44px; }
 [data-keyboard] .settings-panel .compact-profile-editor form { gap: 2px 6px; }
@@ -36,7 +36,7 @@
 [data-keyboard] .settings-panel .compact-profile-editor form input { min-height: 30px; padding: 3px 6px; }
 [data-keyboard] .settings-panel .compact-profile-editor form > .button { min-height: 32px; padding: 4px; }
 
-.settings-panel .account-actions:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.settings-panel .account-actions:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: clamp(8px, 2dvh, 20px); }
 .account-created { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .account-created time { color: var(--cream); }
 .settings-panel .account-actions > .button { width: min(100%, 220px); height: 44px; min-height: 44px; flex-shrink: 0; padding: 10px 16px; border: 1px solid transparent; justify-content: center; font-size: 13px; font-weight: 600; line-height: 1.2; }

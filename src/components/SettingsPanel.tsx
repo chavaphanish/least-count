@@ -23,7 +23,6 @@ export function SettingsPanel({ busy, logout }: { busy: boolean; logout: () => P
     setSelected(index)
   }
   return <section className="settings-panel career-section leaderboard circle-panel" aria-label="Settings">
-    <h2>Settings</h2>
     <div className="settings-layout leaderboard-layout circle-layout">
       <div className="career-tabs" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
         {tabs.map((tab, index) => <button key={tab} type="button" role="tab"
