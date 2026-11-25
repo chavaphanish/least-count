@@ -84,7 +84,7 @@ export function Leaderboard() {
                     <p>No registered players in this ranking yet.</p>
                   )}
                   <div key={scope} className="ranking-frame" data-scrollable={players.length > 5}
-                    style={{ '--ranking-count': Math.max(5, players.length) } as CSSProperties}>
+                    style={{ '--ranking-count': Math.max(5, players.length), '--visible-rows': Math.max(1, Math.min(5, players.length)) } as CSSProperties}>
                     <ol
                       className="ranking-list"
                       aria-label="Player rankings"

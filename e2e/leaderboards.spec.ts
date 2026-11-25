@@ -25,7 +25,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       await expect(page.locator('.ranking-list')).toContainText('18 wins')
       await expect(page.locator('.ranking-frame')).toHaveAttribute('data-scrollable', 'false')
       const first = (await global.boundingBox())!, second = (await buddies.boundingBox())!, results = (await page.locator('.leaderboard-results').boundingBox())!
-      expect(first.width).toBeCloseTo(second.width, 0); expect(first.height).toBe(second.height)
+      expect(first.width).toBeCloseTo(second.width, 0); expect(first.height).toBeCloseTo(second.height, 0)
       expect(second.y).toBeGreaterThan(first.y + first.height)
       expect(results.x).toBeGreaterThan(first.x + first.width)
       expect(results.width / first.width).toBeCloseTo(3, 0)
@@ -48,7 +48,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       await page.reload()
       await expect(page.getByRole('region', { name: 'Leaderboards', exact: true })).toBeVisible()
     })
-    test('five compact avatar-height rows scroll through every server batch', async ({ page }) => {
+    test('five rows fill the panel and scroll through every server batch', async ({ page }) => {
       const fixture = await mock(page)
       const { me, friend } = fixture
       if (width === 667) fixture.setRelationship('incoming')
@@ -81,7 +81,14 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       })
       expect(layout.frame.height).toBeCloseTo(layout.rows[0].height * 5, 0)
       expect(layout.rows[0].height - layout.rows[0].avatar).toBeGreaterThanOrEqual(0)
-      expect(layout.rows[0].height - layout.rows[0].avatar).toBeLessThanOrEqual(6)
+      const tabs = page.locator('.leaderboard .career-tabs button')
+      const firstTab = (await tabs.first().boundingBox())!
+      const lastTab = (await tabs.last().boundingBox())!
+      expect(firstTab.height).toBeCloseTo(lastTab.height, 0)
+      expect(lastTab.y + lastTab.height).toBeCloseTo(layout.frame.bottom, 0)
+      const panel = (await page.locator('.leaderboard').boundingBox())!
+      expect(panel.y + panel.height - layout.frame.bottom).toBeLessThan(24)
+      expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(true)
       expect(layout.width).toBe(layout.frame.width)
       for (const row of layout.rows.slice(0, 5)) {
         expect(row.top).toBeGreaterThanOrEqual(layout.frame.top)
@@ -104,7 +111,7 @@ for (const [width, height, mobile] of [[1280, 800, false], [1024, 768, true], [8
       }
       await expect(list.locator('li').first()).not.toBeInViewport()
       await list.focus(); await page.keyboard.press('End')
-      await expect(list.locator('li').last()).toBeInViewport({ ratio: 1 })
+      await expect.poll(() => list.evaluate(el => Math.abs(el.lastElementChild!.getBoundingClientRect().bottom - el.getBoundingClientRect().bottom))).toBeLessThanOrEqual(1)
       if (width === 1280 || width === 667) await page.screenshot({ path: `/tmp/yaydu-compact-rankings-${width}.png` })
       await page.getByRole('button', { name: 'Buddies', exact: true }).click()
       await expect(list.locator('li')).toHaveCount(1)
@@ -170,7 +177,7 @@ test('a failed additional batch preserves loaded players and retries in the same
   await expect(list.locator('li')).toHaveCount(11)
   await list.evaluate(el => { el.scrollTop = el.scrollHeight })
   await expect(list.locator('li').last()).toContainText('@player11')
-  await expect(list.locator('li').last()).toBeInViewport({ ratio: 1 })
+  await expect.poll(() => list.evaluate(el => Math.abs(el.lastElementChild!.getBoundingClientRect().bottom - el.getBoundingClientRect().bottom))).toBeLessThanOrEqual(1)
 })
 
 test('ranking snapshots survive tab switches and focus until the panel is reopened', async ({page}) => {
