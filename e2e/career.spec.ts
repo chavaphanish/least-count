@@ -17,13 +17,13 @@ for (const width of [320, 1440])
     const state = await mock(page)
     await page.goto('/#/leaderboards')
     await expect(
-      page.getByRole('heading', { name: 'Leaderboards' }),
+      page.getByRole('region', { name: 'Leaderboards' }),
     ).toBeVisible()
-    await expect(page.getByText(/Your Global Rank: #124/)).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Player rankings' })).toBeVisible()
     await page
-      .getByRole('button', { name: 'Buddies Ranking', exact: true })
+      .getByRole('button', { name: 'Buddies', exact: true })
       .click()
-    await expect(page.getByText(/Your Buddies Rank/)).toBeVisible()
+    await expect(page.getByRole('button', {name:'Buddies', exact:true})).toHaveAttribute('aria-pressed', 'true')
     await page.goto('/#/profile')
     const profile = page.getByRole('region', { name: 'My Profile', exact: true })
     await expect(profile.getByRole('tab')).toHaveText(['Overview', 'Stats'])

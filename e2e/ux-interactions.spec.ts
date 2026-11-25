@@ -364,11 +364,11 @@ test('complete guest room journey reaches results, then existing career screens'
     await page.getByRole('button', { name: 'Buddies', exact: true }).click()
     await page.goto('/')
     await page
-      .getByRole('button', { name: 'Leaderboards', exact: true })
+      .getByRole('link', { name: 'Leaderboards', exact: true })
       .click()
-    await expect(page.getByText(/Your Global Rank/)).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Player rankings' })).toBeVisible()
     await page
-      .getByRole('button', { name: 'Buddies Ranking', exact: true })
+      .getByRole('button', { name: 'Buddies', exact: true })
       .click()
     await page.getByRole('link', { name: 'Home', exact: true }).click()
     await expect(

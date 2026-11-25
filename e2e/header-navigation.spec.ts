@@ -44,7 +44,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [568, 320], 
       await rankings.focus(); await expect(rankings).toHaveCSS('outline-width', '2px')
       await rankings.click()
       await expect(page).toHaveURL(/#\/leaderboards$/)
-      await expect(page.getByRole('heading', { name: 'Leaderboards', exact: true })).toBeVisible()
+      await expect(page.getByRole('region', { name: 'Leaderboards', exact: true })).toBeVisible()
       await expect(rankings).toHaveAttribute('aria-current', 'page')
       await nav.getByRole('link', { name: 'Home', exact: true }).click()
       const buddies = nav.getByRole('link', { name: 'Buddies', exact: true })

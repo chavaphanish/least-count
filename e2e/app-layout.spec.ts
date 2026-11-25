@@ -103,11 +103,11 @@ for (const size of sizes)
     if (size.width === 667)
       await page.screenshot({ path: 'docs/mobile-layout/dashboard.png' })
     for (const mode of ['Leaderboards', 'Buddies', 'Settings']) {
-      await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
+      await page.getByRole('link', { name: mode, exact: true }).click()
       if (mode === 'Leaderboards') {
-        await expect(page.getByText(/Your Global Rank/)).toBeVisible()
+        await expect(page.getByRole('list', { name: 'Player rankings' })).toBeVisible()
         await fits(page)
-        await page.getByRole('button', { name: 'Buddies Ranking' }).click()
+        await page.getByRole('button', { name: 'Buddies' }).click()
       }
       await fits(page)
       if (mode === 'Leaderboards' || mode === 'Settings') await page.getByRole('link', { name: 'Home', exact: true }).click()
@@ -402,7 +402,7 @@ test('ranking scroll retains reachable players after viewport height changes', a
     }),
   )
   await page.goto('/')
-  await page.getByRole('button', { name: 'Leaderboards', exact: true }).click()
+  await page.getByRole('link', { name: 'Leaderboards', exact: true }).click()
   const list = page.getByRole('list', { name: 'Player rankings', exact: true })
   await expect(list.locator('li')).toHaveCount(10)
   await list.evaluate(el => { el.scrollTop = el.scrollHeight })

@@ -90,12 +90,12 @@ test('visual audit of all existing mobile surfaces', async ({
     await page.getByRole('button', { name: 'Back to Lounge' }).click()
   }
   for (const mode of ['Leaderboards', 'Buddies', 'Settings']) {
-    await page.getByRole(mode === 'Settings' ? 'link' : 'button', { name: mode, exact: true }).click()
+    await page.getByRole('link', { name: mode, exact: true }).click()
     await shot(mode.toLowerCase())
     if (mode === 'Leaderboards') {
-      await expect(page.getByText(/Your Global Rank/)).toBeVisible()
+      await expect(page.getByRole('list', { name: 'Player rankings' })).toBeVisible()
       await shot('rank-global')
-      await page.getByRole('button', { name: 'Buddies Ranking' }).click()
+      await page.getByRole('button', { name: 'Buddies' }).click()
       await shot('rank-buddies')
     }
     if (mode === 'Buddies') {

@@ -133,7 +133,7 @@ function Application() {
     )
   else if (current.page === 'history' && current.gameId)
     content = <GameHistoryReport key={current.gameId} id={current.gameId} />
-  else if (current.page === 'leaderboards') content = <Leaderboard />
+  else if (current.page === 'leaderboards') content = <Leaderboard key={auth.user.player.id} />
   else if (current.page === 'profile') content = <ProfilePage />
   else if (current.page === 'buddies') content = <DashboardPage key="buddies" initialMode="buddies" />
   else if (current.page === 'settings') content = <DashboardPage key={current.settingsProfile ? 'settings-profile' : 'settings'} initialMode="settings" />

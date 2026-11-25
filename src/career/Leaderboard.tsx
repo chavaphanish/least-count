@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCareer } from './useCareer'
 import { PlayerIdentity } from './PlayerIdentity'
-import { xpProgress } from './model'
 import type { Ranking } from './model'
-export function Leaderboard() {
-  const auth = useAuth()
-  const [scope, setScope] = useState('global')
+type Scope = 'Global' | 'Buddies' | 'Achievements'
+
+function useRankings(scope: 'global' | 'buddies', enabled: boolean) {
   const [offset, setOffset] = useState(0)
   const { data, error, loading, refresh } = useCareer<Ranking>(
-    `/career?op=leaderboard&scope=${scope}&offset=${offset}`,
-    true,
+    enabled ? `/career?op=leaderboard&scope=${scope}&offset=${offset}` : null,
   )
   const [pages, setPages] = useState<Record<number, Ranking>>({})
   useEffect(() => {
@@ -26,36 +24,45 @@ export function Leaderboard() {
       return true
     })
   const me = data?.me ?? pages[0]?.me
-  const registered = auth.user?.player.accountType === 'registered'
+  function loadMore() {
+    if (data?.more && !loading && !error && pages[offset] === data)
+      setOffset(offset + data.players.length)
+  }
+  return { players, me, data, loading, error, refresh, loadMore }
+}
+
+export function Leaderboard() {
+  const { user } = useAuth()
+  const registered = user?.player.accountType === 'registered'
+  const [scope, setScope] = useState<Scope>('Global')
+  const global = useRankings('global', true)
+  const buddies = useRankings('buddies', registered)
+  const { players, me, data, loading, error, refresh, loadMore } = scope === 'Buddies' ? buddies : global
+  const inbox = useCareer<{ players: { relationship: string }[] }>(registered ? '/career?op=buddies' : null)
+  const incoming = inbox.data?.players.filter(p => p.relationship === 'incoming').length ?? 0
   return (
-    <section className="career-section leaderboard" aria-labelledby="leaderboards-title">
-      <h1 id="leaderboards-title">Leaderboards</h1>
+    <section className="career-section leaderboard" aria-label="Leaderboards">
       <div className="leaderboard-layout">
         <div className="career-tabs" role="group" aria-label="Leaderboard scope">
-          {['global', 'buddies'].map((value) => (
+          {(['Global', 'Buddies', 'Achievements'] as const).map((value) => (
             <button
               key={value}
               aria-pressed={scope === value}
-              onClick={() => {
-                if (value === scope) return
-                setScope(value)
-                setOffset(0)
-                setPages({})
-              }}
+              onClick={() => setScope(value)}
             >
-              {value === 'global' ? 'Global Ranking' : 'Buddies Ranking'}
+              {value}
             </button>
           ))}
         </div>
         <div className="leaderboard-results" aria-label="Player rankings">
-          {scope === 'buddies' && !registered ? (
+          {scope === 'Achievements' ? <p>Under construction</p> : scope === 'Buddies' && !registered ? (
             <p>
               Create a verified account to compare with buddies.{' '}
               <a href="#/profile">Account options →</a>
             </p>
           ) : (
             <>
-              {registered && <BuddyInbox />}
+              {incoming > 0 && <p className="invitation-banner"><a href="#/profile">{incoming} incoming buddy {incoming === 1 ? 'request' : 'requests'} · View your profile</a></p>}
               {loading && <p role="status">{players.length ? 'Loading more rankings…' : 'Loading rankings…'}</p>}
               {error && (
                 <p role="status">
@@ -67,14 +74,7 @@ export function Leaderboard() {
               )}
               {(data || players.length > 0) && (
                 <>
-                  {me && (
-                    <p className="ranking-self">
-                      Your {scope === 'global' ? 'Global' : 'Buddies'} Rank: #
-                      {me.rank} · {me.xp.toLocaleString()} XP · Level{' '}
-                      {xpProgress(me.xp, me.levelBase).level}
-                    </p>
-                  )}
-                  {scope === 'buddies' && players.length <= 1 && (
+                  {scope === 'Buddies' && players.length <= 1 && (
                     <p>
                       Add buddies to start competing with your friends.{' '}
                       <a href="#/profile">Add Buddies →</a>
@@ -83,40 +83,42 @@ export function Leaderboard() {
                   {!players.length && !loading && (
                     <p>No registered players in this ranking yet.</p>
                   )}
-                  <ol
-                    key={scope}
-                    className="ranking-list"
-                    aria-label="Player rankings"
-                    tabIndex={0}
-                    onScroll={({ currentTarget }) => {
-                      if (data?.more && !loading && !error && pages[offset] === data &&
-                        currentTarget.scrollHeight - currentTarget.scrollTop - currentTarget.clientHeight < 2)
-                        setOffset(value => value + 10)
-                    }}
-                  >
-                    {players.map((p) => (
-                      <li
-                        key={p.id}
-                        className={
-                          [p.rank !== null && p.rank <= 3 ? 'top-player' : '', p.id === me?.id ? 'current-player' : ''].filter(Boolean).join(' ')
-                        }
-                        aria-current={p.id === me?.id ? 'true' : undefined}
-                      >
-                        <strong className="rank-number">#{p.rank}</strong>
-                        <PlayerIdentity player={p} />
-                        <div className="ranking-score">
-                          <strong>{p.xp.toLocaleString()} XP</strong>
-                          <small>
-                            {p.gamesWon} wins ·{' '}
-                            {p.gamesPlayed
-                              ? Math.round((p.gamesWon / p.gamesPlayed) * 100)
-                              : 0}
-                            % win rate
-                          </small>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
+                  <div key={scope} className="ranking-frame" data-scrollable={players.length > 5}
+                    style={{ '--ranking-count': Math.max(5, players.length) } as CSSProperties}>
+                    <ol
+                      className="ranking-list"
+                      aria-label="Player rankings"
+                      tabIndex={0}
+                      onScroll={({ currentTarget }) => {
+                        const range = currentTarget.scrollHeight - currentTarget.clientHeight
+                        currentTarget.parentElement?.style.setProperty('--rows-scrolled', String(5 * currentTarget.scrollTop / currentTarget.clientHeight))
+                        if (range > 0 && range - currentTarget.scrollTop < 2) loadMore()
+                      }}
+                    >
+                      {players.map((p) => (
+                        <li
+                          key={p.id}
+                          className={
+                            [p.rank !== null && p.rank <= 3 ? 'top-player' : '', p.id === me?.id ? 'current-player' : ''].filter(Boolean).join(' ')
+                          }
+                          aria-current={p.id === me?.id ? 'true' : undefined}
+                        >
+                          <strong className="rank-number">#{p.rank}</strong>
+                          <PlayerIdentity player={p} />
+                          <div className="ranking-score">
+                            <strong>{p.xp.toLocaleString()} XP</strong>
+                            <small>
+                              {p.gamesWon} wins ·{' '}
+                              {p.gamesPlayed
+                                ? Math.round((p.gamesWon / p.gamesPlayed) * 100)
+                                : 0}
+                              % win rate
+                            </small>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </>
               )}
             </>
@@ -125,21 +127,4 @@ export function Leaderboard() {
       </div>
     </section>
   )
-}
-
-function BuddyInbox() {
-  const { data } = useCareer<{ players: { relationship: string }[] }>(
-    '/career?op=buddies',
-    true,
-  )
-  const count =
-    data?.players.filter((p) => p.relationship === 'incoming').length ?? 0
-  return count ? (
-    <p className="invitation-banner">
-      <a href="#/profile">
-        {count} incoming buddy {count === 1 ? 'request' : 'requests'} · View
-        your profile
-      </a>
-    </p>
-  ) : null
 }
