@@ -14,7 +14,7 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [480, 320]])
       })
       await page.goto('/#/profile')
       const profile = page.getByRole('region', { name: 'My Profile', exact: true })
-      await expect(profile.getByRole('heading', { name: 'My Profile', exact: true })).toBeVisible()
+      await expect(profile.getByRole('heading', { name: 'My Profile', exact: true })).toHaveCount(0)
       await expect(profile.getByRole('tab')).toHaveText(['Overview', 'Stats'])
       await expect(profile.getByRole('tab', { name: 'Overview', exact: true })).toHaveAttribute('aria-selected', 'true')
       await expect(profile.getByText('#124', { exact: true })).toBeVisible()
@@ -22,7 +22,15 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [480, 320]])
       await expect(profile).not.toContainText('Career Tester')
       await expect(profile).not.toContainText('1,250')
       await expect(profile).not.toContainText('XP')
-      await expect(profile.getByText(/Achievement badges are not available yet/)).toBeVisible()
+      await expect(profile.getByText(/Progress reflects|Full 7 cycles/)).toHaveCount(0)
+      await expect(profile.getByRole('link', {name:'Edit Profile'})).toHaveCount(0)
+      await expect(profile.getByRole('tabpanel').locator('dl > div').filter({has:page.getByText('Win Rate',{exact:true})})).toHaveText('Win Rate72%')
+      const first = (await profile.getByRole('tab', {name:'Overview'}).boundingBox())!
+      const second = (await profile.getByRole('tab', {name:'Stats'}).boundingBox())!
+      const content = (await profile.locator('.my-profile-content').boundingBox())!
+      expect(second.y).toBeGreaterThan(first.y + first.height)
+      expect(content.x).toBeGreaterThan(first.x + first.width)
+      expect(Math.abs(second.y + second.height - content.y - content.height)).toBeLessThan(1)
       const header = page.getByRole('banner')
       await expect(header.getByRole('progressbar')).toHaveAttribute('value', '250')
       const headerMarkup = await header.innerHTML(), initialRequests = requests
@@ -43,14 +51,14 @@ for (const [width, height] of [[1440, 900], [844, 390], [667, 375], [480, 320]])
       await expect(stats.locator('dl > div').filter({ has: page.getByText('Win rate', { exact: true }) })).toHaveText('Win rate72%')
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
       await profile.getByRole('tab', { name: 'Overview', exact: true }).focus()
-      await page.keyboard.press('ArrowRight')
+      await page.keyboard.press('ArrowDown')
       await expect(profile.getByRole('tab', { name: 'Stats', exact: true })).toBeFocused()
       await expect(profile.getByRole('tab', { name: 'Stats', exact: true })).toHaveAttribute('aria-selected', 'true')
     } finally { await context.close() }
   })
 }
 
-test('Edit Profile opens Settings Profile directly and retains identity editing on reload', async ({ page }) => {
+test('Settings Profile deep link retains identity editing on reload', async ({ page }) => {
   const state = await mock(page)
   const identity = { username: 'cardmaster99', firstName: 'John', lastName: 'Smith', needsCompletion: false }
   Object.assign(state.user, { profile: identity }); Object.assign(state.user.player, identity)
@@ -59,8 +67,7 @@ test('Edit Profile opens Settings Profile directly and retains identity editing 
     Object.assign(identity, route.request().postDataJSON()); Object.assign(state.user.player, identity)
     return route.fulfill({ json: { user: state.user } })
   })
-  await page.goto('/#/profile')
-  await page.getByRole('link', { name: 'Edit Profile', exact: true }).click()
+  await page.goto('/#/settings/profile')
   await expect(page).toHaveURL(/#\/settings\/profile$/)
   await expect(page.getByRole('tab', { name: 'Profile', exact: true })).toHaveAttribute('aria-selected', 'true')
   await page.getByLabel('First Name', { exact: true }).fill('Jane')
@@ -82,7 +89,7 @@ test('empty career, loading failure and retry keep profile navigation usable', a
   await page.goto('/#/profile')
   const profile = page.getByRole('region', { name: 'My Profile', exact: true })
   await expect(profile.getByRole('status')).toContainText('Career temporarily unavailable')
-  await expect(profile.getByRole('link', { name: 'Edit Profile', exact: true })).toBeVisible()
+  await expect(profile.getByRole('link', { name: 'Edit Profile', exact: true })).toHaveCount(0)
   failing = false
   await profile.getByRole('button', { name: 'Retry career data', exact: true }).click()
   await expect(profile.getByText('Unranked', { exact: true })).toBeVisible()
