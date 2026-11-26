@@ -59,7 +59,6 @@ export function MyProfile() {
                 <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
             </dl>
             <section className="my-profile-highlights" aria-label="Career highlights">
-              <h2>Career highlights</h2>
               <dl className="my-profile-grid">
                 {Object.entries({ 'Best win streak': stats.bestWinStreak ?? 0, 'Successful Least': stats.successfulDeclarations ?? 0, 'Win Rate': winRate }).map(([label, value]) =>
                   <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}

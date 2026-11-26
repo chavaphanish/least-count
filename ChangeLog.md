@@ -8,6 +8,10 @@ All notable changes to YAYDU (`least-count`) are documented here.
 - Versions follow **Semantic Versioning (`MAJOR.MINOR.PATCH`)** under [AGENTS.md](AGENTS.md): PATCH for small fixes/UI adjustments, MINOR for features/medium functionality changes, and MAJOR for redesigns/architecture/breaking upgrades. Increment once per implementation task; documentation-only maintenance does not bump the application version. `package.json` carries the web version. The earlier `1.1.x` releases retain their recorded history.
 - Development before this scheme ran as a single `0.1.0` prototype and is summarized below by milestone.
 
+## 1.7.11 — 26 November 2026
+
+- Removed the Career highlights heading from My Profile’s Overview tab.
+
 ## 1.7.10 — 26 November 2026
 
 - Matched My Profile to the full-height Settings layout, replaced Full 7 cycles with Win Rate in Overview, and removed the edit shortcut and progress note.
